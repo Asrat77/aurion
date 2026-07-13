@@ -1,0 +1,152 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { X } from "@phosphor-icons/react";
+import { useUiStore } from "@/store/ui";
+import { useLogin, useRegister } from "@/lib/auth";
+import { ApiError } from "@/lib/api";
+
+export default function AuthModal() {
+  const { authOpen, authMode, closeAuth, openAuth } = useUiStore();
+  const showToast = useUiStore((s) => s.showToast);
+  const login = useLogin();
+  const register = useRegister();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+
+  // Entrance: scale from 0.97 + fade (modals stay centered, no origin anchor).
+  // The rAF flips mounted on open; cleanup resets it on close so each reopen
+  // replays the entrance.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    if (!authOpen) return;
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => {
+      cancelAnimationFrame(id);
+      setMounted(false);
+    };
+  }, [authOpen]);
+
+  if (!authOpen) return null;
+
+  const isSignup = authMode === "signup";
+  const pending = login.isPending || register.isPending;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    try {
+      if (isSignup) {
+        await register.mutateAsync({ email, password, name });
+        showToast(`Welcome ${name}!`, "success");
+      } else {
+        await login.mutateAsync({ email, password });
+        showToast("Welcome back!", "success");
+      }
+      closeAuth();
+      setEmail("");
+      setPassword("");
+      setName("");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Something went wrong.");
+    }
+  }
+
+  return (
+    <div
+      className={`fixed inset-0 bg-black/80 z-[4000] flex items-center justify-center p-8 transition-opacity duration-200 ease-[var(--ease-out)] ${
+        mounted ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div
+        className={`bg-[var(--bg-surface)] border border-[var(--border-gold)] rounded-2xl max-w-[420px] w-full p-10 relative transition-[transform,opacity] duration-200 ease-[var(--ease-out)] ${
+          mounted ? "opacity-100 scale-100" : "opacity-0 scale-[0.97]"
+        }`}
+      >
+        <button
+          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--gold)]"
+          onClick={closeAuth}
+          aria-label="Close"
+        >
+          <X size={22} />
+        </button>
+        <h2 className="font-[family-name:var(--font-display)] text-3xl text-white mb-1">
+          {isSignup ? "Create Account" : "Welcome Back"}
+        </h2>
+        <p className="text-[var(--text-muted)] text-sm mb-6">
+          {isSignup ? "Join the AURION marketplace today." : "Sign in to your account to continue."}
+        </p>
+
+        {error && (
+          <div className="bg-[rgba(224,85,85,0.1)] text-[#e05555] p-3 rounded-lg text-sm mb-4">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
+              Email
+            </label>
+            <input
+              type="email"
+              required
+              className="input"
+              placeholder="you@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              className="input"
+              placeholder="Minimum 6 characters"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          {isSignup && (
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
+                Full Name
+              </label>
+              <input
+                type="text"
+                required
+                className="input"
+                placeholder="Your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+          )}
+          <button type="submit" className="btn btn-primary w-full" disabled={pending}>
+            {pending ? "Please wait…" : isSignup ? "Sign Up" : "Sign In"}
+          </button>
+        </form>
+
+        <p className="text-center mt-4 text-sm text-[var(--text-muted)]">
+          {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+          <button
+            className="text-[var(--gold)] font-semibold hover:underline"
+            onClick={() => {
+              setError("");
+              openAuth(isSignup ? "login" : "signup");
+            }}
+          >
+            {isSignup ? "Sign In" : "Sign Up"}
+          </button>
+        </p>
+      </div>
+    </div>
+  );
+}
