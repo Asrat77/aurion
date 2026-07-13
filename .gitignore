@@ -1,0 +1,21 @@
+# Env
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+.next/
+out/
+npm-debug.log*
+
+# Ruby / Rails
+backend/log/*
+backend/tmp/*
+backend/.byebug_history
+backend/storage/*
+!backend/storage/.keep
+backend/config/master.key
+
+# OS
+.DS_Store
