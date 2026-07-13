@@ -1,6 +1,7 @@
 # Deploying AURION
 
-Backend (Rails API) → Dokploy. Frontend (Next.js) → Appwrite Sites.
+Backend (Rails API) → Dokploy **or** Azure Container Apps (both documented
+below; Azure is what's actually live). Frontend (Next.js) → Appwrite Sites.
 
 They'll be on different domains, so this is a cross-site deployment: the
 frontend calls the backend's public URL over `fetch`, and auth is a signed
@@ -8,26 +9,55 @@ httpOnly cookie. That only works cross-site over HTTPS with
 `SameSite=None` cookies and an exact-match CORS origin — both are already
 wired up in this repo (see "What was fixed for this" below).
 
-## 1. Backend on Dokploy
+## 1. Backend
 
-The repo already has a production-ready multi-stage [Dockerfile](backend/Dockerfile)
-(Rails 8's default: Ruby slim, Thruster in front of Puma, runs as non-root,
-exposes port 80). Point Dokploy at the `backend/` directory as the build
-context and it can build straight from that Dockerfile — nothing extra to
-write.
+The repo has a production-ready multi-stage [Dockerfile](backend/Dockerfile)
+(Rails 8's default: Ruby slim, Thruster in front of Puma, runs as
+non-root). It listens on **port 8080**, not 80 — non-root processes can't
+bind privileged ports (<1024) in most container sandboxes (this bit us on
+Azure Container Apps with `bind: permission denied`; Dokploy would hit the
+same wall). Whatever platform you use, point its ingress/target port at
+`8080`.
 
-**Before you deploy, smoke-test the build locally** (I did a full static
-review — Gemfile.lock is in sync, `.dockerignore` correctly excludes
-`config/master.key` and `.env*`, no Active Storage usage to worry about —
-but couldn't run an actual `docker build` this session because the machine
-was down to ~5GB free disk):
+**Smoke-test the build locally before deploying:**
 
 ```bash
 cd backend
 docker build -t aurion-backend .
-# If you're on Apple Silicon and Dokploy's host is x86_64:
+# If you're on Apple Silicon and the target host is x86_64:
 docker build --platform linux/amd64 -t aurion-backend .
+docker run --rm -p 8080:8080 -e RAILS_MASTER_KEY=$(cat config/master.key) -e DATABASE_URL=... aurion-backend
+curl http://localhost:8080/up   # should return 200
 ```
+
+### 1a. Dokploy
+
+Point Dokploy at the `backend/` directory as the build context — it builds
+straight from the Dockerfile, nothing extra to write. Set the container
+port to `8080` in Dokploy's proxy settings.
+
+### 1b. Azure Container Apps
+
+This repo's [.github/workflows/aurion-api-AutoDeployTrigger-...yml](.github/workflows)
+builds `backend/` with plain `docker build` (not Azure's buildpack
+auto-detection — that path failed with a CNB lifecycle permission error
+when it couldn't find a Dockerfile at the repo root), pushes to **GitHub
+Container Registry**, then runs `az containerapp update --image`.
+
+Two Azure-specific gotchas we hit getting this working:
+- **Region allow-list**: lab/student subscriptions often have a policy
+  restricting which Azure regions you can deploy into (`RequestDisallowedByAzure`).
+  Check the resource group's existing region, or Subscription → Policies →
+  Compliance, rather than guessing regions one at a time.
+- **GHCR image pulls**: the workflow authenticates the Container App's
+  registry pull using the job's `GITHUB_TOKEN`, which expires when the job
+  ends. Fine for the deploy itself, but Azure may fail to re-pull the image
+  later (e.g. on scale-out) once that token is stale. Simplest fix for a
+  project with nothing sensitive in the image: make the `aurion-api` GHCR
+  package **public** (repo → Packages → package settings) so Azure never
+  needs credentials to pull at all.
+
+Set the Container App's **Ingress → Target port** to `8080`.
 
 ### Database
 
@@ -56,12 +86,12 @@ Optional (leave unset — checkout runs in mock/demo mode without them):
 `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY`,
 `CHAPA_SECRET_KEY`, `ETB_PER_USD`.
 
-### Dokploy settings
-- **Port**: container exposes `80` — point Dokploy's proxy at that.
+### Both platforms
 - **Health check**: `GET /up` (Rails' built-in health endpoint).
-- Dokploy's proxy (Traefik) terminates TLS and forwards plain HTTP —
-  `config/environments/production.rb` already has `config.assume_ssl = true`
-  and `config.force_ssl = true`, so this works without extra config.
+- Both Dokploy (Traefik) and Azure Container Apps terminate TLS and forward
+  plain HTTP to the container — `config/environments/production.rb` already
+  has `config.assume_ssl = true` and `config.force_ssl = true`, so this
+  works without extra config.
 
 ## 2. Frontend on Appwrite Sites
 
@@ -74,7 +104,7 @@ Optional (leave unset — checkout runs in mock/demo mode without them):
 
 | Variable | Value |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | `https://<your-dokploy-backend-domain>/api/v1` |
+| `NEXT_PUBLIC_API_URL` | `https://<your-backend-domain>/api/v1` |
 
 This is the only env var the frontend reads (checked — nothing else touches
 `process.env`).
@@ -87,7 +117,7 @@ frontend needs to know the backend's URL), so:
 1. Deploy the backend first with a placeholder `FRONTEND_ORIGIN` (or your
    best guess at the Appwrite domain if you're picking a fixed subdomain).
 2. Deploy the frontend with `NEXT_PUBLIC_API_URL` pointing at the backend's
-   real Dokploy URL.
+   real public URL.
 3. Update the backend's `FRONTEND_ORIGIN` to the frontend's actual final
    URL and redeploy the backend (cookie auth will silently fail — requests
    will 401 — until this matches exactly).

@@ -3,7 +3,7 @@
 
 # This Dockerfile is designed for production, not development. Use with Kamal or build'n'run by hand:
 # docker build -t backend .
-# docker run -d -p 80:80 -e RAILS_MASTER_KEY=<value from config/master.key> --name backend backend
+# docker run -d -p 8080:8080 -e RAILS_MASTER_KEY=<value from config/master.key> --name backend backend
 
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
@@ -69,6 +69,10 @@ COPY --chown=rails:rails --from=build /rails /rails
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-# Start server via Thruster by default, this can be overwritten at runtime
-EXPOSE 80
+# Thruster listens on $PORT. The container runs as a non-root user (see
+# above), and non-root processes can't bind to privileged ports (<1024) in
+# sandboxed runtimes like Azure Container Apps -- so this uses 8080 instead
+# of the port-80 default. Set the platform's ingress/target port to match.
+ENV PORT="8080"
+EXPOSE 8080
 CMD ["./bin/thrust", "./bin/rails", "server"]
