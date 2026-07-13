@@ -79,10 +79,13 @@ COPY --chown=rails:rails --from=build /rails /rails
 # Entrypoint prepares the database.
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-# Thruster listens on $PORT. The container runs as a non-root user (see
-# above), and non-root processes can't bind to privileged ports (<1024) in
-# sandboxed runtimes like Azure Container Apps -- so this uses 8080 instead
-# of the port-80 default. Set the platform's ingress/target port to match.
-ENV PORT="8080"
+# Thruster listens on HTTP_PORT (default 80). The container runs as a
+# non-root user (see above), and non-root processes can't bind privileged
+# ports (<1024) in sandboxed runtimes like Azure Container Apps -- so move
+# Thruster's listener to 8080. NOTE: this must be HTTP_PORT, not PORT --
+# Thruster reads HTTP_PORT for its own listener and *overwrites* PORT with
+# TARGET_PORT (default 3000) when it launches Puma, so any PORT we set here
+# is silently clobbered. Set the platform's ingress/target port to 8080.
+ENV HTTP_PORT="8080"
 EXPOSE 8080
 CMD ["./bin/thrust", "./bin/rails", "server"]

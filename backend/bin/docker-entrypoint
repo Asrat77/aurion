@@ -1,13 +1,5 @@
 #!/bin/bash -e
 
-# Force Thruster's listen port regardless of anything the platform injects.
-# The image runs as non-root, which can't bind <1024, so this must be a
-# non-privileged port -- some platforms (observed on Azure Container Apps)
-# inject their own PORT env var that silently overrides whatever the image
-# sets via `ENV PORT=`, since a runtime-injected variable always wins over
-# an image default. Exporting it here, right before exec, wins over that.
-export PORT="8080"
-
 # If running the rails server then create or migrate existing database
 if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   ./bin/rails db:prepare
