@@ -2,27 +2,51 @@ name: Trigger auto deployment for aurion-api
 
 # When this action will be executed
 on:
-  # Automatically trigger it when detected changes in repo
+  # Automatically trigger it when detected changes to the backend
   push:
-    branches: 
+    branches:
       [ master ]
     paths:
-    - '**'
-    - '.github/workflows/aurion-api-AutoDeployTrigger-60ce685a-bce9-46b1-88aa-02330fb07fc6.yml'
+      - 'backend/**'
+      - '.github/workflows/aurion-api-AutoDeployTrigger-60ce685a-bce9-46b1-88aa-02330fb07fc6.yml'
 
-  # Allow manual trigger 
-  workflow_dispatch:      
+  # Allow manual trigger
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions: 
+    permissions:
       id-token: write #This is required for requesting the OIDC JWT Token
       contents: read #Required when GH token is used to authenticate with private repo
+      packages: write #Required to push the image to GitHub Container Registry
 
     steps:
       - name: Checkout to the branch
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Compute lowercase image repository
+        id: image
+        run: echo "repo=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')/aurion-api" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Builds from backend/Dockerfile directly -- no buildpack auto-detection,
+      # no ambiguity about which app in this monorepo is being built.
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.image.outputs.repo }}:${{ github.sha }}
+            ${{ steps.image.outputs.repo }}:latest
 
       - name: Azure Login
         uses: azure/login@v2
@@ -31,19 +55,17 @@ jobs:
           tenant-id: ${{ secrets.AURIONAPI_AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AURIONAPI_AZURE_SUBSCRIPTION_ID }}
 
-      - name: Build and push container image to registry
-        uses: azure/container-apps-deploy-action@v2
+      - name: Point the Container App at the new image
+        uses: azure/CLI@v2
         with:
-          appSourcePath: ${{ github.workspace }}
-          _dockerfilePathKey_: _dockerfilePath_
-          _targetLabelKey_: _targetLabel_
-          registryUrl: 
-          registryUsername: ${{ secrets.AURIONAPI_REGISTRY_USERNAME }}
-          registryPassword: ${{ secrets.AURIONAPI_REGISTRY_PASSWORD }}
-          containerAppName: aurion-api
-          resourceGroup: cloud-lab-rg
-          imageToBuild: default/[parameters('containerAppName')]:${{ github.sha }}
-          _buildArgumentsKey_: |
-            _buildArgumentsValues_
-
-
+          inlineScript: |
+            az containerapp registry set \
+              --name aurion-api \
+              --resource-group cloud-lab-rg \
+              --server ghcr.io \
+              --username ${{ github.actor }} \
+              --password ${{ secrets.GITHUB_TOKEN }}
+            az containerapp update \
+              --name aurion-api \
+              --resource-group cloud-lab-rg \
+              --image ${{ steps.image.outputs.repo }}:${{ github.sha }}
