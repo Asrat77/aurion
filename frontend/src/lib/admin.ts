@@ -1,0 +1,79 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
+import type { Order, Product } from "@/types";
+
+export interface AdminOverview {
+  totalProducts: number;
+  totalOrders: number;
+  totalRevenueCents: number;
+  totalCustomers: number;
+  recentOrders: Order[];
+}
+
+export interface AdminCustomer {
+  email: string;
+  orders: number;
+  totalCents: number;
+}
+
+export interface AdminVendor {
+  id: number;
+  storeName: string;
+  slug: string;
+  status: string;
+  commissionRate: number;
+  productCount: number;
+  revenueCents: number;
+}
+
+export interface AdminAnalytics {
+  totalRevenueCents: number;
+  avgOrderCents: number;
+  totalOrders: number;
+  topProductName: string | null;
+  topProductQty: number;
+}
+
+export function useAdminOverview() {
+  return useQuery<AdminOverview>({
+    queryKey: [ "admin", "overview" ],
+    queryFn: () => apiFetch("/admin/overview"),
+  });
+}
+
+export function useAdminOrders() {
+  return useQuery<Order[]>({
+    queryKey: [ "admin", "orders" ],
+    queryFn: () => apiFetch("/admin/orders"),
+  });
+}
+
+export function useAdminCustomers() {
+  return useQuery<AdminCustomer[]>({
+    queryKey: [ "admin", "customers" ],
+    queryFn: () => apiFetch("/admin/customers"),
+  });
+}
+
+export function useAdminVendors() {
+  return useQuery<AdminVendor[]>({
+    queryKey: [ "admin", "vendors" ],
+    queryFn: () => apiFetch("/admin/vendors"),
+  });
+}
+
+export function useAdminProducts() {
+  return useQuery<Product[]>({
+    queryKey: [ "admin", "products" ],
+    queryFn: () => apiFetch("/admin/products"),
+  });
+}
+
+export function useAdminAnalytics() {
+  return useQuery<AdminAnalytics>({
+    queryKey: [ "admin", "analytics" ],
+    queryFn: () => apiFetch("/admin/analytics"),
+  });
+}
