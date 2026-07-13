@@ -20,6 +20,16 @@ RUN apt-get update -qq && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
+# Prefer IPv4 over IPv6 for outbound connections. Many managed Postgres
+# hosts (Neon included) publish both AAAA and A records, and several
+# container network egress paths -- Azure Container Apps' Consumption plan
+# among them -- resolve the IPv6 address fine but have no actual outbound
+# IPv6 route. The connection then goes out, gets silently dropped (no
+# ICMP reject, no RST), and hangs for the OS-level TCP timeout (60+
+# seconds) before ever falling back to the IPv4 address that would have
+# worked instantly. This tells glibc's resolver to sort IPv4 first.
+RUN echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf
+
 # Set production environment variables and enable jemalloc for reduced memory usage and latency.
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
