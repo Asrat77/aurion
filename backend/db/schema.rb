@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_11_195320) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_03_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -87,6 +87,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_11_195320) do
     t.index ["category_id"], name: "index_products_on_category_id"
     t.index ["slug"], name: "index_products_on_slug", unique: true
     t.index ["vendor_id"], name: "index_products_on_vendor_id"
+  end
+
+  create_table "request_for_quotes", force: :cascade do |t|
+    t.string "company_name", null: false
+    t.string "contact_name"
+    t.string "country"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "estimated_quantity"
+    t.string "product_interest", null: false
+    t.string "reference", null: false
+    t.text "specifications"
+    t.string "status", default: "new", null: false
+    t.datetime "updated_at", null: false
+    t.index ["reference"], name: "index_request_for_quotes_on_reference", unique: true
+    t.index ["status", "created_at"], name: "index_request_for_quotes_on_status_and_created_at"
   end
 
   create_table "users", force: :cascade do |t|

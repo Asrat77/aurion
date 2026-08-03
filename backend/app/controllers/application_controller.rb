@@ -4,6 +4,7 @@ class ApplicationController < ActionController::API
   COOKIE_NAME = :aurion_jwt
 
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+  rescue_from ActiveRecord::RecordInvalid, with: :render_record_invalid
 
   def current_user
     return @current_user if defined?(@current_user)
@@ -41,7 +42,7 @@ class ApplicationController < ActionController::API
       httponly: true,
       same_site: cookie_same_site,
       secure: Rails.env.production?,
-      expires: AuthToken::EXPIRY.from_now,
+      expires: AuthToken::EXPIRY.from_now
     }
   end
 
@@ -61,5 +62,12 @@ class ApplicationController < ActionController::API
 
   def render_not_found
     render json: { message: "Not found" }, status: :not_found
+  end
+
+  def render_record_invalid(error)
+    render json: {
+      message: error.record.errors.full_messages.to_sentence,
+      errors: error.record.errors.to_hash
+    }, status: :unprocessable_entity
   end
 end

@@ -45,6 +45,7 @@ module Api
         test "overview aggregates paid orders only" do
           pending_order = Order.create!(buyer: @buyer, status: :pending, subtotal_cents: 500, shipping_cents: 0,
                                          tax_cents: 0, total_cents: 500, currency: "USD", fx_rate: 1)
+          RequestForQuote.create!(company_name: "Importer", email: "buyer@importer.example", product_interest: "Coffee")
 
           login_as(@admin)
           get "/api/v1/admin/overview"
@@ -53,6 +54,7 @@ module Api
           assert_equal 1, body["totalOrders"] # pending_order excluded
           assert_equal 2660, body["totalRevenueCents"]
           assert_equal 1, body["totalCustomers"]
+          assert_equal 1, body["totalRfqs"]
           assert_equal 1, body["recentOrders"].length
           pending_order.destroy!
         end

@@ -14,6 +14,7 @@ Rails.application.routes.draw do
       resources :products, only: [ :index, :show ], param: :slug
       resources :categories, only: [ :index ]
       resources :orders, only: [ :index, :show, :create ]
+      resources :request_for_quotes, only: [ :create ]
 
       post "payments/:order_id/intent", to: "payments#create"
       post "payments/:order_id/mock_confirm", to: "payments#mock_confirm"
@@ -31,6 +32,7 @@ Rails.application.routes.draw do
         resources :customers, only: [ :index ]
         resources :vendors, only: [ :index ]
         resources :products, only: [ :index ]
+        resources :request_for_quotes, only: [ :index ]
         get "analytics", to: "analytics#show"
       end
     end
