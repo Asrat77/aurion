@@ -2,13 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
-import type { Order, Product } from "@/types";
+import type { Order, Product, RequestForQuote } from "@/types";
 
 export interface AdminOverview {
   totalProducts: number;
   totalOrders: number;
   totalRevenueCents: number;
   totalCustomers: number;
+  totalRfqs: number;
   recentOrders: Order[];
 }
 
@@ -75,5 +76,12 @@ export function useAdminAnalytics() {
   return useQuery<AdminAnalytics>({
     queryKey: [ "admin", "analytics" ],
     queryFn: () => apiFetch("/admin/analytics"),
+  });
+}
+
+export function useAdminRequestForQuotes() {
+  return useQuery<RequestForQuote[]>({
+    queryKey: [ "admin", "request-for-quotes" ],
+    queryFn: () => apiFetch("/admin/request_for_quotes"),
   });
 }

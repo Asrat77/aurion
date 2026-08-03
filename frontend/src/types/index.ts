@@ -90,3 +90,17 @@ export interface Payout {
   productName: string;
   createdAt: string;
 }
+
+export interface RequestForQuote {
+  id: number;
+  reference: string;
+  companyName: string;
+  contactName: string | null;
+  email: string;
+  country: string | null;
+  productInterest: string;
+  estimatedQuantity: string | null;
+  specifications: string | null;
+  status: "new" | "reviewing" | "quoted" | "closed";
+  createdAt: string;
+}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Icon } from "@phosphor-icons/react";
-import { SquaresFour, Package, Receipt, Users, TrendUp, Storefront } from "@phosphor-icons/react";
+import { SquaresFour, Package, Receipt, Users, TrendUp, Storefront, FileText } from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import {
   useAdminOverview,
@@ -11,6 +11,7 @@ import {
   useAdminVendors,
   useAdminProducts,
   useAdminAnalytics,
+  useAdminRequestForQuotes,
 } from "@/lib/admin";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
@@ -27,6 +28,7 @@ const VIEWS: { key: string; label: string; icon: Icon }[] = [
   { key: "overview", label: "Overview", icon: SquaresFour },
   { key: "products", label: "Products", icon: Package },
   { key: "orders", label: "Orders", icon: Receipt },
+  { key: "rfqs", label: "Sourcing", icon: FileText },
   { key: "customers", label: "Customers", icon: Users },
   { key: "analytics", label: "Analytics", icon: TrendUp },
   { key: "vendors", label: "Vendors", icon: Storefront },
@@ -66,15 +68,18 @@ export default function AdminPage() {
   return (
     <section className="px-4 sm:px-6 lg:px-8 pt-32 pb-20">
       <div className="max-w-[var(--container-wide)] mx-auto">
-        <PageHeader title="Dashboard" />
+        <PageHeader
+          title="Command Center"
+          description="Retail operations and commercial sourcing in one place."
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-8">
-          <aside className="card p-4 h-fit">
+          <aside className="card p-4 h-fit md:sticky md:top-28">
             <nav className="flex md:flex-col gap-1 flex-wrap">
               {VIEWS.map((v) => (
                 <button
                   key={v.key}
-                  className={`flex items-center gap-2.5 text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                  className={`flex min-h-11 cursor-pointer items-center gap-2.5 text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                     view === v.key
                       ? "bg-[rgba(200,164,92,0.08)] text-[var(--gold)]"
                       : "text-[var(--text-secondary)] hover:text-[var(--gold)]"
@@ -88,10 +93,11 @@ export default function AdminPage() {
             </nav>
           </aside>
 
-          <div className="card p-8">
+          <div className="card p-5 sm:p-8 min-w-0">
             {view === "overview" && <OverviewView />}
             {view === "products" && <ProductsView />}
             {view === "orders" && <OrdersView />}
+            {view === "rfqs" && <RequestForQuotesView />}
             {view === "customers" && <CustomersView />}
             {view === "analytics" && <AnalyticsView />}
             {view === "vendors" && <VendorsView />}
@@ -112,11 +118,12 @@ function OverviewView() {
         <h3 className="display-heading">Overview</h3>
         <span className="text-xs text-[var(--text-muted)]">Last 30 days</span>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-8">
         <StatCard label="Products" value={String(data.totalProducts)} />
         <StatCard label="Orders" value={String(data.totalOrders)} />
         <StatCard label="Revenue" value={formatUsd(data.totalRevenueCents)} />
         <StatCard label="Customers" value={String(data.totalCustomers)} />
+        <StatCard label="Sourcing requests" value={String(data.totalRfqs)} />
       </div>
       <div>
         <h4 className="text-white mb-2 text-sm font-semibold">Recent Orders</h4>
@@ -151,6 +158,104 @@ function OverviewView() {
           </table>
         )}
       </div>
+    </div>
+  );
+}
+
+function RequestForQuotesView() {
+  const { data, isLoading } = useAdminRequestForQuotes();
+  if (isLoading) return <TableSkeleton cols={7} />;
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="section-label mb-2">Commercial pipeline</p>
+          <h3 className="display-heading">Sourcing Requests</h3>
+        </div>
+        <span className="text-xs text-[var(--text-muted)]">
+          {data?.length ?? 0} total requests
+        </span>
+      </div>
+
+      {!data || data.length === 0 ? (
+        <EmptyState
+          icon={<FileText size={24} />}
+          title="No sourcing requests yet"
+          body="New commercial inquiries will appear here with their RFQ reference."
+        />
+      ) : (
+        <>
+          <div className="grid gap-3 xl:hidden">
+            {data.map((request) => (
+              <article key={request.id} className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-deep)] p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <span className="font-[family-name:var(--font-mono)] text-xs text-[var(--gold)]">
+                      {request.reference}
+                    </span>
+                    <h4 className="mt-1 text-base font-semibold text-white">{request.companyName}</h4>
+                  </div>
+                  <StatusBadge status={request.status} />
+                </div>
+                <dl className="mt-4 grid gap-3 text-sm">
+                  <div>
+                    <dt className="text-xs text-[var(--text-muted)]">Product</dt>
+                    <dd className="text-[var(--text-primary)]">{request.productInterest}</dd>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <dt className="text-xs text-[var(--text-muted)]">Country</dt>
+                      <dd>{request.country || "Not provided"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-[var(--text-muted)]">Quantity</dt>
+                      <dd>{request.estimatedQuantity || "Not provided"}</dd>
+                    </div>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-[var(--text-muted)]">Contact</dt>
+                    <dd className="break-all">{request.email}</dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto xl:block">
+            <table className="data-table min-w-[900px]">
+              <thead>
+                <tr>
+                  <th>RFQ</th>
+                  <th>Company</th>
+                  <th>Product</th>
+                  <th>Country</th>
+                  <th>Quantity</th>
+                  <th>Contact</th>
+                  <th>Status</th>
+                  <th>Received</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((request) => (
+                  <tr key={request.id}>
+                    <td className="font-mono text-[var(--gold)]">{request.reference}</td>
+                    <td>{request.companyName}</td>
+                    <td>{request.productInterest}</td>
+                    <td>{request.country || "—"}</td>
+                    <td>{request.estimatedQuantity || "—"}</td>
+                    <td>{request.email}</td>
+                    <td><StatusBadge status={request.status} /></td>
+                    <td className="text-xs text-[var(--text-muted)]">
+                      {new Date(request.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }

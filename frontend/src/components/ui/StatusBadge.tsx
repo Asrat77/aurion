@@ -11,6 +11,11 @@ const STATUS_STYLES: Record<string, string> = {
   active: "text-[var(--success)] bg-[rgba(92,184,141,0.12)]",
   draft: "text-[var(--text-secondary)] bg-[rgba(176,172,165,0.1)]",
   suspended: "text-[var(--danger)] bg-[rgba(224,85,85,0.12)]",
+  // sourcing states
+  new: "text-[var(--gold-light)] bg-[rgba(214,180,94,0.12)]",
+  reviewing: "text-[#8ec5ff] bg-[rgba(67,145,220,0.12)]",
+  quoted: "text-[var(--success)] bg-[rgba(92,184,141,0.12)]",
+  closed: "text-[var(--text-secondary)] bg-[rgba(176,172,165,0.1)]",
 };
 
 function labelFor(status: string) {
