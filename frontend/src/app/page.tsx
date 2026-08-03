@@ -99,23 +99,43 @@ export default function Home() {
 
           <div className="hero-reveal hero-reveal-3 relative mx-auto flex w-full max-w-[590px] items-center justify-center lg:justify-end">
             <div className="emblem-stage relative aspect-square w-[min(86vw,560px)]">
-              <div className="absolute inset-[8%] rounded-full border border-[rgba(214,180,94,0.16)]" />
-              <div className="absolute inset-[17%] rounded-full border border-dashed border-[rgba(214,180,94,0.14)]" />
-              <div className="absolute left-[4%] top-1/2 -translate-y-1/2 -rotate-90 font-[family-name:var(--font-mono)] text-[0.56rem] tracking-[0.32em] text-[var(--gold)]">
+              <div className="emblem-orbit emblem-orbit-outer" aria-hidden="true" />
+              <div className="emblem-orbit emblem-orbit-inner" aria-hidden="true" />
+              <div className="emblem-orbit-runner" aria-hidden="true">
+                <span />
+              </div>
+
+              <div
+                data-emblem-label
+                className="emblem-side-label emblem-side-label-left"
+                aria-hidden="true"
+              >
                 AURION MARKETS
               </div>
-              <div className="absolute right-[2%] top-1/2 -translate-y-1/2 rotate-90 font-[family-name:var(--font-mono)] text-[0.56rem] tracking-[0.32em] text-[var(--text-muted)]">
+              <div
+                data-emblem-label
+                className="emblem-side-label emblem-side-label-right"
+                aria-hidden="true"
+              >
                 ETHIOPIA / GLOBAL
               </div>
-              <Image
-                src="/brand/aurion-emblem.png"
-                alt="AURION blue and gold emblem"
-                fill
-                priority
-                sizes="(max-width: 1024px) 86vw, 560px"
-                className="object-contain p-[13%] drop-shadow-[0_28px_80px_rgba(214,180,94,0.22)]"
-              />
-              <div className="absolute bottom-[6%] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-[var(--border-gold)] bg-[rgba(5,7,13,0.8)] px-4 py-2 backdrop-blur-xl font-[family-name:var(--font-mono)] text-[0.58rem] tracking-[0.2em] text-[var(--gold-light)]">
+
+              <div data-emblem-mark className="emblem-mark absolute inset-[17%] z-10">
+                <Image
+                  src="/brand/aurion-emblem.png"
+                  alt="AURION blue and gold emblem"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 68vw, 370px"
+                  className="object-contain drop-shadow-[0_28px_80px_rgba(214,180,94,0.22)]"
+                />
+              </div>
+
+              <span className="emblem-glint emblem-glint-left" aria-hidden="true" />
+              <span className="emblem-glint emblem-glint-center" aria-hidden="true" />
+              <span className="emblem-glint emblem-glint-right" aria-hidden="true" />
+
+              <div className="absolute bottom-[5%] left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full border border-[var(--border-gold)] bg-[rgba(5,7,13,0.88)] px-4 py-2 backdrop-blur-xl font-[family-name:var(--font-mono)] text-[0.58rem] tracking-[0.2em] text-[var(--gold-light)] shadow-[0_12px_38px_rgba(0,0,0,0.35)]">
                 FROM ETHIOPIA TO THE WORLD
               </div>
             </div>
