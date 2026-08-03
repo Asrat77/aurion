@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, Star, MapPin, Storefront, Check } from "@phosphor-icons/react";
+import {
+  ArrowUpRight,
+  Check,
+  Heart,
+  MapPin,
+  Star,
+  Storefront,
+} from "@phosphor-icons/react";
 import type { Product } from "@/types";
 import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
@@ -13,85 +20,116 @@ function formatUsd(cents: number) {
 }
 
 export default function ProductCard({ product }: { product: Product }) {
-  const cartItems = useCartStore((s) => s.items);
-  const addItem = useCartStore((s) => s.addItem);
-  const wishlistIds = useWishlistStore((s) => s.ids);
-  const toggleWishlist = useWishlistStore((s) => s.toggle);
-  const showToast = useUiStore((s) => s.showToast);
+  const cartItems = useCartStore((state) => state.items);
+  const addItem = useCartStore((state) => state.addItem);
+  const wishlistIds = useWishlistStore((state) => state.ids);
+  const toggleWishlist = useWishlistStore((state) => state.toggle);
+  const showToast = useUiStore((state) => state.showToast);
 
-  const inCart = cartItems.some((i) => i.productId === product.id);
+  const inCart = cartItems.some((item) => item.productId === product.id);
   const inWishlist = wishlistIds.includes(product.id);
 
   return (
-    <div className="bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-2xl p-6 flex flex-col transition-[transform,border-color,box-shadow] duration-200 ease-[var(--ease-out)] [@media(hover:hover)]:hover:border-[var(--border-gold)] [@media(hover:hover)]:hover:shadow-[var(--shadow-gold)] [@media(hover:hover)]:hover:-translate-y-1">
-      <div className="relative w-full aspect-[4/3] mb-4">
-        <Link href={`/product/${product.slug}`} className="absolute inset-0 z-0">
+    <article className="group flex flex-col overflow-hidden rounded-[22px] border border-[var(--border-subtle)] bg-[var(--bg-card)] transition-[transform,border-color,box-shadow] duration-300 ease-[var(--ease-out)] [@media(hover:hover)]:hover:-translate-y-1.5 [@media(hover:hover)]:hover:border-[var(--border-gold)] [@media(hover:hover)]:hover:shadow-[0_28px_80px_rgba(0,0,0,0.42)]">
+      <div className="relative aspect-[4/3] w-full overflow-hidden">
+        <Link
+          href={`/product/${product.slug}`}
+          className="absolute inset-0 z-0"
+          aria-label={`View ${product.name}`}
+        >
           <ProductImage
             name={product.name}
             emoji={product.emoji}
             width={800}
             height={600}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            frame={false}
+            className="transition-transform duration-700 ease-[var(--ease-out)] [@media(hover:hover)]:group-hover:scale-[1.035]"
           />
         </Link>
+
         <button
-          className={`absolute top-2 right-2 z-10 bg-black/60 backdrop-blur-sm p-1.5 rounded-full transition-colors ${
+          type="button"
+          className={`absolute right-3 top-3 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/[0.12] bg-black/60 backdrop-blur-md transition-colors ${
             inWishlist ? "text-[var(--gold)]" : "text-[var(--text-muted)]"
           }`}
           onClick={() => {
             const nowIn = toggleWishlist(product.id);
-            showToast(nowIn ? "Added to wishlist" : "Removed from wishlist", "success");
+            showToast(
+              nowIn ? "Added to wishlist" : "Removed from wishlist",
+              "success",
+            );
           }}
-          aria-label="Toggle wishlist"
+          aria-label={
+            inWishlist
+              ? `Remove ${product.name} from wishlist`
+              : `Add ${product.name} to wishlist`
+          }
         >
-          <Heart size={18} weight={inWishlist ? "fill" : "regular"} />
+          <Heart size={19} weight={inWishlist ? "fill" : "regular"} />
         </button>
+
+        <span className="absolute bottom-3 left-3 rounded-full border border-white/[0.12] bg-black/60 px-3 py-1.5 font-[family-name:var(--font-mono)] text-[0.56rem] uppercase tracking-[0.16em] text-[var(--gold-light)] backdrop-blur-md">
+          {product.category.name}
+        </span>
       </div>
 
-      <span className="text-xs text-[var(--gold)] uppercase tracking-wide font-semibold">
-        {product.category.name}
-      </span>
-      <Link href={`/product/${product.slug}`}>
-        <h4 className="font-[family-name:var(--font-display)] text-lg text-white mb-1 mt-1 hover:text-[var(--gold)]">
-          {product.name}
-        </h4>
-      </Link>
-      {product.rating != null ? (
-        <div className="flex items-center gap-1 text-sm text-[var(--gold)] mb-1">
-          <Star size={14} weight="fill" />
-          {product.rating} ({product.reviewsCount})
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <Link href={`/product/${product.slug}`} className="group/title min-w-0">
+            <h3 className="font-[family-name:var(--font-display)] text-[1.45rem] leading-tight text-white transition-colors group-hover/title:text-[var(--gold-light)]">
+              {product.name}
+            </h3>
+          </Link>
+          <span className="shrink-0 text-base font-semibold text-[var(--gold-light)]">
+            {formatUsd(product.priceCents)}
+          </span>
         </div>
-      ) : (
-        <div className="text-sm text-[var(--text-muted)] mb-1">No reviews yet</div>
-      )}
-      <div className="text-lg font-semibold text-[var(--gold-light)] my-2">
-        {formatUsd(product.priceCents)}
+
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.68rem] text-[var(--text-muted)]">
+          <span className="inline-flex items-center gap-1.5">
+            <MapPin size={14} /> {product.origin}
+          </span>
+          <span className="inline-flex min-w-0 items-center gap-1.5">
+            <Storefront size={14} />
+            <span className="truncate">{product.vendor.storeName}</span>
+          </span>
+          {product.rating != null ? (
+            <span className="inline-flex items-center gap-1 text-[var(--gold)]">
+              <Star size={13} weight="fill" /> {product.rating} ({product.reviewsCount})
+            </span>
+          ) : null}
+        </div>
+
+        <p className="mt-4 line-clamp-2 flex-1 text-sm leading-relaxed text-[var(--text-muted)]">
+          {product.description}
+        </p>
+
+        <div className="mt-5 grid grid-cols-[1fr_48px] gap-2">
+          <button
+            type="button"
+            className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full px-4 text-xs font-semibold uppercase tracking-[0.1em] transition-[background-color,color,transform] duration-200 ease-[var(--ease-out)] active:scale-[0.98] ${
+              inCart
+                ? "border border-[var(--gold)] bg-[var(--bg-elevated)] text-[var(--gold)]"
+                : "bg-[var(--gold)] text-[var(--bg-deep)] [@media(hover:hover)]:hover:bg-[var(--gold-light)]"
+            }`}
+            onClick={() => {
+              addItem(product);
+              showToast(`Added ${product.name} to cart`, "success");
+            }}
+          >
+            {inCart ? <Check size={15} weight="bold" /> : null}
+            {inCart ? "In Cart" : "Add to Cart"}
+          </button>
+          <Link
+            href={`/product/${product.slug}`}
+            aria-label={`View ${product.name} details`}
+            className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border-gold)] text-[var(--gold)] transition-colors hover:bg-[rgba(214,180,94,0.08)] hover:text-white"
+          >
+            <ArrowUpRight size={18} />
+          </Link>
+        </div>
       </div>
-      <div className="flex items-center gap-3 text-xs text-[var(--text-secondary)] mb-3">
-        <span className="flex items-center gap-1">
-          <MapPin size={14} /> {product.origin}
-        </span>
-        <span className="flex items-center gap-1">
-          <Storefront size={14} /> {product.vendor.storeName}
-        </span>
-      </div>
-      <p className="text-sm text-[var(--text-muted)] flex-1 mb-3 line-clamp-2">
-        {product.description}
-      </p>
-      <button
-        className={`w-full py-2.5 rounded-full font-semibold text-xs uppercase tracking-wide flex items-center justify-center gap-1.5 transition-[background-color,color,transform] duration-200 ease-[var(--ease-out)] active:scale-[0.98] ${
-          inCart
-            ? "bg-[var(--bg-elevated)] text-[var(--gold)] border border-[var(--gold)]"
-            : "bg-[var(--gold)] text-[var(--bg-deep)] [@media(hover:hover)]:hover:bg-[var(--gold-light)]"
-        }`}
-        onClick={() => {
-          addItem(product);
-          showToast(`Added ${product.name} to cart`, "success");
-        }}
-      >
-        {inCart && <Check size={14} weight="bold" />}
-        {inCart ? "In Cart" : "Add to Cart"}
-      </button>
-    </div>
+    </article>
   );
 }

@@ -1,11 +1,23 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import type { User } from "@/types";
 
+const subscribeToHydration = () => () => {};
+
+function useHydrated() {
+  return useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false,
+  );
+}
+
 export function useMe() {
-  return useQuery<User | null>({
+  const hydrated = useHydrated();
+  const query = useQuery<User | null>({
     queryKey: ["me"],
     queryFn: async () => {
       try {
@@ -15,6 +27,12 @@ export function useMe() {
       }
     },
   });
+
+  return {
+    ...query,
+    data: hydrated ? query.data : undefined,
+    isLoading: !hydrated || query.isLoading,
+  };
 }
 
 export function useLogin() {

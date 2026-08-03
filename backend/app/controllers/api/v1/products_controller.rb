@@ -2,7 +2,7 @@ module Api
   module V1
     class ProductsController < ApplicationController
       def index
-        scope = Product.active.includes(:vendor, :category)
+        scope = Product.active.eager_load(:vendor, :category)
 
         if params[:category].present?
           scope = scope.joins(:category).where(categories: { slug: params[:category] })
@@ -30,12 +30,12 @@ module Api
 
         render json: {
           products: products.map { |p| ProductSerializer.render(p) },
-          meta: { total: total, page: page, per: per },
+          meta: { total: total, page: page, per: per }
         }
       end
 
       def show
-        product = Product.active.includes(:vendor, :category).find_by!(slug: params[:slug])
+        product = Product.active.eager_load(:vendor, :category).find_by!(slug: params[:slug])
         render json: ProductSerializer.render(product)
       end
     end
