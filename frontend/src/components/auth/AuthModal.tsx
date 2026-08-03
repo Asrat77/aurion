@@ -60,23 +60,31 @@ export default function AuthModal() {
       className={`fixed inset-0 bg-black/80 z-[4000] flex items-center justify-center p-8 transition-opacity duration-200 ease-[var(--ease-out)] ${
         mounted ? "opacity-100" : "opacity-0"
       }`}
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) closeAuth();
+      }}
     >
       <div
         className={`bg-[var(--bg-surface)] border border-[var(--border-gold)] rounded-2xl max-w-[420px] w-full p-10 relative transition-[transform,opacity] duration-200 ease-[var(--ease-out)] ${
           mounted ? "opacity-100 scale-100" : "opacity-0 scale-[0.97]"
         }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-title"
+        aria-describedby="auth-description"
       >
         <button
-          className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--gold)]"
+          className="absolute top-3 right-3 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-white/[0.05] hover:text-[var(--gold)]"
           onClick={closeAuth}
           aria-label="Close"
         >
           <X size={22} />
         </button>
-        <h2 className="font-[family-name:var(--font-display)] text-3xl text-white mb-1">
+        <h2 id="auth-title" className="font-[family-name:var(--font-display)] text-3xl text-white mb-1">
           {isSignup ? "Create Account" : "Welcome Back"}
         </h2>
-        <p className="text-[var(--text-muted)] text-sm mb-6">
+        <p id="auth-description" className="text-[var(--text-muted)] text-sm mb-6">
           {isSignup ? "Join the AURION marketplace today." : "Sign in to your account to continue."}
         </p>
 
@@ -88,11 +96,13 @@ export default function AuthModal() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
+            <label htmlFor="auth-email" className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
               Email
             </label>
             <input
               type="email"
+              id="auth-email"
+              autoComplete="email"
               required
               className="input"
               placeholder="you@email.com"
@@ -101,11 +111,13 @@ export default function AuthModal() {
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
+            <label htmlFor="auth-password" className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
               Password
             </label>
             <input
               type="password"
+              id="auth-password"
+              autoComplete={isSignup ? "new-password" : "current-password"}
               required
               minLength={6}
               className="input"
@@ -116,11 +128,13 @@ export default function AuthModal() {
           </div>
           {isSignup && (
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
+              <label htmlFor="auth-name" className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
                 Full Name
               </label>
               <input
                 type="text"
+                id="auth-name"
+                autoComplete="name"
                 required
                 className="input"
                 placeholder="Your full name"

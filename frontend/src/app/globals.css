@@ -26,20 +26,23 @@
 */
 
 :root {
-  --bg-deep: #0a0a0c;
-  --bg-surface: #111114;
-  --bg-elevated: #16161b;
-  --bg-card: #1a1a20;
-  --gold: #c8a45c;
-  --gold-light: #d4b76e;
-  --gold-dark: #a0803a;
-  --gold-pale: #f0e4c8;
-  --text-primary: #e8e4dd;
-  --text-secondary: #b0aca5;
-  --text-muted: #8a8680;
-  --border-subtle: #252530;
-  --border-gold: rgba(200, 164, 92, 0.3);
-  --shadow-gold: 0 0 60px rgba(200, 164, 92, 0.08);
+  --bg-deep: #05070d;
+  --bg-surface: #090d16;
+  --bg-elevated: #0d1320;
+  --bg-card: #101827;
+  --gold: #d6b45e;
+  --gold-light: #f0d58d;
+  --gold-dark: #9e792d;
+  --gold-pale: #f6ecd2;
+  --blue: #0c2b52;
+  --blue-glow: rgba(16, 69, 128, 0.2);
+  --text-primary: #f4efe5;
+  --text-secondary: #b9b6b0;
+  --text-muted: #8d8b87;
+  --border-subtle: #1c2636;
+  --border-gold: rgba(214, 180, 94, 0.28);
+  --border-gold-strong: rgba(214, 180, 94, 0.5);
+  --shadow-gold: 0 24px 80px rgba(214, 180, 94, 0.1);
   --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.6);
   --success: #5cb88d;
   --success-ink: #0a0a0c;
@@ -62,7 +65,7 @@
   --dur-hover: 200ms;
   --dur-panel: 300ms;
   --font-display: var(--font-cormorant), "Times New Roman", serif;
-  --font-body: var(--font-inter), -apple-system, sans-serif;
+  --font-body: var(--font-manrope), -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains), monospace;
 }
 
@@ -96,7 +99,9 @@ html {
 }
 
 body {
-  background-color: var(--bg-deep);
+  background:
+    radial-gradient(circle at 82% 12%, rgba(16, 69, 128, 0.08), transparent 32rem),
+    var(--bg-deep);
   color: var(--text-primary);
   font-family: var(--font-body);
   line-height: 1.7;
@@ -127,18 +132,19 @@ body {
 /* Type scale (lock 5) */
 .display-hero {
   font-family: var(--font-display);
-  font-size: clamp(2.6rem, 5.5vw, 4.5rem);
+  font-size: clamp(3.35rem, 7.2vw, 7rem);
   font-weight: 600;
-  line-height: 1.1;
+  line-height: 0.94;
   color: #fff;
 }
 
 .display-title {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3rem);
+  font-size: clamp(2.65rem, 5vw, 5rem);
   font-weight: 600;
   color: #fff;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
 }
 
 .display-heading {
@@ -153,7 +159,7 @@ body {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   letter-spacing: 0.25em;
-  color: var(--gold);
+  color: var(--gold-light);
   text-transform: uppercase;
   margin-bottom: 0.75rem;
   display: block;
@@ -186,6 +192,7 @@ body {
 
 .btn {
   display: inline-block;
+  min-height: 48px;
   padding: 14px 32px;
   border-radius: 9999px;
   font-weight: 600;
@@ -206,7 +213,7 @@ body {
   transform: scale(0.97);
 }
 .btn-primary {
-  background: var(--gold);
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
   color: var(--bg-deep);
   box-shadow: 0 4px 20px rgba(200, 164, 92, 0.25);
 }
@@ -240,7 +247,7 @@ body {
 }
 
 .card {
-  background: var(--bg-card);
+  background: linear-gradient(145deg, rgba(16, 24, 39, 0.98), rgba(9, 13, 22, 0.98));
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 2rem;
@@ -269,7 +276,8 @@ select.input,
 textarea.input {
   width: 100%;
   padding: 12px 16px;
-  background: var(--bg-deep);
+  min-height: 50px;
+  background: rgba(5, 7, 13, 0.72);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   color: var(--text-primary);
@@ -277,6 +285,131 @@ textarea.input {
   font-size: 0.9rem;
   transition: border-color var(--dur-hover) var(--ease-out),
     box-shadow var(--dur-hover) var(--ease-out);
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 9999;
+  transform: translateY(-160%);
+  border-radius: 999px;
+  background: var(--gold-light);
+  color: var(--bg-deep);
+  padding: 0.75rem 1.1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: transform var(--dur-hover) var(--ease-out);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.aurion-pattern {
+  background-image:
+    linear-gradient(30deg, transparent 46%, rgba(214, 180, 94, 0.22) 47%, rgba(214, 180, 94, 0.22) 49%, transparent 50%),
+    linear-gradient(150deg, transparent 46%, rgba(214, 180, 94, 0.16) 47%, rgba(214, 180, 94, 0.16) 49%, transparent 50%);
+  background-size: 72px 42px;
+  mask-image: radial-gradient(circle at center, black, transparent 88%);
+}
+
+.aurion-hero {
+  background:
+    linear-gradient(100deg, rgba(5, 7, 13, 0.98) 0%, rgba(5, 7, 13, 0.85) 52%, rgba(8, 16, 29, 0.92) 100%);
+}
+
+.emblem-stage::before,
+.emblem-stage::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.emblem-stage::before {
+  inset: 23%;
+  background: rgba(214, 180, 94, 0.12);
+  filter: blur(62px);
+}
+
+.emblem-stage::after {
+  inset: 1%;
+  border: 1px solid rgba(214, 180, 94, 0.08);
+  box-shadow: inset 0 0 80px rgba(16, 69, 128, 0.12);
+}
+
+.experience-card {
+  background:
+    linear-gradient(155deg, rgba(21, 28, 42, 0.98), rgba(8, 11, 18, 0.98));
+  transition: transform 400ms var(--ease-out), border-color 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+}
+
+.experience-card-blue {
+  background:
+    radial-gradient(circle at 80% 12%, rgba(25, 83, 146, 0.25), transparent 46%),
+    linear-gradient(155deg, #0b1729, #070b13);
+}
+
+.origin-card {
+  transition: background-color 300ms var(--ease-out);
+}
+
+.brand-rail {
+  box-shadow: 0 -1px 40px rgba(214, 180, 94, 0.03);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .experience-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--border-gold-strong);
+    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.45);
+  }
+
+  .origin-card:hover {
+    background: #142033;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    animation: hero-reveal 760ms var(--ease-out) forwards;
+  }
+
+  .hero-reveal-1 { animation-delay: 80ms; }
+  .hero-reveal-2 { animation-delay: 150ms; }
+  .hero-reveal-3 { animation-delay: 250ms; }
+  .hero-reveal-4 { animation-delay: 350ms; }
+  .hero-reveal-5 { animation-delay: 450ms; }
+
+  .emblem-stage > div:nth-child(2) {
+    animation: orbit-spin 32s linear infinite;
+  }
+}
+
+@keyframes hero-reveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes orbit-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 639px) {
+  .display-hero {
+    font-size: clamp(3.1rem, 15vw, 4.2rem);
+  }
+
+  .aurion-pattern {
+    background-size: 54px 32px;
+  }
 }
 .input:focus {
   outline: none;

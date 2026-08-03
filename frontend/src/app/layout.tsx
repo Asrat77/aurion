@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Inter, JetBrains_Mono } from "next/font/google";
+import { Cormorant_Garamond, JetBrains_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import Navbar from "@/components/Navbar";
@@ -15,10 +15,10 @@ const cormorant = Cormorant_Garamond({
   style: ["normal", "italic"],
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -28,9 +28,18 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AURION GLOBAL HOLDINGS PLC | Integrated Engines of Value",
+  metadataBase: new URL("https://aurion.appwrite.network"),
+  title: {
+    default: "AURION Markets | Ethiopian Origin, Global Reach",
+    template: "%s | AURION Markets",
+  },
   description:
-    "AURION GLOBAL HOLDINGS PLC, an Ethiopian-origin multinational conglomerate building integrated engines of value across technology, commerce, and industry.",
+    "Discover Ethiopian products at retail or source commercial quantities through AURION Markets.",
+  openGraph: {
+    title: "AURION Markets | Ethiopian Origin, Global Reach",
+    description: "Shop the origin or source at scale through AURION Markets.",
+    images: ["/brand/aurion-emblem.png"],
+  },
 };
 
 export default function RootLayout({
@@ -41,12 +50,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${cormorant.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="min-h-dvh flex flex-col">
+      <body className="min-h-dvh flex flex-col overflow-x-hidden">
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <Providers>
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <main id="main-content" className="flex-1">{children}</main>
           <Footer />
           <CartDrawer />
           <AuthModal />
