@@ -6,6 +6,7 @@ import type {
   Order,
   Product,
   RequestForQuote,
+  RequestForQuoteStatus,
   RefundRequest,
   Review,
   VendorApplication,
@@ -100,6 +101,41 @@ export function useAdminRequestForQuotes() {
   return useQuery<RequestForQuote[]>({
     queryKey: [ "admin", "request-for-quotes" ],
     queryFn: () => apiFetch("/admin/request_for_quotes"),
+  });
+}
+
+export function useUpdateRequestForQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: RequestForQuoteStatus }) =>
+      apiFetch<RequestForQuote>(`/admin/request_for_quotes/${id}`, {
+        method: "PATCH",
+        body: { status },
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
+  });
+}
+
+/** Sends a price back to a commercial buyer and moves the request to quoted. */
+export function useQuoteRequestForQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      quoted_unit_price_cents,
+      quoted_lead_time_days,
+      quote_note,
+    }: {
+      id: number;
+      quoted_unit_price_cents: number;
+      quoted_lead_time_days?: number;
+      quote_note?: string;
+    }) =>
+      apiFetch<RequestForQuote>(`/admin/request_for_quotes/${id}/quote`, {
+        method: "POST",
+        body: { quoted_unit_price_cents, quoted_lead_time_days, quote_note },
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
   });
 }
 

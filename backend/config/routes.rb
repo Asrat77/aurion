@@ -19,7 +19,9 @@ Rails.application.routes.draw do
         post :quote, on: :collection
         post :cancel, on: :member
       end
-      resources :request_for_quotes, only: [ :create ]
+      resources :request_for_quotes, only: [ :create ] do
+        get :catalogue, on: :collection
+      end
 
       get "products/:product_slug/reviews", to: "reviews#index"
       get "reviews/pending", to: "reviews#pending"
@@ -53,7 +55,9 @@ Rails.application.routes.draw do
         resources :customers, only: [ :index ]
         resources :vendors, only: [ :index ]
         resources :products, only: [ :index ]
-        resources :request_for_quotes, only: [ :index ]
+        resources :request_for_quotes, only: [ :index, :update ] do
+          post :quote, on: :member
+        end
         resources :reviews, only: [ :index, :update ]
         resources :vendor_applications, only: [ :index ] do
           post :approve, on: :member

@@ -119,6 +119,50 @@ PRODUCT_DEFS.each_with_index do |p, index|
   product.update!(free_shipping: (index % 3).zero?)
 end
 
+# Commercial terms for the wholesale catalogue. Only some products are offered
+# at scale — a marketplace where everything has an MOQ is not a marketplace.
+puts "Seeding wholesale terms..."
+
+WHOLESALE_DEFS = {
+  "Yirgacheffe Specialty Coffee" => { moq: 500, uom: "kg", lead: 21, packaging: "60kg jute bags, GrainPro lined",
+                                       sample: true, sample_price: 3500,
+                                       tiers: [ [ 500, 2400 ], [ 2_000, 2150 ], [ 10_000, 1900 ] ] },
+  "Sidamo Organic Coffee" => { moq: 500, uom: "kg", lead: 21, packaging: "60kg jute bags",
+                                sample: true, sample_price: 3000,
+                                tiers: [ [ 500, 2050 ], [ 2_000, 1850 ], [ 10_000, 1650 ] ] },
+  "Premium Teff Flour" => { moq: 1_000, uom: "kg", lead: 14, packaging: "25kg multiwall paper sacks",
+                             sample: true, sample_price: 2000,
+                             tiers: [ [ 1_000, 1050 ], [ 5_000, 940 ], [ 20_000, 820 ] ] },
+  "Berbere Spice Blend" => { moq: 250, uom: "kg", lead: 10, packaging: "10kg food-grade pails",
+                              sample: true, sample_price: 1500,
+                              tiers: [ [ 250, 780 ], [ 1_000, 690 ], [ 5_000, 610 ] ] },
+  "White Honey — Forest" => { moq: 200, uom: "kg", lead: 18, packaging: "25kg HDPE drums",
+                               sample: false, sample_price: nil,
+                               tiers: [ [ 200, 1900 ], [ 1_000, 1700 ] ] },
+  "Handwoven Cotton Scarf" => { moq: 100, uom: "pieces", lead: 30, packaging: "Individually wrapped, 50 per carton",
+                                 sample: true, sample_price: 5500,
+                                 tiers: [ [ 100, 3800 ], [ 500, 3300 ] ] },
+}.freeze
+
+WHOLESALE_DEFS.each do |name, terms|
+  product = Product.find_by(name: name)
+  next unless product
+
+  product.update!(
+    moq: terms[:moq],
+    unit_of_measure: terms[:uom],
+    lead_time_days: terms[:lead],
+    packaging: terms[:packaging],
+    sample_available: terms[:sample],
+    sample_price_cents: terms[:sample_price],
+  )
+
+  terms[:tiers].each do |min_quantity, unit_price_cents|
+    tier = product.price_tiers.find_or_initialize_by(min_quantity: min_quantity)
+    tier.update!(unit_price_cents: unit_price_cents)
+  end
+end
+
 # Reviews are only meaningful when a real buyer received real goods, so the
 # demo ratings are backed by genuine delivered orders rather than typed in.
 puts "Seeding review history..."

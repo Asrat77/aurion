@@ -30,6 +30,8 @@ import {
   useModerateReview,
   useAdminVendorApplications,
   useResolveVendorApplication,
+  useUpdateRequestForQuote,
+  useQuoteRequestForQuote,
 } from "@/lib/admin";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
@@ -40,7 +42,14 @@ import EmptyState from "@/components/ui/EmptyState";
 import { formatBase } from "@/lib/money";
 import { ApiError } from "@/lib/api";
 import { useUiStore } from "@/store/ui";
-import type { Order, RefundRequest, Review, VendorApplication } from "@/types";
+import type {
+  Order,
+  RefundRequest,
+  Review,
+  VendorApplication,
+  RequestForQuote,
+  RequestForQuoteStatus,
+} from "@/types";
 
 const VIEWS: { key: string; label: string; icon: Icon }[] = [
   { key: "overview", label: "Overview", icon: SquaresFour },
@@ -256,8 +265,10 @@ function RequestForQuotesView() {
                   <th>Country</th>
                   <th>Quantity</th>
                   <th>Contact</th>
+                  <th>Terms</th>
                   <th>Status</th>
                   <th>Received</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -265,13 +276,25 @@ function RequestForQuotesView() {
                   <tr key={request.id}>
                     <td className="font-mono text-[var(--gold)]">{request.reference}</td>
                     <td>{request.companyName}</td>
-                    <td>{request.productInterest}</td>
+                    <td>{request.productName ?? request.productInterest}</td>
                     <td>{request.country || "—"}</td>
                     <td>{request.estimatedQuantity || "—"}</td>
                     <td>{request.email}</td>
+                    <td className="text-xs text-[var(--text-muted)]">
+                      {[
+                        request.incoterm,
+                        request.destinationPort,
+                        request.sampleRequested ? "sample" : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "—"}
+                    </td>
                     <td><StatusBadge status={request.status} /></td>
                     <td className="text-xs text-[var(--text-muted)]">
                       {new Date(request.createdAt).toLocaleDateString()}
+                    </td>
+                    <td>
+                      <RfqActions request={request} />
                     </td>
                   </tr>
                 ))}
@@ -800,6 +823,85 @@ function VendorApplicationsView() {
             </article>
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+const RFQ_NEXT_STATUS: Partial<Record<RequestForQuoteStatus, RequestForQuoteStatus>> = {
+  new: "reviewing",
+  quoted: "closed",
+};
+
+function RfqActions({ request }: { request: RequestForQuote }) {
+  const updateStatus = useUpdateRequestForQuote();
+  const sendQuote = useQuoteRequestForQuote();
+  const showToast = useUiStore((s) => s.showToast);
+
+  const next = RFQ_NEXT_STATUS[request.status];
+
+  async function advance() {
+    if (!next) return;
+    try {
+      await updateStatus.mutateAsync({ id: request.id, status: next });
+      showToast(`${request.reference} moved to ${next}.`, "success");
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : "Could not update this request.", "error");
+    }
+  }
+
+  async function quote() {
+    const price = window.prompt(`Unit price to quote ${request.companyName} (in USD):`);
+    if (price === null) return;
+
+    const cents = Math.round(parseFloat(price) * 100);
+    if (!Number.isFinite(cents) || cents <= 0) {
+      showToast("Enter a price greater than zero.", "error");
+      return;
+    }
+
+    const lead = window.prompt("Lead time in days (optional):");
+    const note = window.prompt("Note to include with the quote (optional):");
+
+    try {
+      await sendQuote.mutateAsync({
+        id: request.id,
+        quoted_unit_price_cents: cents,
+        quoted_lead_time_days: lead ? Number(lead) : undefined,
+        quote_note: note || undefined,
+      });
+      showToast(`Quote recorded against ${request.reference}.`, "success");
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : "Could not record the quote.", "error");
+    }
+  }
+
+  const busy = updateStatus.isPending || sendQuote.isPending;
+
+  return (
+    <div className="flex flex-wrap gap-3">
+      {request.status !== "closed" && request.status !== "quoted" && (
+        <button
+          className="flex min-h-9 items-center text-xs text-[var(--gold)] hover:underline"
+          onClick={quote}
+          disabled={busy}
+        >
+          Send quote
+        </button>
+      )}
+      {next && (
+        <button
+          className="flex min-h-9 items-center text-xs text-[var(--text-muted)] hover:text-[var(--gold)]"
+          onClick={advance}
+          disabled={busy}
+        >
+          Mark {next}
+        </button>
+      )}
+      {request.quotedUnitPriceCents != null && (
+        <span className="flex min-h-9 items-center font-mono text-xs text-[var(--success)]">
+          {formatBase(request.quotedUnitPriceCents)}/unit
+        </span>
       )}
     </div>
   );

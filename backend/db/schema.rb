@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,6 +120,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_130000) do
     t.index ["vendor_id"], name: "index_payouts_on_vendor_id"
   end
 
+  create_table "price_tiers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "min_quantity", null: false
+    t.bigint "product_id", null: false
+    t.integer "unit_price_cents", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_id", "min_quantity"], name: "index_price_tiers_on_product_id_and_min_quantity", unique: true
+    t.index ["product_id"], name: "index_price_tiers_on_product_id"
+  end
+
   create_table "products", force: :cascade do |t|
     t.bigint "category_id", null: false
     t.datetime "created_at", null: false
@@ -127,17 +137,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_130000) do
     t.text "description"
     t.string "emoji"
     t.boolean "free_shipping", default: false, null: false
+    t.integer "lead_time_days"
+    t.integer "moq"
     t.string "name", null: false
     t.string "origin"
+    t.string "packaging"
     t.integer "price_cents", default: 0, null: false
     t.decimal "rating", precision: 3, scale: 2
     t.integer "reviews_count", default: 0, null: false
+    t.boolean "sample_available", default: false, null: false
+    t.integer "sample_price_cents"
     t.string "slug", null: false
     t.integer "status", default: 0, null: false
     t.integer "stock", default: 0, null: false
+    t.string "unit_of_measure"
     t.datetime "updated_at", null: false
     t.bigint "vendor_id", null: false
     t.index ["category_id"], name: "index_products_on_category_id"
+    t.index ["moq"], name: "index_products_on_moq"
     t.index ["slug"], name: "index_products_on_slug", unique: true
     t.index ["vendor_id"], name: "index_products_on_vendor_id"
   end
@@ -167,13 +184,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_130000) do
     t.string "contact_name"
     t.string "country"
     t.datetime "created_at", null: false
+    t.string "destination_port"
     t.string "email", null: false
     t.string "estimated_quantity"
+    t.string "incoterm"
+    t.bigint "product_id"
     t.string "product_interest", null: false
+    t.text "quote_note"
+    t.datetime "quoted_at"
+    t.integer "quoted_lead_time_days"
+    t.integer "quoted_unit_price_cents"
     t.string "reference", null: false
+    t.boolean "sample_requested", default: false, null: false
     t.text "specifications"
     t.string "status", default: "new", null: false
+    t.integer "target_price_cents"
     t.datetime "updated_at", null: false
+    t.index ["product_id"], name: "index_request_for_quotes_on_product_id"
     t.index ["reference"], name: "index_request_for_quotes_on_reference", unique: true
     t.index ["status", "created_at"], name: "index_request_for_quotes_on_status_and_created_at"
   end
@@ -247,12 +274,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_130000) do
   add_foreign_key "orders", "users", column: "buyer_id"
   add_foreign_key "payouts", "order_items"
   add_foreign_key "payouts", "vendors"
+  add_foreign_key "price_tiers", "products"
   add_foreign_key "products", "categories"
   add_foreign_key "products", "vendors"
   add_foreign_key "refund_requests", "order_items"
   add_foreign_key "refund_requests", "orders"
   add_foreign_key "refund_requests", "users", column: "buyer_id"
   add_foreign_key "refund_requests", "users", column: "resolved_by_id"
+  add_foreign_key "request_for_quotes", "products"
   add_foreign_key "reviews", "order_items"
   add_foreign_key "reviews", "products"
   add_foreign_key "reviews", "users", column: "buyer_id"

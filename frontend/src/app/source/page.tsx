@@ -14,9 +14,11 @@ import {
 import { ApiError } from "@/lib/api";
 import {
   useCreateRequestForQuote,
+  INCOTERMS,
   type RequestForQuoteInput,
 } from "@/lib/requestForQuotes";
-import type { RequestForQuote } from "@/types";
+import WholesaleCatalogue from "@/components/source/WholesaleCatalogue";
+import type { Incoterm, Product, RequestForQuote } from "@/types";
 
 const INITIAL_FORM: RequestForQuoteInput = {
   company_name: "",
@@ -26,6 +28,9 @@ const INITIAL_FORM: RequestForQuoteInput = {
   product_interest: "",
   estimated_quantity: "",
   specifications: "",
+  incoterm: "",
+  destination_port: "",
+  sample_requested: false,
 };
 
 const PRODUCT_OPTIONS = [
@@ -44,8 +49,26 @@ export default function SourcePage() {
   const [created, setCreated] = useState<RequestForQuote | null>(null);
   const [error, setError] = useState("");
 
-  function update(field: keyof RequestForQuoteInput, value: string) {
+  function update(field: keyof RequestForQuoteInput, value: string | boolean) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  // Picking a line from the catalogue pre-fills the request and scrolls the
+  // buyer to the form, so they never retype what the card already told us.
+  function requestQuoteFor(product: Product) {
+    setForm((current) => ({
+      ...current,
+      product_id: product.id,
+      product_interest: current.product_interest || product.category.name,
+      estimated_quantity:
+        current.estimated_quantity ||
+        (product.wholesale
+          ? `${product.wholesale.moq.toLocaleString()} ${product.wholesale.unitOfMeasure ?? "units"}`
+          : ""),
+      specifications:
+        current.specifications || `Interested in ${product.name} (${product.origin}).`,
+    }));
+    document.getElementById("source-form-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -113,6 +136,22 @@ export default function SourcePage() {
             <Link href="/store" className="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--gold)] hover:text-white">
               <ArrowLeft size={16} /> Looking for retail products?
             </Link>
+
+            <div className="mt-14">
+              <span className="font-[family-name:var(--font-mono)] text-[0.6rem] uppercase tracking-[0.2em] text-[var(--gold)]">
+                Available at scale
+              </span>
+              <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl text-white sm:text-4xl">
+                Commercial lines, with terms.
+              </h2>
+              <p className="mt-3 max-w-[560px] text-sm leading-relaxed text-[var(--text-secondary)]">
+                Minimum order quantities, volume pricing and lead times are shown up front.
+                Pick a line to start a request with its details already filled in.
+              </p>
+              <div className="mt-7">
+                <WholesaleCatalogue onRequestQuote={requestQuoteFor} />
+              </div>
+            </div>
           </div>
 
           <div className="source-form-shell rounded-[28px] border border-[var(--border-gold)] bg-[rgba(9,13,22,0.9)] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:p-9 lg:p-12">
@@ -210,6 +249,42 @@ export default function SourcePage() {
                     placeholder="For example: 20 tons, one container, or a recurring monthly order"
                   />
                 </Field>
+              </div>
+
+              <Field label="Delivery terms" htmlFor="incoterm">
+                <select
+                  id="incoterm"
+                  className="input"
+                  value={form.incoterm ?? ""}
+                  onChange={(event) => update("incoterm", event.target.value as Incoterm)}
+                >
+                  <option value="">Not sure yet</option>
+                  {INCOTERMS.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Destination port or city" htmlFor="destination-port">
+                <input
+                  id="destination-port"
+                  className="input"
+                  value={form.destination_port ?? ""}
+                  onChange={(event) => update("destination_port", event.target.value)}
+                  placeholder="Rotterdam, Jebel Ali, Mombasa…"
+                />
+              </Field>
+
+              <div className="sm:col-span-2">
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-[var(--text-secondary)]">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-[var(--gold)]"
+                    checked={form.sample_requested ?? false}
+                    onChange={(event) => update("sample_requested", event.target.checked)}
+                  />
+                  Send a sample before we commit to a volume order
+                </label>
               </div>
 
               <div className="sm:col-span-2">

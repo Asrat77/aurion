@@ -58,7 +58,26 @@ export interface Product {
   status: "draft" | "active";
   category: Category;
   vendor: { id: number; storeName: string; slug: string };
+  /** Null for retail-only products. */
+  wholesale: WholesaleTerms | null;
 }
+
+export interface PriceTier {
+  minQuantity: number;
+  unitPriceCents: number;
+}
+
+export interface WholesaleTerms {
+  moq: number;
+  unitOfMeasure: string | null;
+  leadTimeDays: number | null;
+  packaging: string | null;
+  sampleAvailable: boolean;
+  samplePriceCents: number | null;
+  priceTiers: PriceTier[];
+}
+
+export type Incoterm = "EXW" | "FOB" | "CIF" | "CFR" | "DAP";
 
 export interface Message {
   id: number;
@@ -256,6 +275,8 @@ export interface Payout {
   createdAt: string;
 }
 
+export type RequestForQuoteStatus = "new" | "reviewing" | "quoted" | "closed";
+
 export interface RequestForQuote {
   id: number;
   reference: string;
@@ -264,8 +285,19 @@ export interface RequestForQuote {
   email: string;
   country: string | null;
   productInterest: string;
+  productId: number | null;
+  productName: string | null;
+  productSlug: string | null;
   estimatedQuantity: string | null;
   specifications: string | null;
-  status: "new" | "reviewing" | "quoted" | "closed";
+  incoterm: Incoterm | null;
+  destinationPort: string | null;
+  targetPriceCents: number | null;
+  sampleRequested: boolean;
+  quotedUnitPriceCents: number | null;
+  quotedLeadTimeDays: number | null;
+  quoteNote: string | null;
+  quotedAt: string | null;
+  status: RequestForQuoteStatus;
   createdAt: string;
 }
