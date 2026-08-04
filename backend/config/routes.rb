@@ -35,6 +35,7 @@ Rails.application.routes.draw do
 
       namespace :vendor do
         get "overview", to: "overview#show"
+        get "analytics", to: "analytics#show"
         resources :products, only: [ :index, :create, :update, :destroy ]
         resources :orders, only: [ :index, :update ]
         resources :payouts, only: [ :index ]

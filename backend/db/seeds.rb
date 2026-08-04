@@ -156,6 +156,11 @@ Product.order(:id).limit(12).each_with_index do |product, product_index|
     line_total = product.price_cents
     commission = (line_total * product.vendor.commission_rate).round
 
+    # Spread the history across the last few weeks. created_at matters as much
+    # as paid_at: the vendor revenue chart buckets by order date, so leaving it
+    # at "now" would stack every seeded sale on today.
+    placed_at = (31 - product_index).days.ago - (reviewer_index * 7).hours
+
     order = Order.create!(
       buyer: reviewer,
       status: :delivered,
@@ -165,8 +170,9 @@ Product.order(:id).limit(12).each_with_index do |product, product_index|
       total_cents: line_total,
       currency: "USD",
       fx_rate: 1,
-      paid_at: (30 - product_index).days.ago,
-      delivered_at: (20 - product_index).days.ago,
+      created_at: placed_at,
+      paid_at: placed_at + 1.hour,
+      delivered_at: placed_at + 6.days,
       payment_method: "mock",
       shipping_address: { city: "Addis Ababa", country: "ET" },
     )
@@ -181,8 +187,8 @@ Product.order(:id).limit(12).each_with_index do |product, product_index|
       commission_cents: commission,
       net_cents: line_total - commission,
       fulfillment_status: :delivered,
-      shipped_at: (25 - product_index).days.ago,
-      delivered_at: (20 - product_index).days.ago,
+      shipped_at: placed_at + 2.days,
+      delivered_at: placed_at + 6.days,
     )
 
     Payout.find_or_create_by!(order_item: item) do |payout|
