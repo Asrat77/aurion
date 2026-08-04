@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { ChatCircleText } from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import { useStartConversation } from "@/lib/messages";
@@ -26,6 +27,7 @@ export default function ContactVendorButton({
   className?: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const { data: user } = useMe();
   const openAuth = useUiStore((s) => s.openAuth);
   const showToast = useUiStore((s) => s.showToast);
@@ -47,12 +49,12 @@ export default function ContactVendorButton({
         order_id: orderId,
         body: body.trim(),
       });
-      showToast("Message sent.", "success");
+      showToast(t("messages.sent"), "success");
       setOpen(false);
       setBody("");
       router.push("/messages");
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Could not send your message.", "error");
+      showToast(err instanceof ApiError ? err.message : t("messages.sendFailed"), "error");
     }
   }
 
@@ -62,7 +64,7 @@ export default function ContactVendorButton({
         className={`inline-flex min-h-10 cursor-pointer items-center gap-1.5 text-sm text-[var(--gold)] hover:underline ${className}`}
         onClick={() => (user ? setOpen(true) : openAuth("login"))}
       >
-        <ChatCircleText size={16} /> Message {vendorName}
+        <ChatCircleText size={16} /> {t("messages.contactVendor", { name: vendorName })}
       </button>
     );
   }
@@ -73,7 +75,7 @@ export default function ContactVendorButton({
       onSubmit={send}
     >
       <label className="field-label" htmlFor={`message-${vendorId}-${productId ?? orderId ?? 0}`}>
-        Message {vendorName}
+        {t("messages.contactVendor", { name: vendorName })}
       </label>
       <textarea
         id={`message-${vendorId}-${productId ?? orderId ?? 0}`}
@@ -82,15 +84,15 @@ export default function ContactVendorButton({
         value={body}
         onChange={(e) => setBody(e.target.value)}
         maxLength={4000}
-        placeholder="Ask about stock, shipping, or anything else."
+        placeholder={t("messages.contactPlaceholder")}
         autoFocus
       />
       <div className="mt-3 flex justify-end gap-2">
         <button type="button" className="btn btn-outline" onClick={() => setOpen(false)}>
-          Cancel
+          {t("common.cancel")}
         </button>
         <button type="submit" className="btn btn-primary" disabled={!body.trim() || start.isPending}>
-          {start.isPending ? "Sending…" : "Send"}
+          {start.isPending ? t("messages.sending") : t("common.send")}
         </button>
       </div>
     </form>

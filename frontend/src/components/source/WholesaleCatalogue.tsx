@@ -1,6 +1,7 @@
 "use client";
 
 import { Package, Clock, Stack, FlaskIcon } from "@phosphor-icons/react";
+import { useTranslation } from "react-i18next";
 import { useWholesaleCatalogue } from "@/lib/requestForQuotes";
 import { formatBase } from "@/lib/money";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -16,6 +17,7 @@ export default function WholesaleCatalogue({
 }: {
   onRequestQuote: (product: Product) => void;
 }) {
+  const { t } = useTranslation();
   const { data, isLoading } = useWholesaleCatalogue();
 
   if (isLoading) {
@@ -31,8 +33,8 @@ export default function WholesaleCatalogue({
     return (
       <EmptyState
         icon={<Stack size={28} />}
-        title="No commercial lines listed yet"
-        body="Send a sourcing request and our team will come back with what is available."
+        title={t("wholesale.emptyTitle")}
+        body={t("wholesale.emptyBody")}
       />
     );
   }
@@ -53,6 +55,7 @@ function WholesaleCard({
   product: Product;
   onRequestQuote: (product: Product) => void;
 }) {
+  const { t } = useTranslation();
   const terms = product.wholesale;
   if (!terms) return null;
 
@@ -75,24 +78,24 @@ function WholesaleCard({
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-        <Term icon={<Package size={15} />} label="MOQ" value={`${terms.moq.toLocaleString()} ${uom}`} />
+        <Term icon={<Package size={15} />} label={t("wholesale.moq")} value={`${terms.moq.toLocaleString()} ${uom}`} />
         {terms.leadTimeDays != null && (
-          <Term icon={<Clock size={15} />} label="Lead time" value={`${terms.leadTimeDays} days`} />
+          <Term icon={<Clock size={15} />} label={t("wholesale.leadTime")} value={t("wholesale.days", { count: terms.leadTimeDays })} />
         )}
         {terms.packaging && (
           <div className="col-span-2">
-            <Term icon={<Stack size={15} />} label="Packaging" value={terms.packaging} />
+            <Term icon={<Stack size={15} />} label={t("wholesale.packaging")} value={terms.packaging} />
           </div>
         )}
         {terms.sampleAvailable && (
           <div className="col-span-2">
             <Term
               icon={<FlaskIcon size={15} />}
-              label="Samples"
+              label={t("wholesale.samples")}
               value={
                 terms.samplePriceCents
-                  ? `Available — ${formatBase(terms.samplePriceCents)}`
-                  : "Available on request"
+                  ? `${t("wholesale.available")} — ${formatBase(terms.samplePriceCents)}`
+                  : t("wholesale.availableOnRequest")
               }
             />
           </div>
@@ -102,14 +105,14 @@ function WholesaleCard({
       {terms.priceTiers.length > 0 && (
         <table className="mt-5 w-full text-sm">
           <caption className="mb-2 text-left text-xs uppercase tracking-[0.1em] text-[var(--text-muted)]">
-            Volume pricing
+            {t("wholesale.volumePricing")}
           </caption>
           <thead>
             <tr className="text-xs text-[var(--text-muted)]">
-              <th className="pb-1 text-left font-normal">Quantity</th>
+              <th className="pb-1 text-left font-normal">{t("wholesale.quantity")}</th>
               {/* "Unit price" rather than "per {uom}" — a unit of measure like
                   "pieces" is already plural and reads wrong after "per". */}
-              <th className="pb-1 text-right font-normal">Unit price</th>
+              <th className="pb-1 text-right font-normal">{t("wholesale.unitPrice")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border-subtle)]">
@@ -129,8 +132,7 @@ function WholesaleCard({
 
       {best && (
         <p className="mt-3 text-xs text-[var(--text-muted)]">
-          Best rate {formatBase(best.unitPriceCents)} at {best.minQuantity.toLocaleString()}+{" "}
-          {uom}.
+          {t("wholesale.bestRate", { price: formatBase(best.unitPriceCents), quantity: best.minQuantity.toLocaleString(), unit: uom })}
         </p>
       )}
 
@@ -138,7 +140,7 @@ function WholesaleCard({
         className="btn btn-outline mt-5 w-full"
         onClick={() => onRequestQuote(product)}
       >
-        Request a quote
+        {t("wholesale.requestQuote")}
       </button>
     </article>
   );

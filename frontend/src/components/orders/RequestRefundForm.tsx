@@ -2,11 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { ShieldCheck } from "@phosphor-icons/react";
 import { useCreateRefundRequest, REFUND_REASONS } from "@/lib/refunds";
 import { ApiError } from "@/lib/api";
 import { useUiStore } from "@/store/ui";
 import type { OrderItem, RefundReason } from "@/types";
+
+const REASON_KEYS: Record<RefundReason, string> = {
+  not_received: "refund.reasons.notReceived",
+  damaged: "refund.reasons.damaged",
+  not_as_described: "refund.reasons.notAsDescribed",
+  wrong_item: "refund.reasons.wrongItem",
+  other: "refund.reasons.other",
+};
 
 export default function RequestRefundForm({
   item,
@@ -15,6 +24,7 @@ export default function RequestRefundForm({
   item: OrderItem;
   onDone: () => void;
 }) {
+  const { t } = useTranslation();
   const createRefund = useCreateRefundRequest();
   const showToast = useUiStore((s) => s.showToast);
 
@@ -30,10 +40,10 @@ export default function RequestRefundForm({
         reason,
         detail: detail || undefined,
       });
-      showToast("Claim submitted. Our team will review it shortly.", "success");
+      showToast(t("refund.submitted"), "success");
       onDone();
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Could not submit your claim.", "error");
+      showToast(err instanceof ApiError ? err.message : t("refund.submitFailed"), "error");
     }
   }
 
@@ -44,13 +54,13 @@ export default function RequestRefundForm({
     >
       <div className="flex items-center gap-2 mb-1">
         <ShieldCheck size={18} className="text-[var(--gold)]" />
-        <p className="section-label">Buyer protection claim</p>
+        <p className="section-label">{t("refund.claimTitle")}</p>
       </div>
       <h4 className="text-base font-semibold text-white mb-4">{item.productName}</h4>
 
       <div className="mb-4">
         <label className="field-label" htmlFor={`reason-${item.id}`}>
-          What went wrong? <span className="text-[var(--gold)]">*</span>
+          {t("refund.whatWentWrong")} <span className="text-[var(--gold)]">*</span>
         </label>
         <select
           id={`reason-${item.id}`}
@@ -60,7 +70,7 @@ export default function RequestRefundForm({
         >
           {REFUND_REASONS.map((r) => (
             <option key={r.value} value={r.value}>
-              {r.label}
+              {t(REASON_KEYS[r.value])}
             </option>
           ))}
         </select>
@@ -68,7 +78,7 @@ export default function RequestRefundForm({
 
       <div className="mb-4">
         <label className="field-label" htmlFor={`detail-${item.id}`}>
-          Tell us more
+          {t("refund.tellMore")}
         </label>
         <textarea
           id={`detail-${item.id}`}
@@ -77,12 +87,12 @@ export default function RequestRefundForm({
           value={detail}
           onChange={(e) => setDetail(e.target.value)}
           maxLength={2000}
-          placeholder="Anything that helps us resolve this quickly."
+          placeholder={t("refund.detailPlaceholder")}
         />
         <p className="field-help">
-          See what is covered in our{" "}
+          {t("refund.policyLead")} {" "}
           <Link href="/buyer-protection" className="text-[var(--gold)] hover:underline">
-            buyer protection policy
+            {t("refund.policy")}
           </Link>
           .
         </p>
@@ -90,10 +100,10 @@ export default function RequestRefundForm({
 
       <div className="flex justify-end gap-3">
         <button type="button" className="btn btn-outline" onClick={onDone}>
-          Cancel
+          {t("common.cancel")}
         </button>
         <button type="submit" className="btn btn-primary" disabled={createRefund.isPending}>
-          {createRefund.isPending ? "Submitting…" : "Submit claim"}
+          {createRefund.isPending ? t("refund.submitting") : t("refund.submitClaim")}
         </button>
       </div>
     </form>

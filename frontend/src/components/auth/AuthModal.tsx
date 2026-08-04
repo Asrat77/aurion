@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { X } from "@phosphor-icons/react";
 import { useUiStore } from "@/store/ui";
 import { useLogin, useRegister } from "@/lib/auth";
 import { ApiError } from "@/lib/api";
 
 export default function AuthModal() {
+  const { t } = useTranslation();
   const { authOpen, authMode, closeAuth, openAuth } = useUiStore();
   const showToast = useUiStore((s) => s.showToast);
   const login = useLogin();
@@ -41,17 +43,17 @@ export default function AuthModal() {
     try {
       if (isSignup) {
         await register.mutateAsync({ email, password, name });
-        showToast(`Welcome ${name}!`, "success");
+        showToast(t("auth.welcomeName", { name }), "success");
       } else {
         await login.mutateAsync({ email, password });
-        showToast("Welcome back!", "success");
+        showToast(t("auth.welcomeBackTitle"), "success");
       }
       closeAuth();
       setEmail("");
       setPassword("");
       setName("");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Something went wrong.");
+      setError(err instanceof ApiError ? err.message : t("common.somethingWentWrong"));
     }
   }
 
@@ -77,15 +79,15 @@ export default function AuthModal() {
         <button
           className="absolute top-3 right-3 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-white/[0.05] hover:text-[var(--gold)]"
           onClick={closeAuth}
-          aria-label="Close"
+          aria-label={t("common.close")}
         >
           <X size={22} />
         </button>
         <h2 id="auth-title" className="font-[family-name:var(--font-display)] text-3xl text-white mb-1">
-          {isSignup ? "Create Account" : "Welcome Back"}
+          {isSignup ? t("auth.createAccount") : t("auth.welcomeBackTitle")}
         </h2>
         <p id="auth-description" className="text-[var(--text-muted)] text-sm mb-6">
-          {isSignup ? "Join the AURION marketplace today." : "Sign in to your account to continue."}
+          {isSignup ? t("auth.joinToday") : t("auth.signInContinue")}
         </p>
 
         {error && (
@@ -97,7 +99,7 @@ export default function AuthModal() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label htmlFor="auth-email" className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
-              Email
+              {t("auth.email")}
             </label>
             <input
               type="email"
@@ -112,7 +114,7 @@ export default function AuthModal() {
           </div>
           <div>
             <label htmlFor="auth-password" className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
-              Password
+              {t("auth.password")}
             </label>
             <input
               type="password"
@@ -121,7 +123,7 @@ export default function AuthModal() {
               required
               minLength={6}
               className="input"
-              placeholder="Minimum 6 characters"
+              placeholder={t("auth.passwordPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -129,7 +131,7 @@ export default function AuthModal() {
           {isSignup && (
             <div>
               <label htmlFor="auth-name" className="block text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)] mb-1">
-                Full Name
+                {t("auth.fullName")}
               </label>
               <input
                 type="text"
@@ -137,19 +139,19 @@ export default function AuthModal() {
                 autoComplete="name"
                 required
                 className="input"
-                placeholder="Your full name"
+                placeholder={t("auth.namePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
           )}
           <button type="submit" className="btn btn-primary w-full" disabled={pending}>
-            {pending ? "Please wait…" : isSignup ? "Sign Up" : "Sign In"}
+            {pending ? t("auth.pleaseWait") : isSignup ? t("common.signUp") : t("common.signIn")}
           </button>
         </form>
 
         <p className="text-center mt-4 text-sm text-[var(--text-muted)]">
-          {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
+          {isSignup ? t("auth.alreadyHaveAccount") : t("auth.dontHaveAccount")}{" "}
           <button
             className="text-[var(--gold)] font-semibold hover:underline"
             onClick={() => {
@@ -157,7 +159,7 @@ export default function AuthModal() {
               openAuth(isSignup ? "login" : "signup");
             }}
           >
-            {isSignup ? "Sign In" : "Sign Up"}
+            {isSignup ? t("common.signIn") : t("common.signUp")}
           </button>
         </p>
       </div>

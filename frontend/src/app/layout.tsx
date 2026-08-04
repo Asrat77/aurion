@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import ToastHost from "@/components/ToastHost";
 import CartDrawer from "@/components/cart/CartDrawer";
 import AuthModal from "@/components/auth/AuthModal";
+import SkipLink from "@/components/SkipLink";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -62,10 +63,8 @@ export default function RootLayout({
       className={`${cormorant.variable} ${manrope.variable} ${jetbrainsMono.variable} ${notoEthiopic.variable}`}
     >
       <body className="min-h-dvh flex flex-col overflow-x-hidden">
-        <a href="#main-content" className="skip-link">
-          Skip to main content
-        </a>
         <Providers>
+          <SkipLink />
           <Navbar />
           <main id="main-content" className="flex-1">{children}</main>
           <Footer />

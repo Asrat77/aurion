@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import { ChatCircleText, PaperPlaneRight, ArrowLeft } from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import { useUiStore } from "@/store/ui";
@@ -13,6 +14,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import type { Conversation } from "@/types";
 
 export default function MessagesPage() {
+  const { t } = useTranslation();
   const { data: user, isLoading: userLoading } = useMe();
   const openAuth = useUiStore((s) => s.openAuth);
   const { data: inbox, isLoading } = useInbox(!!user);
@@ -41,10 +43,10 @@ export default function MessagesPage() {
       <Shell>
         <EmptyState
           icon={<ChatCircleText size={32} />}
-          title="Sign in to see your messages"
+          title={t("messages.signInPrompt")}
           action={
             <button className="btn btn-primary" onClick={() => openAuth("login")}>
-              Sign In
+              {t("common.signIn")}
             </button>
           }
         />
@@ -57,11 +59,11 @@ export default function MessagesPage() {
       <Shell>
         <EmptyState
           icon={<ChatCircleText size={32} />}
-          title="No messages yet"
-          body="Ask a vendor about a product or an order and the conversation will appear here."
+          title={t("messages.noneTitle")}
+          body={t("messages.noneBody")}
           action={
             <Link href="/store" className="btn btn-primary">
-              Browse the Store
+              {t("messages.browseStore")}
             </Link>
           }
         />
@@ -74,7 +76,7 @@ export default function MessagesPage() {
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         <ul
           className={`flex-col gap-2 ${activeId != null ? "hidden lg:flex" : "flex"}`}
-          aria-label="Conversations"
+          aria-label={t("messages.conversations")}
         >
           {conversations.map((c) => (
             <li key={c.id}>
@@ -92,7 +94,7 @@ export default function MessagesPage() {
             <Thread id={activeId} onBack={() => setSelection("closed")} />
           ) : (
             <div className="flex h-64 items-center justify-center rounded-2xl border border-[var(--border-subtle)] text-sm text-[var(--text-muted)]">
-              Pick a conversation.
+              {t("messages.pickConversation")}
             </div>
           )}
         </div>
@@ -102,15 +104,16 @@ export default function MessagesPage() {
 }
 
 function Shell({ children, unread = 0 }: { children: React.ReactNode; unread?: number }) {
+  const { t } = useTranslation();
   return (
     <section className="px-4 sm:px-6 lg:px-8 pt-32 pb-20">
       <div className="max-w-[var(--container-content)] mx-auto">
         <PageHeader
-          title="Messages"
+          title={t("messages.title")}
           description={
             unread > 0
-              ? `${unread} unread message${unread === 1 ? "" : "s"}.`
-              : "Questions to and from the vendors you buy from."
+              ? t("messages.unread", { count: unread })
+              : t("messages.description")
           }
         />
         {children}
@@ -159,6 +162,7 @@ function ThreadButton({
 }
 
 function Thread({ id, onBack }: { id: number; onBack: () => void }) {
+  const { t } = useTranslation();
   const { data: conversation, isLoading } = useConversation(id);
   const reply = useReply(id);
   const showToast = useUiStore((s) => s.showToast);
@@ -178,7 +182,7 @@ function Thread({ id, onBack }: { id: number; onBack: () => void }) {
       await reply.mutateAsync(body.trim());
       setBody("");
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Could not send your message.", "error");
+      showToast(err instanceof ApiError ? err.message : t("messages.sendFailed"), "error");
     }
   }
 
@@ -192,7 +196,7 @@ function Thread({ id, onBack }: { id: number; onBack: () => void }) {
         <button
           className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-[var(--text-secondary)] hover:text-[var(--gold)] lg:hidden"
           onClick={onBack}
-          aria-label="Back to conversations"
+          aria-label={t("messages.backToConversations")}
         >
           <ArrowLeft size={18} />
         </button>
@@ -203,7 +207,7 @@ function Thread({ id, onBack }: { id: number; onBack: () => void }) {
           <p className="truncate text-xs text-[var(--text-muted)]">
             {conversation.orderReference ? (
               <Link href="/orders" className="text-[var(--gold)] hover:underline">
-                Order {conversation.orderReference}
+                {t("messages.order", { reference: conversation.orderReference })}
               </Link>
             ) : conversation.productSlug ? (
               <Link
@@ -250,7 +254,7 @@ function Thread({ id, onBack }: { id: number; onBack: () => void }) {
 
       <form className="flex gap-2 border-t border-[var(--border-subtle)] p-4" onSubmit={send}>
         <label className="sr-only" htmlFor="reply-body">
-          Your message
+          {t("messages.yourMessage")}
         </label>
         <textarea
           id="reply-body"
@@ -259,13 +263,13 @@ function Thread({ id, onBack }: { id: number; onBack: () => void }) {
           value={body}
           onChange={(e) => setBody(e.target.value)}
           maxLength={4000}
-          placeholder="Write a message…"
+          placeholder={t("messages.placeholder")}
         />
         <button
           type="submit"
           className="btn btn-primary shrink-0 self-end"
           disabled={!body.trim() || reply.isPending}
-          aria-label="Send message"
+          aria-label={t("messages.sendMessage")}
         >
           <PaperPlaneRight size={16} weight="fill" />
         </button>

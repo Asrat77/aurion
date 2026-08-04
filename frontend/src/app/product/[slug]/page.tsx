@@ -73,7 +73,7 @@ export default function ProductDetailPage({
   return (
     <section className="px-4 sm:px-6 lg:px-8 pt-32 pb-20">
       <div className="max-w-[var(--container-content)] mx-auto">
-        <nav aria-label="Breadcrumb" className="mb-6">
+        <nav aria-label={t("product.breadcrumb")} className="mb-6">
           <ol className="flex flex-wrap items-center gap-1.5 text-sm text-[var(--text-muted)]">
             <li>
               <Link href="/store" className="inline-flex items-center gap-1.5 text-[var(--gold)] hover:underline">
@@ -208,7 +208,7 @@ function BuyBox({ product }: { product: Product }) {
             className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-l-full text-[var(--text-secondary)] transition-colors hover:text-[var(--gold)] disabled:opacity-40"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
             disabled={qty <= 1 || soldOut}
-            aria-label="Decrease quantity"
+            aria-label={t("cart.decrease")}
           >
             <Minus size={14} weight="bold" />
           </button>
@@ -228,7 +228,7 @@ function BuyBox({ product }: { product: Product }) {
             className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-r-full text-[var(--text-secondary)] transition-colors hover:text-[var(--gold)] disabled:opacity-40"
             onClick={() => setQty((q) => Math.min(product.stock, q + 1))}
             disabled={qty >= product.stock || soldOut}
-            aria-label="Increase quantity"
+            aria-label={t("cart.increase")}
           >
             <Plus size={14} weight="bold" />
           </button>
@@ -268,9 +268,9 @@ function BuyBox({ product }: { product: Product }) {
           }`}
           onClick={() => {
             const nowIn = toggleWishlist(product.id);
-            showToast(nowIn ? "Added to wishlist" : "Removed from wishlist", "success");
+            showToast(nowIn ? t("wishlist.added") : t("wishlist.removed"), "success");
           }}
-          aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+          aria-label={inWishlist ? t("wishlist.removeAria", { name: product.name }) : t("wishlist.addAria", { name: product.name })}
         >
           <Heart size={16} weight={inWishlist ? "fill" : "regular"} />
         </button>

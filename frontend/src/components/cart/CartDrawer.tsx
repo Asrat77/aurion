@@ -40,7 +40,7 @@ export default function CartDrawer() {
           <button
             className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-white/[0.05] hover:text-[var(--gold)]"
             onClick={close}
-            aria-label="Close cart"
+            aria-label={t("common.close")}
           >
             <X size={22} />
           </button>
@@ -82,7 +82,7 @@ export default function CartDrawer() {
                     <button
                       className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:border-[var(--gold)] hover:text-[var(--gold)]"
                       onClick={() => updateQty(item.productId, -1)}
-                      aria-label="Decrease quantity"
+                      aria-label={t("cart.decrease")}
                     >
                       <Minus size={12} />
                     </button>
@@ -90,14 +90,14 @@ export default function CartDrawer() {
                     <button
                       className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-[var(--border-subtle)] bg-[var(--bg-elevated)] hover:border-[var(--gold)] hover:text-[var(--gold)]"
                       onClick={() => updateQty(item.productId, 1)}
-                      aria-label="Increase quantity"
+                      aria-label={t("cart.increase")}
                     >
                       <Plus size={12} />
                     </button>
                     <button
                       className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[var(--text-muted)] hover:bg-white/[0.04] hover:text-[var(--danger)]"
                       onClick={() => removeItem(item.productId)}
-                      aria-label="Remove item"
+                      aria-label={t("cart.remove")}
                     >
                       <X size={16} />
                     </button>
@@ -111,7 +111,7 @@ export default function CartDrawer() {
         {items.length > 0 && (
           <div className="border-t border-[var(--border-subtle)] pt-4 mt-2">
             <div className="flex justify-between text-lg font-semibold text-white mb-4">
-              <span>Total</span>
+              <span>{t("checkout.total")}</span>
               <span className="text-[var(--gold)]">{price(total)}</span>
             </div>
             <Link

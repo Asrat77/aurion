@@ -37,7 +37,7 @@ export default function WriteReviewForm({
       showToast(t("reviews.thanks"), "success");
       onDone();
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Could not post your review.", "error");
+      showToast(err instanceof ApiError ? err.message : t("errors.couldNotReview"), "error");
     }
   }
 

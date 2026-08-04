@@ -63,7 +63,7 @@ export default function Navbar() {
         <Link
           href="/"
           className="group flex items-center gap-2.5 shrink-0 min-h-11"
-          aria-label="AURION Markets home"
+          aria-label={t("nav.home")}
           onClick={closeNavigation}
         >
           <span className="relative w-11 h-11 shrink-0 transition-transform duration-300 ease-[var(--ease-out)] group-hover:rotate-[4deg]">
@@ -201,7 +201,7 @@ export default function Navbar() {
                       className="w-full min-h-11 cursor-pointer text-left px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
                       onClick={() => {
                         logout.mutate(undefined, {
-                          onSuccess: () => showToast("Logged out.", "success"),
+                          onSuccess: () => showToast(t("auth.loggedOut"), "success"),
                         });
                         setDropdownOpen(false);
                       }}

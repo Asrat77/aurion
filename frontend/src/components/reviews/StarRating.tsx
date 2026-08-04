@@ -1,6 +1,7 @@
 "use client";
 
 import { Star } from "@phosphor-icons/react";
+import { useTranslation } from "react-i18next";
 
 /** Read-only star display. Rounded to the nearest half for the fill count. */
 export function StarRating({
@@ -15,7 +16,7 @@ export function StarRating({
   const filled = Math.round(rating);
 
   return (
-    <span className={`inline-flex items-center gap-0.5 ${className}`} aria-label={`${rating} out of 5`}>
+    <span className={`inline-flex items-center gap-0.5 ${className}`} aria-label={`${rating}/5`}>
       {[1, 2, 3, 4, 5].map((i) => (
         <Star
           key={i}
@@ -39,15 +40,16 @@ export function StarPicker({
   onChange: (rating: number) => void;
   size?: number;
 }) {
+  const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-1" role="radiogroup" aria-label="Rating">
+    <div className="flex items-center gap-1" role="radiogroup" aria-label={t("filters.rating")}>
       {[1, 2, 3, 4, 5].map((i) => (
         <button
           key={i}
           type="button"
           role="radio"
           aria-checked={value === i}
-          aria-label={`${i} star${i === 1 ? "" : "s"}`}
+          aria-label={`${i} ${t("reviews.star", { count: i })}`}
           className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-white/[0.04]"
           onClick={() => onChange(i)}
         >

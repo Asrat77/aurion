@@ -15,8 +15,10 @@ import { useWishlistStore } from "@/store/wishlist";
 import { useUiStore } from "@/store/ui";
 import ProductImage from "@/components/ui/ProductImage";
 import { usePrice } from "@/lib/money";
+import { useTranslation } from "react-i18next";
 
 export default function ProductCard({ product }: { product: Product }) {
+  const { t } = useTranslation();
   const price = usePrice();
   const cartItems = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
@@ -33,7 +35,7 @@ export default function ProductCard({ product }: { product: Product }) {
         <Link
           href={`/product/${product.slug}`}
           className="absolute inset-0 z-0"
-          aria-label={`View ${product.name}`}
+          aria-label={t("product.viewProduct", { name: product.name })}
         >
           <ProductImage
             name={product.name}
@@ -54,14 +56,14 @@ export default function ProductCard({ product }: { product: Product }) {
           onClick={() => {
             const nowIn = toggleWishlist(product.id);
             showToast(
-              nowIn ? "Added to wishlist" : "Removed from wishlist",
+              nowIn ? t("wishlist.added") : t("wishlist.removed"),
               "success",
             );
           }}
           aria-label={
             inWishlist
-              ? `Remove ${product.name} from wishlist`
-              : `Add ${product.name} to wishlist`
+              ? t("wishlist.removeAria", { name: product.name })
+              : t("wishlist.addAria", { name: product.name })
           }
         >
           <Heart size={19} weight={inWishlist ? "fill" : "regular"} />
@@ -113,15 +115,15 @@ export default function ProductCard({ product }: { product: Product }) {
             }`}
             onClick={() => {
               addItem(product);
-              showToast(`Added ${product.name} to cart`, "success");
+              showToast(t("product.addedToCart", { count: 1, name: product.name }), "success");
             }}
           >
             {inCart ? <Check size={15} weight="bold" /> : null}
-            {inCart ? "In Cart" : "Add to Cart"}
+            {inCart ? t("cart.inCart") : t("product.addToCart")}
           </button>
           <Link
             href={`/product/${product.slug}`}
-            aria-label={`View ${product.name} details`}
+            aria-label={t("product.viewDetails", { name: product.name })}
             className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--border-gold)] text-[var(--gold)] transition-colors hover:bg-[rgba(214,180,94,0.08)] hover:text-white"
           >
             <ArrowUpRight size={18} />

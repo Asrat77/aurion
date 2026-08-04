@@ -1,6 +1,7 @@
 "use client";
 
 import { formatBase } from "@/lib/money";
+import { useTranslation } from "react-i18next";
 
 export interface RevenuePoint {
   date: string;
@@ -13,13 +14,14 @@ export interface RevenuePoint {
  * be more weight than the job needs.
  */
 export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
+  const { t } = useTranslation();
   const peak = Math.max(...data.map((d) => d.revenueCents), 1);
   const total = data.reduce((sum, d) => sum + d.revenueCents, 0);
 
   if (total === 0) {
     return (
       <div className="flex h-40 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-deep)] text-sm text-[var(--text-muted)]">
-        No sales in this window yet.
+        {t("chart.noSales")}
       </div>
     );
   }
@@ -29,7 +31,7 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
       <div
         className="flex h-40 items-end gap-[2px]"
         role="img"
-        aria-label={`Daily revenue over ${data.length} days, peaking at ${formatBase(peak)}`}
+        aria-label={t("chart.aria", { count: data.length, peak: formatBase(peak) })}
       >
         {data.map((point) => {
           const height = (point.revenueCents / peak) * 100;
@@ -62,7 +64,7 @@ export default function RevenueChart({ data }: { data: RevenuePoint[] }) {
             day: "numeric",
           })}
         </span>
-        <span>Peak {formatBase(peak)}</span>
+        <span>{t("chart.peak", { peak: formatBase(peak) })}</span>
         <span>
           {new Date(data[data.length - 1].date).toLocaleDateString(undefined, {
             month: "short",

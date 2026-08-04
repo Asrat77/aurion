@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -13,26 +16,26 @@ import {
 const ORIGINS = [
   {
     index: "01",
-    title: "Coffee",
-    subtitle: "Yirgacheffe and Sidamo",
+    title: "home.coffee",
+    subtitle: "home.coffeeSubtitle",
     href: "/store?category=coffee",
   },
   {
     index: "02",
-    title: "Teff & Grains",
-    subtitle: "Everyday staples, Ethiopian origin",
+    title: "home.grains",
+    subtitle: "home.grainsSubtitle",
     href: "/store?category=teff",
   },
   {
     index: "03",
-    title: "Spices & Honey",
-    subtitle: "Bold flavor, unmistakable place",
+    title: "home.spices",
+    subtitle: "home.spicesSubtitle",
     href: "/store?category=spices",
   },
   {
     index: "04",
-    title: "Jewelry & Craft",
-    subtitle: "Made with material and memory",
+    title: "home.jewelry",
+    subtitle: "home.jewelrySubtitle",
     href: "/store?category=jewelry",
   },
 ];
@@ -41,24 +44,25 @@ const SOURCE_STEPS = [
   {
     icon: Compass,
     number: "01",
-    title: "Share the requirement",
-    body: "Tell us the product, destination, quantity, packaging needs, and commercial context.",
+    title: "home.step1Title",
+    body: "home.step1Body",
   },
   {
     icon: Handshake,
     number: "02",
-    title: "Start a direct conversation",
-    body: "Your request enters the AURION sourcing desk with a trackable reference.",
+    title: "home.step2Title",
+    body: "home.step2Body",
   },
   {
     icon: Package,
     number: "03",
-    title: "Shape the right route",
-    body: "Move from product interest toward a practical sourcing conversation without guesswork.",
+    title: "home.step3Title",
+    body: "home.step3Body",
   },
 ];
 
 export default function Home() {
+  const { t } = useTranslation();
   return (
     <>
       <section className="aurion-hero relative min-h-[100svh] overflow-hidden px-4 pb-20 pt-32 sm:px-6 lg:px-8 lg:pt-36">
@@ -68,32 +72,31 @@ export default function Home() {
 
         <div className="relative mx-auto grid min-h-[calc(100svh-9rem)] max-w-[var(--container-wide)] items-center gap-14 lg:grid-cols-[1.08fr_0.92fr]">
           <div className="max-w-[760px]">
-            <p className="section-label hero-reveal hero-reveal-1">Ethiopian origin, global reach</p>
+            <p className="section-label hero-reveal hero-reveal-1">{t("home.eyebrow")}</p>
             <h1 className="display-hero hero-reveal hero-reveal-2 mb-7 max-w-[760px]">
-              Shop the <span className="text-[var(--gold)] italic">origin.</span>
+              {t("home.heroShop")} <span className="text-[var(--gold)] italic">{t("home.heroOrigin")}</span>
               <br />
-              Source the <span className="text-[var(--gold)] italic">scale.</span>
+              {t("home.heroSource")} <span className="text-[var(--gold)] italic">{t("home.heroScale")}</span>
             </h1>
             <p className="hero-reveal hero-reveal-3 max-w-[650px] text-base leading-[1.9] text-[var(--text-secondary)] sm:text-lg">
-              AURION Markets connects Ethiopian products with people who want a single piece
-              and businesses looking for commercial quantities.
+              {t("home.heroBody")}
             </p>
 
             <div className="hero-reveal hero-reveal-4 mt-9 flex flex-col gap-3 sm:flex-row">
               <Link href="/store" className="btn btn-primary group inline-flex items-center justify-center gap-2">
-                Shop the origin
+                {t("home.shopOrigin")}
                 <ArrowRight size={17} className="transition-transform group-hover:translate-x-1" />
               </Link>
               <Link href="/source" className="btn btn-outline group inline-flex items-center justify-center gap-2">
-                Source at scale
+                {t("home.sourceScale")}
                 <ArrowUpRight size={17} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
               </Link>
             </div>
 
             <div className="hero-reveal hero-reveal-5 mt-10 flex flex-wrap gap-x-7 gap-y-3 border-t border-white/[0.08] pt-5 font-[family-name:var(--font-mono)] text-[0.62rem] uppercase tracking-[0.18em] text-[var(--text-muted)]">
-              <span>Retail marketplace</span>
-              <span>Commercial sourcing</span>
-              <span>Direct inquiry</span>
+              <span>{t("home.retailMarketplace")}</span>
+              <span>{t("home.commercialSourcing")}</span>
+              <span>{t("home.directInquiry")}</span>
             </div>
           </div>
 
@@ -110,20 +113,20 @@ export default function Home() {
                 className="emblem-side-label emblem-side-label-left"
                 aria-hidden="true"
               >
-                AURION MARKETS
+                {t("home.commerceEngine")}
               </div>
               <div
                 data-emblem-label
                 className="emblem-side-label emblem-side-label-right"
                 aria-hidden="true"
               >
-                ETHIOPIA / GLOBAL
+                {t("home.addisToWorld")}
               </div>
 
               <div data-emblem-mark className="emblem-mark absolute inset-[17%] z-10">
                 <Image
                   src="/brand/aurion-emblem.png"
-                  alt="AURION blue and gold emblem"
+                  alt={t("home.emblemAlt")}
                   fill
                   priority
                   sizes="(max-width: 1024px) 68vw, 370px"
@@ -136,7 +139,7 @@ export default function Home() {
               <span className="emblem-glint emblem-glint-right" aria-hidden="true" />
 
               <div className="absolute bottom-[5%] left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full border border-[var(--border-gold)] bg-[rgba(5,7,13,0.88)] px-4 py-2 backdrop-blur-xl font-[family-name:var(--font-mono)] text-[0.58rem] tracking-[0.2em] text-[var(--gold-light)] shadow-[0_12px_38px_rgba(0,0,0,0.35)]">
-                FROM ETHIOPIA TO THE WORLD
+                {t("home.fromEthiopia")}
               </div>
             </div>
           </div>
@@ -144,7 +147,7 @@ export default function Home() {
 
         <div className="absolute bottom-7 left-1/2 hidden -translate-x-1/2 items-center gap-3 font-[family-name:var(--font-mono)] text-[0.55rem] uppercase tracking-[0.22em] text-[var(--text-muted)] lg:flex">
           <span className="h-px w-12 bg-[var(--border-gold)]" />
-          Discover AURION
+          {t("home.discover")}
           <span className="h-px w-12 bg-[var(--border-gold)]" />
         </div>
       </section>
@@ -153,9 +156,9 @@ export default function Home() {
         <div className="mx-auto flex max-w-[var(--container-wide)] flex-wrap items-center justify-center gap-x-10 gap-y-2 px-4 font-[family-name:var(--font-mono)] text-[0.6rem] uppercase tracking-[0.24em] text-[var(--text-muted)]">
           <span>AURION GLOBAL HOLDINGS PLC</span>
           <span className="text-[var(--gold)]">◆</span>
-          <span>Commerce engine</span>
+          <span>{t("home.commerceEngine")}</span>
           <span className="text-[var(--gold)]">◆</span>
-          <span>Addis Ababa to global markets</span>
+          <span>{t("home.addisToWorld")}</span>
         </div>
       </div>
 
@@ -164,16 +167,15 @@ export default function Home() {
         <div className="relative mx-auto max-w-[var(--container-wide)]">
           <div className="grid gap-12 lg:grid-cols-[0.78fr_1.22fr] lg:items-end">
             <div>
-              <p className="section-label">One market, two ways in</p>
+              <p className="section-label">{t("home.storyEyebrow")}</p>
               <h2 className="display-title max-w-[540px]">
-                The same origin.
+                {t("home.storyTitleA")}
                 <br />
-                A different scale.
+                {t("home.storyTitleB")}
               </h2>
             </div>
             <p className="max-w-[660px] text-base leading-[1.9] text-[var(--text-secondary)] lg:justify-self-end lg:text-lg">
-              AURION Markets brings retail discovery and commercial sourcing into one clear
-              experience. Browse products for yourself, or tell us what your business needs.
+              {t("home.storyBody")}
             </p>
           </div>
 
@@ -183,14 +185,11 @@ export default function Home() {
               <div className="relative flex h-full flex-col">
                 <ShoppingBagOpen size={34} className="text-[var(--gold)]" />
                 <div className="mt-auto">
-                  <span className="font-[family-name:var(--font-mono)] text-[0.62rem] uppercase tracking-[0.22em] text-[var(--gold)]">For individuals</span>
-                  <h3 className="mt-3 font-[family-name:var(--font-display)] text-4xl text-white sm:text-5xl">Shop the Origin</h3>
-                  <p className="mt-4 max-w-[500px] leading-relaxed text-[var(--text-secondary)]">
-                    Explore coffee, grains, spices, honey, textiles, jewelry, and more from
-                    Ethiopian vendors.
-                  </p>
+                  <span className="font-[family-name:var(--font-mono)] text-[0.62rem] uppercase tracking-[0.22em] text-[var(--gold)]">{t("home.forIndividuals")}</span>
+                  <h3 className="mt-3 font-[family-name:var(--font-display)] text-4xl text-white sm:text-5xl">{t("home.shopOriginTitle")}</h3>
+                  <p className="mt-4 max-w-[500px] leading-relaxed text-[var(--text-secondary)]">{t("home.shopOriginBody")}</p>
                   <span className="mt-7 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--gold-light)]">
-                    Enter the marketplace <ArrowRight size={16} />
+                    {t("home.enterMarketplace")} <ArrowRight size={16} />
                   </span>
                 </div>
               </div>
@@ -201,14 +200,11 @@ export default function Home() {
               <div className="relative flex h-full flex-col">
                 <Buildings size={34} className="text-[var(--gold)]" />
                 <div className="mt-auto">
-                  <span className="font-[family-name:var(--font-mono)] text-[0.62rem] uppercase tracking-[0.22em] text-[var(--gold)]">For businesses</span>
-                  <h3 className="mt-3 font-[family-name:var(--font-display)] text-4xl text-white sm:text-5xl">Source at Scale</h3>
-                  <p className="mt-4 max-w-[500px] leading-relaxed text-[var(--text-secondary)]">
-                    Share your destination, quantity, packaging, and product requirements in
-                    one focused sourcing request.
-                  </p>
+                  <span className="font-[family-name:var(--font-mono)] text-[0.62rem] uppercase tracking-[0.22em] text-[var(--gold)]">{t("home.forBusinesses")}</span>
+                  <h3 className="mt-3 font-[family-name:var(--font-display)] text-4xl text-white sm:text-5xl">{t("home.sourceScaleTitle")}</h3>
+                  <p className="mt-4 max-w-[500px] leading-relaxed text-[var(--text-secondary)]">{t("home.sourceScaleBody")}</p>
                   <span className="mt-7 inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--gold-light)]">
-                    Open the sourcing desk <ArrowUpRight size={16} />
+                    {t("home.openDesk")} <ArrowUpRight size={16} />
                   </span>
                 </div>
               </div>
@@ -221,11 +217,11 @@ export default function Home() {
         <div className="mx-auto max-w-[var(--container-wide)]">
           <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="section-label">Explore by origin</p>
-              <h2 className="display-title">Find your way in.</h2>
+              <p className="section-label">{t("home.originsEyebrow")}</p>
+              <h2 className="display-title">{t("home.originsTitle")}</h2>
             </div>
             <Link href="/store" className="inline-flex min-h-11 items-center gap-2 self-start text-sm font-semibold uppercase tracking-[0.12em] text-[var(--gold)] hover:text-white">
-              View the full marketplace <ArrowRight size={16} />
+              {t("home.viewMarketplace")} <ArrowRight size={16} />
             </Link>
           </div>
 
@@ -237,8 +233,8 @@ export default function Home() {
                   {origin.index}
                 </span>
                 <div className="absolute inset-x-7 bottom-7">
-                  <h3 className="font-[family-name:var(--font-display)] text-3xl text-white">{origin.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{origin.subtitle}</p>
+                  <h3 className="font-[family-name:var(--font-display)] text-3xl text-white">{t(origin.title)}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--text-muted)]">{t(origin.subtitle)}</p>
                   <ArrowUpRight size={18} className="mt-5 text-[var(--gold)] transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
                 </div>
               </Link>
@@ -252,14 +248,11 @@ export default function Home() {
         <div className="relative mx-auto max-w-[var(--container-wide)]">
           <div className="grid gap-14 lg:grid-cols-[0.82fr_1.18fr]">
             <div className="lg:sticky lg:top-32 lg:self-start">
-              <p className="section-label">The sourcing desk</p>
-              <h2 className="display-title max-w-[520px]">Commercial interest, made concrete.</h2>
-              <p className="mt-6 max-w-[520px] leading-[1.9] text-[var(--text-secondary)]">
-                Replace scattered messages with one structured request and a reference you can
-                use in every follow-up.
-              </p>
+              <p className="section-label">{t("home.deskEyebrow")}</p>
+              <h2 className="display-title max-w-[520px]">{t("home.deskTitle")}</h2>
+              <p className="mt-6 max-w-[520px] leading-[1.9] text-[var(--text-secondary)]">{t("home.deskBody")}</p>
               <Link href="/source" className="btn btn-primary mt-8 inline-flex items-center gap-2">
-                Start a request <ArrowUpRight size={17} />
+                {t("home.startRequest")} <ArrowUpRight size={17} />
               </Link>
             </div>
 
@@ -270,9 +263,9 @@ export default function Home() {
                     <step.icon size={22} />
                   </div>
                   <div>
-                    <span className="font-[family-name:var(--font-mono)] text-[0.58rem] tracking-[0.2em] text-[var(--gold)]">STEP {step.number}</span>
-                    <h3 className="mt-2 font-[family-name:var(--font-display)] text-2xl text-white sm:text-3xl">{step.title}</h3>
-                    <p className="mt-3 max-w-[620px] leading-relaxed text-[var(--text-secondary)]">{step.body}</p>
+                    <span className="font-[family-name:var(--font-mono)] text-[0.58rem] tracking-[0.2em] text-[var(--gold)]">{t("home.stepLabel", { number: step.number })}</span>
+                    <h3 className="mt-2 font-[family-name:var(--font-display)] text-2xl text-white sm:text-3xl">{t(step.title)}</h3>
+                    <p className="mt-3 max-w-[620px] leading-relaxed text-[var(--text-secondary)]">{t(step.body)}</p>
                   </div>
                   <ArrowRight size={20} className="hidden text-[var(--border-gold-strong)] transition-transform group-hover:translate-x-1 sm:block" />
                 </div>
@@ -288,17 +281,17 @@ export default function Home() {
           <div className="absolute -right-20 -top-32 h-96 w-96 rounded-full bg-[rgba(214,180,94,0.1)] blur-[100px]" />
           <div className="relative grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
             <div>
-              <p className="section-label">AURION Markets</p>
+              <p className="section-label">{t("home.closingEyebrow")}</p>
               <h2 className="font-[family-name:var(--font-display)] text-4xl leading-tight text-white sm:text-5xl lg:text-6xl">
-                Your next Ethiopian product starts here.
+                {t("home.closingTitle")}
               </h2>
             </div>
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
               <Link href="/store" className="btn btn-primary inline-flex items-center justify-center gap-2">
-                Explore products <ArrowRight size={17} />
+                {t("home.exploreProducts")} <ArrowRight size={17} />
               </Link>
               <Link href="/source" className="btn btn-outline inline-flex items-center justify-center gap-2">
-                Request a quote <ArrowUpRight size={17} />
+                {t("home.requestQuote")} <ArrowUpRight size={17} />
               </Link>
             </div>
           </div>

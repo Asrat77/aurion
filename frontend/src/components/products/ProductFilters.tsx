@@ -105,7 +105,7 @@ export default function ProductFilters({
             min="0"
             inputMode="decimal"
             aria-label={t("filters.min")}
-            placeholder={facets ? String(Math.floor(facets.priceRange.minCents / 100)) : "Min"}
+            placeholder={facets ? String(Math.floor(facets.priceRange.minCents / 100)) : t("filters.min")}
             value={priceInput(filters.minPriceCents)}
             onChange={(e) => patch({ minPriceCents: parsePrice(e.target.value) })}
           />
@@ -116,7 +116,7 @@ export default function ProductFilters({
             min="0"
             inputMode="decimal"
             aria-label={t("filters.max")}
-            placeholder={facets ? String(Math.ceil(facets.priceRange.maxCents / 100)) : "Max"}
+            placeholder={facets ? String(Math.ceil(facets.priceRange.maxCents / 100)) : t("filters.max")}
             value={priceInput(filters.maxPriceCents)}
             onChange={(e) => patch({ maxPriceCents: parsePrice(e.target.value) })}
           />

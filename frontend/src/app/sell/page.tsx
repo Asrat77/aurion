@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import {
   Storefront,
   CheckCircle,
@@ -23,33 +24,34 @@ import PageHeader from "@/components/ui/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 const COUNTRIES = [
-  { value: "ET", label: "Ethiopia" },
-  { value: "KE", label: "Kenya" },
-  { value: "DJ", label: "Djibouti" },
-  { value: "SO", label: "Somalia" },
-  { value: "ER", label: "Eritrea" },
-  { value: "SD", label: "Sudan" },
+  { value: "ET", key: "country.ethiopia" },
+  { value: "KE", key: "country.kenya" },
+  { value: "DJ", key: "country.djibouti" },
+  { value: "SO", key: "country.somalia" },
+  { value: "ER", key: "country.eritrea" },
+  { value: "SD", key: "country.sudan" },
 ];
 
 const PITCH = [
   {
     icon: Globe,
-    title: "Reach buyers worldwide",
-    body: "Your goods sit alongside Ethiopia's best, in front of retail buyers and commercial importers.",
+    title: "sell.reachWorldwide",
+    body: "sell.reachWorldwideBody",
   },
   {
     icon: Percent,
-    title: "One clear commission",
-    body: "15% on what sells. No listing fees, no monthly charge, no surprises.",
+    title: "sell.clearCommission",
+    body: "sell.clearCommissionBody",
   },
   {
     icon: ChartLineUp,
-    title: "Tools that do the work",
-    body: "Inventory, orders, fulfilment and payout history in one dashboard.",
+    title: "sell.toolsWork",
+    body: "sell.toolsWorkBody",
   },
 ];
 
 export default function SellPage() {
+  const { t } = useTranslation();
   const { data: user, isLoading: userLoading } = useMe();
   const openAuth = useUiStore((s) => s.openAuth);
   const { data: application, isLoading: applicationLoading } = useMyVendorApplication(!!user);
@@ -58,8 +60,8 @@ export default function SellPage() {
     <section className="px-4 sm:px-6 lg:px-8 pt-32 pb-20">
       <div className="max-w-[var(--container-content)] mx-auto">
         <PageHeader
-          title="Sell on AURION"
-          description="Ethiopian producers, cooperatives and exporters — bring your goods to a global counter."
+          title={t("sell.title")}
+          description={t("sell.description")}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
@@ -69,8 +71,8 @@ export default function SellPage() {
               className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-deep)] p-6"
             >
               <p.icon size={24} className="text-[var(--gold)]" />
-              <h3 className="mt-3 text-base font-semibold text-white">{p.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{p.body}</p>
+              <h3 className="mt-3 text-base font-semibold text-white">{t(p.title)}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--text-secondary)]">{t(p.body)}</p>
             </article>
           ))}
         </div>
@@ -93,51 +95,53 @@ export default function SellPage() {
 }
 
 function SignInPrompt({ onSignIn }: { onSignIn: () => void }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-2xl border border-[var(--border-gold)] bg-[var(--bg-surface)] p-8 text-center">
       <Storefront size={32} className="text-[var(--gold)] mx-auto mb-3" />
-      <h3 className="display-heading mb-2">Sign in to apply</h3>
+      <h3 className="display-heading mb-2">{t("sell.signInApply")}</h3>
       <p className="text-[var(--text-secondary)] mb-6">
-        Applications are tied to your AURION account. Create one or sign in to get started.
+        {t("sell.accountLinkBody")}
       </p>
       <button className="btn btn-primary" onClick={onSignIn}>
-        Sign In
+        {t("common.signIn")}
       </button>
     </div>
   );
 }
 
 function ApplicationStatus({ status, note }: { status: string; note: string | null }) {
+  const { t } = useTranslation();
   const config = {
     pending: {
       icon: Clock,
       tone: "var(--warning)",
-      title: "Application received",
-      body: "Our team is reviewing your details. We will be in touch once a decision is made.",
+      title: "sell.applicationReceived",
+      body: "sell.applicationReceivedBody",
     },
     active: {
       icon: CheckCircle,
       tone: "var(--success)",
-      title: "You're approved",
-      body: "Your store is live. Head to your vendor dashboard to list your first product.",
+      title: "sell.approved",
+      body: "sell.approvedBody",
     },
     rejected: {
       icon: XCircle,
       tone: "var(--danger)",
-      title: "Application not approved",
-      body: "We could not approve this application. Contact us if you believe this is a mistake.",
+      title: "sell.notApproved",
+      body: "sell.notApprovedBody",
     },
     suspended: {
       icon: XCircle,
       tone: "var(--danger)",
-      title: "Store suspended",
-      body: "Your store is currently suspended. Contact our team to resolve it.",
+      title: "sell.suspended",
+      body: "sell.suspendedBody",
     },
   }[status] ?? {
     icon: Clock,
     tone: "var(--text-muted)",
-    title: "Application status",
-    body: "We are processing your application.",
+    title: "sell.status",
+    body: "sell.statusBody",
   };
 
   const Icon = config.icon;
@@ -145,8 +149,8 @@ function ApplicationStatus({ status, note }: { status: string; note: string | nu
   return (
     <div className="rounded-2xl border border-[var(--border-gold)] bg-[var(--bg-surface)] p-8">
       <Icon size={32} weight="fill" style={{ color: config.tone }} />
-      <h3 className="display-heading mt-3 mb-2">{config.title}</h3>
-      <p className="text-[var(--text-secondary)]">{config.body}</p>
+      <h3 className="display-heading mt-3 mb-2">{t(config.title)}</h3>
+      <p className="text-[var(--text-secondary)]">{t(config.body)}</p>
       {note && (
         <p className="mt-3 rounded-lg bg-[var(--bg-deep)] p-3 text-sm text-[var(--text-muted)]">
           {note}
@@ -154,7 +158,7 @@ function ApplicationStatus({ status, note }: { status: string; note: string | nu
       )}
       {status === "active" && (
         <Link href="/vendor" className="btn btn-primary mt-6 inline-flex">
-          Open your dashboard
+          {t("sell.openDashboard")}
         </Link>
       )}
     </div>
@@ -162,6 +166,7 @@ function ApplicationStatus({ status, note }: { status: string; note: string | nu
 }
 
 function ApplicationForm({ defaultName }: { defaultName: string }) {
+  const { t } = useTranslation();
   const submit = useSubmitVendorApplication();
   const showToast = useUiStore((s) => s.showToast);
 
@@ -185,9 +190,9 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
     e.preventDefault();
     try {
       await submit.mutateAsync(values);
-      showToast("Application submitted. We'll review it shortly.", "success");
+      showToast(t("sell.submitted"), "success");
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Could not submit your application.", "error");
+      showToast(err instanceof ApiError ? err.message : t("sell.submitFailed"), "error");
     }
   }
 
@@ -199,12 +204,12 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
       className="rounded-2xl border border-[var(--border-gold)] bg-[var(--bg-surface)] p-6 sm:p-8"
       onSubmit={handleSubmit}
     >
-      <h3 className="display-heading mb-6">Tell us about your business</h3>
+      <h3 className="display-heading mb-6">{t("sell.businessTitle")}</h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
           <label className="field-label" htmlFor="store_name">
-            Store name <span className="text-[var(--gold)]">*</span>
+            {t("sell.storeName")} <span className="text-[var(--gold)]">*</span>
           </label>
           <input
             id="store_name"
@@ -213,12 +218,12 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
             onChange={(e) => set("store_name", e.target.value)}
             required
           />
-          <p className="field-help">The name buyers will see on your products.</p>
+          <p className="field-help">{t("sell.storeNameHelp")}</p>
         </div>
 
         <div>
           <label className="field-label" htmlFor="contact_name">
-            Contact name <span className="text-[var(--gold)]">*</span>
+            {t("sell.contactName")} <span className="text-[var(--gold)]">*</span>
           </label>
           <input
             id="contact_name"
@@ -231,7 +236,7 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
 
         <div>
           <label className="field-label" htmlFor="contact_phone">
-            Phone <span className="text-[var(--gold)]">*</span>
+            {t("sell.phone")} <span className="text-[var(--gold)]">*</span>
           </label>
           <input
             id="contact_phone"
@@ -245,7 +250,7 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
 
         <div>
           <label className="field-label" htmlFor="country">
-            Country <span className="text-[var(--gold)]">*</span>
+            {t("sell.country")} <span className="text-[var(--gold)]">*</span>
           </label>
           <select
             id="country"
@@ -255,7 +260,7 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
           >
             {COUNTRIES.map((c) => (
               <option key={c.value} value={c.value}>
-                {c.label}
+                {t(c.key)}
               </option>
             ))}
           </select>
@@ -263,7 +268,7 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
 
         <div>
           <label className="field-label" htmlFor="city">
-            City or region
+            {t("sell.cityRegion")}
           </label>
           <input
             id="city"
@@ -275,20 +280,20 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
 
         <div>
           <label className="field-label" htmlFor="product_focus">
-            What do you sell?
+            {t("sell.whatSell")}
           </label>
           <input
             id="product_focus"
             className="input"
             value={values.product_focus}
             onChange={(e) => set("product_focus", e.target.value)}
-            placeholder="Specialty coffee, honey, handwoven textiles…"
+            placeholder={t("sell.whatSellPlaceholder")}
           />
         </div>
 
         <div>
           <label className="field-label" htmlFor="business_registration">
-            Business registration number
+            {t("sell.registration")}
           </label>
           <input
             id="business_registration"
@@ -296,12 +301,12 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
             value={values.business_registration}
             onChange={(e) => set("business_registration", e.target.value)}
           />
-          <p className="field-help">Helps us verify you faster. Optional at this stage.</p>
+          <p className="field-help">{t("sell.registrationHelp")}</p>
         </div>
 
         <div className="sm:col-span-2">
           <label className="field-label" htmlFor="website">
-            Website or social page
+            {t("sell.website")}
           </label>
           <input
             id="website"
@@ -313,7 +318,7 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
 
         <div className="sm:col-span-2">
           <label className="field-label" htmlFor="bio">
-            About your business
+            {t("sell.aboutBusiness")}
           </label>
           <textarea
             id="bio"
@@ -321,17 +326,17 @@ function ApplicationForm({ defaultName }: { defaultName: string }) {
             rows={4}
             value={values.bio}
             onChange={(e) => set("bio", e.target.value)}
-            placeholder="Where you grow or make it, how long you have been doing it, what makes it yours."
+            placeholder={t("sell.aboutPlaceholder")}
           />
         </div>
       </div>
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
         <p className="text-xs text-[var(--text-muted)]">
-          AURION charges 15% commission on sales. No listing or monthly fees.
+          {t("sell.commissionNote")}
         </p>
         <button type="submit" className="btn btn-primary" disabled={!ready || submit.isPending}>
-          {submit.isPending ? "Submitting…" : "Submit application"}
+          {submit.isPending ? t("sell.submitting") : t("sell.submitApplication")}
         </button>
       </div>
     </form>

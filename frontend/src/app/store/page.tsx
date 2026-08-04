@@ -169,7 +169,7 @@ function StoreContent() {
               <h2 className="mt-1 font-[family-name:var(--font-display)] text-3xl text-white sm:text-4xl">
                 {category === "all"
                   ? t("store.allProducts")
-                  : categories?.find((item) => item.slug === category)?.name ?? "Products"}
+                  : categories?.find((item) => item.slug === category)?.name ?? t("store.allProducts")}
               </h2>
             </div>
             {!isLoading && !isError ? (
@@ -227,12 +227,12 @@ function StoreContent() {
                   <Buildings size={25} />
                 </span>
                 <div>
-                  <span className="font-[family-name:var(--font-mono)] text-[0.58rem] uppercase tracking-[0.2em] text-[var(--gold)]">Need more than a cart?</span>
-                  <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl leading-tight text-white sm:text-4xl">Move from browsing to a structured sourcing request.</h2>
+                  <span className="font-[family-name:var(--font-mono)] text-[0.58rem] uppercase tracking-[0.2em] text-[var(--gold)]">{t("store.needMore")}</span>
+                  <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl leading-tight text-white sm:text-4xl">{t("store.structuredSourcing")}</h2>
                 </div>
               </div>
               <Link href="/source" className="btn btn-primary inline-flex shrink-0 items-center justify-center gap-2 self-start lg:self-auto">
-                Source at scale <ArrowRight size={17} />
+                {t("store.sourceAtScale")} <ArrowRight size={17} />
               </Link>
             </div>
           </div>
