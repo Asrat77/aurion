@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { Icon } from "@phosphor-icons/react";
-import { SquaresFour, Package, Receipt, Users, TrendUp, Storefront, FileText } from "@phosphor-icons/react";
+import { SquaresFour, Package, Receipt, Users, TrendUp, Storefront, FileText, XCircle } from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import {
   useAdminOverview,
@@ -12,6 +12,7 @@ import {
   useAdminProducts,
   useAdminAnalytics,
   useAdminRequestForQuotes,
+  useAdminCancelOrder,
 } from "@/lib/admin";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
@@ -19,10 +20,10 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import ProductImage from "@/components/ui/ProductImage";
 import { TableSkeleton, StatRowSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
-
-function formatUsd(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
-}
+import { formatBase } from "@/lib/money";
+import { ApiError } from "@/lib/api";
+import { useUiStore } from "@/store/ui";
+import type { Order } from "@/types";
 
 const VIEWS: { key: string; label: string; icon: Icon }[] = [
   { key: "overview", label: "Overview", icon: SquaresFour },
@@ -121,7 +122,7 @@ function OverviewView() {
       <div className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-8">
         <StatCard label="Products" value={String(data.totalProducts)} />
         <StatCard label="Orders" value={String(data.totalOrders)} />
-        <StatCard label="Revenue" value={formatUsd(data.totalRevenueCents)} />
+        <StatCard label="Revenue" value={formatBase(data.totalRevenueCents)} />
         <StatCard label="Customers" value={String(data.totalCustomers)} />
         <StatCard label="Sourcing requests" value={String(data.totalRfqs)} />
       </div>
@@ -145,7 +146,7 @@ function OverviewView() {
                 <tr key={o.id}>
                   <td className="font-mono text-[var(--gold)]">{o.reference}</td>
                   <td>{o.buyerEmail}</td>
-                  <td className="num">{formatUsd(o.totalCents)}</td>
+                  <td className="num">{formatBase(o.totalCents)}</td>
                   <td>
                     <StatusBadge status={o.status} />
                   </td>
@@ -299,7 +300,7 @@ function ProductsView() {
                   </div>
                 </td>
                 <td className="capitalize">{p.category.name}</td>
-                <td className="num">{formatUsd(p.priceCents)}</td>
+                <td className="num">{formatBase(p.priceCents)}</td>
                 <td>{p.vendor.storeName}</td>
                 <td>
                   <StatusBadge status={p.status} />
@@ -315,7 +316,22 @@ function ProductsView() {
 
 function OrdersView() {
   const { data, isLoading } = useAdminOrders();
-  if (isLoading) return <TableSkeleton cols={6} />;
+  const adminCancel = useAdminCancelOrder();
+  const showToast = useUiStore((s) => s.showToast);
+
+  async function cancelOrder(order: Order) {
+    const note = window.prompt(`Cancel ${order.reference}? Add a reason for the record:`);
+    if (note === null) return;
+
+    try {
+      await adminCancel.mutateAsync({ id: order.id, note: note || undefined });
+      showToast(`${order.reference} cancelled. Stock released and payouts reversed.`, "success");
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : "Could not cancel this order.", "error");
+    }
+  }
+
+  if (isLoading) return <TableSkeleton cols={7} />;
 
   return (
     <div>
@@ -332,6 +348,7 @@ function OrdersView() {
               <th className="text-right">Total</th>
               <th>Status</th>
               <th>Date</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -340,12 +357,25 @@ function OrdersView() {
                 <td className="font-mono text-[var(--gold)]">{o.reference}</td>
                 <td>{o.buyerEmail}</td>
                 <td className="num">{o.items.length}</td>
-                <td className="num">{formatUsd(o.totalCents)}</td>
+                <td className="num">{formatBase(o.totalCents)}</td>
                 <td>
                   <StatusBadge status={o.status} />
                 </td>
                 <td className="text-xs text-[var(--text-muted)]">
                   {new Date(o.createdAt).toLocaleDateString()}
+                </td>
+                <td>
+                  {o.cancellable ? (
+                    <button
+                      className="flex min-h-10 items-center gap-1 text-xs text-[var(--danger)]"
+                      onClick={() => cancelOrder(o)}
+                      disabled={adminCancel.isPending}
+                    >
+                      <XCircle size={14} /> Cancel
+                    </button>
+                  ) : (
+                    <span className="text-xs text-[var(--text-muted)]">&mdash;</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -379,7 +409,7 @@ function CustomersView() {
               <tr key={c.email}>
                 <td>{c.email}</td>
                 <td className="num">{c.orders}</td>
-                <td className="num">{formatUsd(c.totalCents)}</td>
+                <td className="num">{formatBase(c.totalCents)}</td>
               </tr>
             ))}
           </tbody>
@@ -397,8 +427,8 @@ function AnalyticsView() {
     <div>
       <h3 className="display-heading mb-4">Analytics</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Revenue" value={formatUsd(data.totalRevenueCents)} />
-        <StatCard label="Avg Order" value={formatUsd(data.avgOrderCents)} />
+        <StatCard label="Total Revenue" value={formatBase(data.totalRevenueCents)} />
+        <StatCard label="Avg Order" value={formatBase(data.avgOrderCents)} />
         <StatCard label="Total Orders" value={String(data.totalOrders)} />
         <StatCard label="Top Product" value={data.topProductName ?? "None yet"} />
       </div>
@@ -406,7 +436,7 @@ function AnalyticsView() {
         <h4 className="text-white mb-2 text-sm font-semibold">Revenue Trend</h4>
         <p className="text-sm text-[var(--text-muted)]">
           {data.totalOrders > 0
-            ? `${data.totalOrders} orders placed. Average order value: ${formatUsd(data.avgOrderCents)}`
+            ? `${data.totalOrders} orders placed. Average order value: ${formatBase(data.avgOrderCents)}`
             : "No data yet. Start selling to see trends."}
         </p>
       </div>
@@ -441,7 +471,7 @@ function VendorsView() {
               <tr key={v.id}>
                 <td>{v.storeName}</td>
                 <td className="num">{v.productCount}</td>
-                <td className="num">{formatUsd(v.revenueCents)}</td>
+                <td className="num">{formatBase(v.revenueCents)}</td>
                 <td>
                   <StatusBadge status={v.status} />
                 </td>

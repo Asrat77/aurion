@@ -7,7 +7,7 @@ module Api
 
           render json: vendors.map { |v|
             revenue_cents = OrderItem.joins(:order)
-                                      .where(vendor: v, orders: { status: [ :paid, :fulfilled ] })
+                                      .where(vendor: v, orders: { status: Order::SETTLED_STATUSES })
                                       .sum(:line_total_cents)
             {
               id: v.id,

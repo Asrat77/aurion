@@ -4,7 +4,7 @@ module Api
       class OverviewController < BaseController
         def show
           sold_items = OrderItem.joins(:order)
-                                 .where(vendor: current_vendor, orders: { status: [ :paid, :fulfilled ] })
+                                 .where(vendor: current_vendor, orders: { status: Order::SETTLED_STATUSES })
 
           render json: {
             productCount: current_vendor.products.count,

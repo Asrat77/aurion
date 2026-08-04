@@ -14,10 +14,7 @@ import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { useUiStore } from "@/store/ui";
 import ProductImage from "@/components/ui/ProductImage";
-
-function formatUsd(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
-}
+import { formatBase } from "@/lib/money";
 
 export default function ProductCard({ product }: { product: Product }) {
   const cartItems = useCartStore((state) => state.items);
@@ -82,7 +79,7 @@ export default function ProductCard({ product }: { product: Product }) {
             </h3>
           </Link>
           <span className="shrink-0 text-base font-semibold text-[var(--gold-light)]">
-            {formatUsd(product.priceCents)}
+            {formatBase(product.priceCents)}
           </span>
         </div>
 

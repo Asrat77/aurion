@@ -3,7 +3,7 @@ module Api
     module Admin
       class OverviewController < BaseController
         def show
-          paid_orders = Order.where(status: [ :paid, :fulfilled ])
+          paid_orders = Order.settled
 
           render json: {
             totalProducts: Product.count,

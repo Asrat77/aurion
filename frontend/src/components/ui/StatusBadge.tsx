@@ -2,7 +2,8 @@ const STATUS_STYLES: Record<string, string> = {
   // order/payment states
   pending: "text-[var(--warning)] bg-[rgba(255,193,7,0.12)]",
   paid: "text-[var(--success)] bg-[rgba(92,184,141,0.12)]",
-  fulfilled: "text-[var(--success)] bg-[rgba(92,184,141,0.12)]",
+  awaiting: "text-[var(--warning)] bg-[rgba(255,193,7,0.12)]",
+  processing: "text-[#8ec5ff] bg-[rgba(67,145,220,0.12)]",
   shipped: "text-[var(--gold)] bg-[rgba(200,164,92,0.12)]",
   delivered: "text-[var(--success)] bg-[rgba(92,184,141,0.12)]",
   cancelled: "text-[var(--danger)] bg-[rgba(224,85,85,0.12)]",
@@ -18,8 +19,14 @@ const STATUS_STYLES: Record<string, string> = {
   closed: "text-[var(--text-secondary)] bg-[rgba(176,172,165,0.1)]",
 };
 
+// A few statuses read better to a buyer than their internal name does.
+const LABELS: Record<string, string> = {
+  paid: "Confirmed",
+  awaiting: "Awaiting dispatch",
+};
+
 function labelFor(status: string) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
+  return LABELS[status.toLowerCase()] ?? status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 export default function StatusBadge({ status }: { status: string }) {

@@ -10,10 +10,7 @@ import { useUiStore } from "@/store/ui";
 import ProductImage from "@/components/ui/ProductImage";
 import { DetailSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
-
-function formatUsd(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
-}
+import { formatBase } from "@/lib/money";
 
 export default function ProductDetailPage({
   params,
@@ -98,7 +95,7 @@ export default function ProductDetailPage({
               <div className="text-sm text-[var(--text-muted)] mb-3">No reviews yet</div>
             )}
             <div className="font-mono text-3xl font-semibold text-[var(--gold-light)] mb-4">
-              {formatUsd(product.priceCents)}
+              {formatBase(product.priceCents)}
             </div>
             <p className="text-[var(--text-secondary)] leading-relaxed mb-6">
               {product.description}

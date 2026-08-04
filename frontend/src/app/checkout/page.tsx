@@ -11,11 +11,18 @@ import {
 } from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import { useUiStore } from "@/store/ui";
-import { useCartStore, cartTotalCents } from "@/store/cart";
-import { useCreateOrder, useMockConfirmPayment, type ShippingAddress } from "@/lib/orders";
+import { useCartStore } from "@/store/cart";
+import {
+  useCreateOrder,
+  useMockConfirmPayment,
+  useOrderQuote,
+  type ShippingAddress,
+} from "@/lib/orders";
+import { formatMoney } from "@/lib/money";
 import { ApiError } from "@/lib/api";
 import { Skeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
+import type { OrderQuote } from "@/types";
 
 const COUNTRIES = [
   { value: "ET", label: "Ethiopia" },
@@ -28,10 +35,6 @@ const COUNTRIES = [
   { value: "NG", label: "Nigeria" },
   { value: "ZA", label: "South Africa" },
 ];
-
-function formatUsd(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
-}
 
 const STEPS = [
   { n: 1, label: "Shipping" },
@@ -81,11 +84,10 @@ export default function CheckoutPage() {
     phone: "",
   });
 
-  const subtotal = cartTotalCents(items);
-  const shipping = subtotal > 0 ? 500 : 0;
-  const tax = Math.round(subtotal * 0.08);
-  const total = subtotal + shipping + tax;
-  const gateway = address.country === "ET" ? "Chapa (ETB)" : "Stripe (USD)";
+  // Shipping zone, VAT and the buyer's currency all follow the destination, so
+  // the server prices the cart and the client only renders the answer.
+  const quoteItems = items.map((i) => ({ product_id: i.productId, quantity: i.qty }));
+  const { data: quote, isFetching: quoting } = useOrderQuote(quoteItems, address.country);
 
   if (userLoading) {
     return (
@@ -299,20 +301,27 @@ export default function CheckoutPage() {
             <h3 className="display-heading mb-6">Payment Method</h3>
             <div className="bg-[var(--bg-elevated)] rounded-lg p-6 mb-6">
               <p className="text-[var(--text-secondary)] mb-2">
-                Based on your shipping country, payment will be processed via
+                Your order is priced in
               </p>
-              <p className="text-[var(--gold)] font-semibold text-lg">{gateway}</p>
+              <p className="text-[var(--gold)] font-semibold text-lg">
+                {quote?.currency === "ETB" ? "Ethiopian Birr (ETB)" : "US Dollars (USD)"}
+              </p>
               <p className="text-xs text-[var(--text-muted)] mt-3">
-                Demo mode: no payment provider is configured yet, so checkout completes
-                instantly via a simulated payment.
+                Demo mode: no payment provider is connected yet, so checkout completes
+                instantly via a simulated payment. Live payments will run through Chapa,
+                which covers Telebirr and CBE Birr.
               </p>
             </div>
-            <OrderSummary subtotal={subtotal} shipping={shipping} tax={tax} total={total} />
+            <OrderSummary quote={quote} loading={quoting} />
             <div className="flex justify-between mt-8">
               <button className="btn btn-outline flex items-center gap-2" onClick={() => setStep(1)}>
                 <ArrowLeft size={16} /> Back
               </button>
-              <button className="btn btn-primary flex items-center gap-2" onClick={() => setStep(3)}>
+              <button
+                className="btn btn-primary flex items-center gap-2"
+                onClick={() => setStep(3)}
+                disabled={!quote}
+              >
                 Review Order <ArrowRight size={16} />
               </button>
             </div>
@@ -322,7 +331,7 @@ export default function CheckoutPage() {
         {step === 3 && (
           <div>
             <h3 className="display-heading mb-6">Confirm Order</h3>
-            <OrderSummary subtotal={subtotal} shipping={shipping} tax={tax} total={total} />
+            <OrderSummary quote={quote} loading={quoting} />
             <div className="mt-4 p-4 bg-[var(--bg-deep)] rounded-lg text-sm text-[var(--text-secondary)] flex flex-col gap-2">
               <p className="flex items-start gap-2">
                 <Package size={16} className="text-[var(--gold)] mt-0.5 shrink-0" />
@@ -330,7 +339,8 @@ export default function CheckoutPage() {
                 {COUNTRIES.find((c) => c.value === address.country)?.label}
               </p>
               <p className="flex items-center gap-2">
-                <CreditCard size={16} className="text-[var(--gold)] shrink-0" /> Payment: {gateway}
+                <CreditCard size={16} className="text-[var(--gold)] shrink-0" /> Payment: simulated
+                (demo mode)
               </p>
             </div>
             <div className="flex justify-between mt-8">
@@ -352,26 +362,41 @@ export default function CheckoutPage() {
   );
 }
 
-function OrderSummary({
-  subtotal,
-  shipping,
-  tax,
-  total,
-}: {
-  subtotal: number;
-  shipping: number;
-  tax: number;
-  total: number;
-}) {
+function OrderSummary({ quote, loading }: { quote?: OrderQuote; loading: boolean }) {
+  if (!quote) {
+    return (
+      <div className="bg-[var(--bg-elevated)] rounded-lg p-6 flex flex-col gap-3">
+        <Skeleton className="w-full h-4" />
+        <Skeleton className="w-full h-4" />
+        <Skeleton className="w-full h-6" />
+      </div>
+    );
+  }
+
+  const money = (cents: number) => formatMoney(cents, quote.currency, quote.fxRate);
+
   return (
-    <div className="bg-[var(--bg-elevated)] rounded-lg p-6">
-      <SummaryRow label="Subtotal" value={formatUsd(subtotal)} />
-      <SummaryRow label="Shipping" value={formatUsd(shipping)} />
-      <SummaryRow label="Tax (VAT)" value={formatUsd(tax)} />
+    <div
+      className={`bg-[var(--bg-elevated)] rounded-lg p-6 transition-opacity ${
+        loading ? "opacity-60" : ""
+      }`}
+      aria-busy={loading}
+    >
+      <SummaryRow label="Subtotal" value={money(quote.subtotalCents)} />
+      <SummaryRow
+        label="Shipping"
+        value={quote.freeShippingApplied ? "Free" : money(quote.shippingCents)}
+      />
+      {quote.taxCents > 0 && <SummaryRow label={quote.taxLabel} value={money(quote.taxCents)} />}
       <div className="flex justify-between pt-3 mt-2 border-t-2 border-[var(--gold)] font-bold text-white">
         <span>Total</span>
-        <span>{formatUsd(total)}</span>
+        <span>{money(quote.totalCents)}</span>
       </div>
+      {quote.currency !== "USD" && (
+        <p className="mt-3 text-xs text-[var(--text-muted)]">
+          Converted at {quote.fxRate.toLocaleString("en-US")} ETB per USD.
+        </p>
+      )}
     </div>
   );
 }

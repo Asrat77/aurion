@@ -23,20 +23,19 @@ import {
   useCreateVendorProduct,
   useUpdateVendorProduct,
   useDeleteVendorProduct,
+  useAdvanceVendorOrderLine,
   type VendorProductInput,
+  type VendorOrderLine,
 } from "@/lib/vendor";
 import { ApiError } from "@/lib/api";
-import type { Product } from "@/types";
+import { formatBase } from "@/lib/money";
+import type { Product, FulfillmentStatus } from "@/types";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import ProductImage from "@/components/ui/ProductImage";
 import { TableSkeleton, StatRowSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
-
-function formatUsd(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
-}
 
 const VIEWS: { key: string; label: string; icon: Icon }[] = [
   { key: "overview", label: "Overview", icon: SquaresFour },
@@ -125,8 +124,8 @@ function OverviewView() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <StatCard label="Products" value={String(data.productCount)} />
         <StatCard label="Items Sold" value={String(data.itemsSold)} />
-        <StatCard label="Revenue" value={formatUsd(data.grossCents)} />
-        <StatCard label={`Net (${Math.round((1 - data.commissionRate) * 100)}%)`} value={formatUsd(data.netCents)} />
+        <StatCard label="Revenue" value={formatBase(data.grossCents)} />
+        <StatCard label={`Net (${Math.round((1 - data.commissionRate) * 100)}%)`} value={formatBase(data.netCents)} />
       </div>
       <div>
         <h4 className="text-white mb-2 text-sm font-semibold">Your Products</h4>
@@ -149,7 +148,7 @@ function OverviewView() {
                   </div>
                   <span className="text-sm">{p.name}</span>
                 </div>
-                <span className="font-mono text-[var(--gold)]">{formatUsd(p.priceCents)}</span>
+                <span className="font-mono text-[var(--gold)]">{formatBase(p.priceCents)}</span>
               </div>
             ))}
           </div>
@@ -250,7 +249,7 @@ function ProductsView() {
                     {p.name}
                   </div>
                 </td>
-                <td className="num">{formatUsd(p.priceCents)}</td>
+                <td className="num">{formatBase(p.priceCents)}</td>
                 <td>
                   <span className="inline-flex items-center rounded-full border border-current/20 px-3 py-1 text-xs font-semibold text-[var(--success)] bg-[rgba(92,184,141,0.12)]">
                     {p.stock} in stock
@@ -302,6 +301,7 @@ function ProductForm({
   const [stock, setStock] = useState(product ? String(product.stock) : "");
   const [emoji, setEmoji] = useState(product?.emoji ?? "");
   const [origin, setOrigin] = useState(product?.origin ?? "");
+  const [freeShipping, setFreeShipping] = useState(product?.freeShipping ?? false);
 
   return (
     <form
@@ -316,6 +316,7 @@ function ProductForm({
           stock: Number(stock || 0),
           emoji,
           origin,
+          free_shipping: freeShipping,
         });
       }}
     >
@@ -374,6 +375,21 @@ function ProductForm({
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
+      <div className="sm:col-span-2">
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-[var(--text-secondary)]">
+          <input
+            type="checkbox"
+            className="h-4 w-4 accent-[var(--gold)]"
+            checked={freeShipping}
+            onChange={(e) => setFreeShipping(e.target.checked)}
+          />
+          Ship this product free
+        </label>
+        <p className="field-help">
+          Buyers can filter for free shipping. A cart only ships free when every item in it
+          does.
+        </p>
+      </div>
       <div className="sm:col-span-2 flex gap-3 justify-end">
         <button type="button" className="btn btn-outline" onClick={onCancel}>
           Cancel
@@ -386,38 +402,134 @@ function ProductForm({
   );
 }
 
+const NEXT_STATUS_LABELS: Record<FulfillmentStatus, string> = {
+  awaiting: "Awaiting dispatch",
+  processing: "Start preparing",
+  shipped: "Mark shipped",
+  delivered: "Mark delivered",
+  cancelled: "Cancel line",
+};
+
 function OrdersView() {
   const { data, isLoading } = useVendorOrders();
-  if (isLoading) return <TableSkeleton cols={5} />;
+  if (isLoading) return <TableSkeleton cols={6} />;
 
   return (
     <div>
-      <h3 className="display-heading mb-4">Orders</h3>
+      <h3 className="display-heading mb-1">Orders</h3>
+      <p className="text-sm text-[var(--text-muted)] mb-4">
+        You fulfil only your own lines. A buyer&apos;s order shows as shipped once every
+        vendor on it has shipped.
+      </p>
       {!data || data.length === 0 ? (
         <EmptyState icon={<Receipt size={24} />} title="No orders for your products yet" />
       ) : (
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Order</th>
-              <th>Product</th>
-              <th className="text-right">Qty</th>
-              <th className="text-right">Total</th>
-              <th>Customer</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((i) => (
-              <tr key={i.id}>
-                <td className="font-mono text-[var(--gold)]">{i.orderReference}</td>
-                <td>{i.productName}</td>
-                <td className="num">{i.quantity}</td>
-                <td className="num">{formatUsd(i.lineTotalCents)}</td>
-                <td>{i.buyerEmail}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="flex flex-col gap-3">
+          {data.map((line) => (
+            <VendorOrderLineRow key={line.id} line={line} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VendorOrderLineRow({ line }: { line: VendorOrderLine }) {
+  const advance = useAdvanceVendorOrderLine();
+  const showToast = useUiStore((s) => s.showToast);
+  const [carrier, setCarrier] = useState("");
+  const [tracking, setTracking] = useState("");
+
+  const needsTracking = line.nextStatuses.includes("shipped");
+
+  async function move(status: FulfillmentStatus) {
+    try {
+      await advance.mutateAsync({
+        id: line.id,
+        fulfillment_status: status,
+        ...(status === "shipped"
+          ? { carrier: carrier || undefined, tracking_number: tracking || undefined }
+          : {}),
+      });
+      showToast(`${line.productName} → ${status}.`, "success");
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : "Could not update this line.", "error");
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-deep)] p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <span className="font-mono text-sm text-[var(--gold)]">{line.orderReference}</span>
+          <span className="text-sm text-[var(--text-secondary)] truncate">
+            {line.productName} &times;{line.quantity}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <StatusBadge status={line.fulfillmentStatus} />
+          <span className="font-mono text-sm text-[var(--gold)]">
+            {formatBase(line.lineTotalCents)}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[var(--text-muted)]">
+        <span>{line.buyerEmail}</span>
+        <span>{new Date(line.createdAt).toLocaleDateString()}</span>
+        <span>Net {formatBase(line.netCents)}</span>
+        {line.trackingNumber && (
+          <span className="font-mono">
+            {line.carrier ? `${line.carrier} · ` : ""}
+            {line.trackingNumber}
+          </span>
+        )}
+      </div>
+
+      {line.nextStatuses.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-[var(--border-subtle)] pt-3">
+          {needsTracking && (
+            <>
+              <div>
+                <label className="field-label" htmlFor={`carrier-${line.id}`}>
+                  Carrier
+                </label>
+                <input
+                  id={`carrier-${line.id}`}
+                  className="input"
+                  style={{ minWidth: "9rem" }}
+                  value={carrier}
+                  onChange={(e) => setCarrier(e.target.value)}
+                  placeholder="DHL"
+                />
+              </div>
+              <div>
+                <label className="field-label" htmlFor={`tracking-${line.id}`}>
+                  Tracking number
+                </label>
+                <input
+                  id={`tracking-${line.id}`}
+                  className="input"
+                  style={{ minWidth: "10rem" }}
+                  value={tracking}
+                  onChange={(e) => setTracking(e.target.value)}
+                  placeholder="ET-000000"
+                />
+              </div>
+            </>
+          )}
+          {line.nextStatuses.map((status) => (
+            <button
+              key={status}
+              className={`btn ${status === "cancelled" ? "btn-outline" : "btn-primary"}`}
+              style={{ padding: "10px 16px", fontSize: "0.72rem" }}
+              disabled={advance.isPending}
+              onClick={() => move(status)}
+            >
+              {NEXT_STATUS_LABELS[status]}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -431,9 +543,9 @@ function PayoutsView() {
     <div>
       <h3 className="display-heading mb-4">Payouts</h3>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <StatCard label="Gross Sales" value={formatUsd(data.grossCents)} />
-        <StatCard label="Commission" value={formatUsd(data.commissionCents)} />
-        <StatCard label="Net Earnings" value={formatUsd(data.netCents)} />
+        <StatCard label="Gross Sales" value={formatBase(data.grossCents)} />
+        <StatCard label="Commission" value={formatBase(data.commissionCents)} />
+        <StatCard label="Net Earnings" value={formatBase(data.netCents)} />
       </div>
       <div>
         <h4 className="text-white mb-2 text-sm font-semibold">Payout History</h4>
@@ -453,7 +565,7 @@ function PayoutsView() {
                 </span>
                 <span className="flex items-center gap-2">
                   <StatusBadge status={p.status} />
-                  <span className="font-mono text-[var(--gold)]">{formatUsd(p.amountCents)}</span>
+                  <span className="font-mono text-[var(--gold)]">{formatBase(p.amountCents)}</span>
                 </span>
               </div>
             ))}

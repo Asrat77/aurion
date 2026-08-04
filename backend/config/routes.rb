@@ -13,7 +13,10 @@ Rails.application.routes.draw do
 
       resources :products, only: [ :index, :show ], param: :slug
       resources :categories, only: [ :index ]
-      resources :orders, only: [ :index, :show, :create ]
+      resources :orders, only: [ :index, :show, :create ] do
+        post :quote, on: :collection
+        post :cancel, on: :member
+      end
       resources :request_for_quotes, only: [ :create ]
 
       post "payments/:order_id/intent", to: "payments#create"
@@ -22,13 +25,15 @@ Rails.application.routes.draw do
       namespace :vendor do
         get "overview", to: "overview#show"
         resources :products, only: [ :index, :create, :update, :destroy ]
-        resources :orders, only: [ :index ]
+        resources :orders, only: [ :index, :update ]
         resources :payouts, only: [ :index ]
       end
 
       namespace :admin do
         get "overview", to: "overview#show"
-        resources :orders, only: [ :index ]
+        resources :orders, only: [ :index ] do
+          post :cancel, on: :member
+        end
         resources :customers, only: [ :index ]
         resources :vendors, only: [ :index ]
         resources :products, only: [ :index ]

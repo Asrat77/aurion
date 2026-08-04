@@ -1,21 +1,17 @@
 class PaymentGateway
-  # Resolves the gateway adapter for an order: Chapa for ETB, Stripe for USD,
-  # falling back to the mock adapter whenever the relevant API key isn't
-  # configured. Real adapters are added in Milestone 6.
+  # Resolves the payment adapter for an order.
+  #
+  # Only the mock adapter ships today: it completes the order instantly, so the
+  # full marketplace loop works with zero external accounts configured.
+  #
+  # Chapa is the intended live gateway — it fronts Telebirr and CBE Birr behind
+  # one REST API, which is why it beats integrating Telebirr directly. It needs
+  # registered-business credentials, so the adapter is deliberately left
+  # unwritten rather than half-wired: to add it, create
+  # PaymentGateways::ChapaGateway responding to #create_intent and return it
+  # here for ETB orders. Its webhook must verify the HMAC-SHA256 signature and
+  # then call Order#mark_paid!, which is already idempotent.
   def self.for(order)
-    case order.currency
-    when "ETB"
-      if ENV["CHAPA_SECRET_KEY"].present?
-        PaymentGateways::ChapaGateway.new(order)
-      else
-        PaymentGateways::MockGateway.new(order)
-      end
-    else
-      if ENV["STRIPE_SECRET_KEY"].present?
-        PaymentGateways::StripeGateway.new(order)
-      else
-        PaymentGateways::MockGateway.new(order)
-      end
-    end
+    PaymentGateways::MockGateway.new(order)
   end
 end

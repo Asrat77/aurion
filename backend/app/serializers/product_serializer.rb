@@ -12,6 +12,7 @@ class ProductSerializer
       stock: product.stock,
       emoji: product.emoji,
       origin: product.origin,
+      freeShipping: product.free_shipping,
       rating: product.rating&.to_f,
       reviewsCount: product.reviews_count,
       status: product.status,

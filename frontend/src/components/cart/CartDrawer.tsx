@@ -5,10 +5,7 @@ import { X, Minus, Plus, Bag } from "@phosphor-icons/react";
 import { useCartStore, cartTotalCents } from "@/store/cart";
 import ProductImage from "@/components/ui/ProductImage";
 import EmptyState from "@/components/ui/EmptyState";
-
-function formatUsd(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
-}
+import { formatBase } from "@/lib/money";
 
 export default function CartDrawer() {
   const { items, isOpen, close, removeItem, updateQty } = useCartStore();
@@ -75,7 +72,7 @@ export default function CartDrawer() {
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm text-white truncate">{item.name}</h4>
                     <div className="text-sm text-[var(--gold)]">
-                      {formatUsd(item.priceCents)} each
+                      {formatBase(item.priceCents)} each
                     </div>
                   </div>
                   <div className="col-span-2 flex items-center justify-end gap-2 border-t border-[var(--border-subtle)] pt-3">
@@ -112,7 +109,7 @@ export default function CartDrawer() {
           <div className="border-t border-[var(--border-subtle)] pt-4 mt-2">
             <div className="flex justify-between text-lg font-semibold text-white mb-4">
               <span>Total</span>
-              <span className="text-[var(--gold)]">{formatUsd(total)}</span>
+              <span className="text-[var(--gold)]">{formatBase(total)}</span>
             </div>
             <Link
               href="/checkout"

@@ -38,7 +38,8 @@ module Api
         private
 
         def product_params
-          params.permit(:name, :category_id, :description, :price_cents, :stock, :emoji, :origin, :status)
+          params.permit(:name, :category_id, :description, :price_cents, :stock, :emoji, :origin,
+                        :status, :free_shipping)
         end
       end
     end

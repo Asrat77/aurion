@@ -3,7 +3,7 @@ module Api
     module Admin
       class CustomersController < BaseController
         def index
-          rows = Order.where(status: [ :paid, :fulfilled ])
+          rows = Order.settled
                        .joins(:buyer)
                        .group("users.id", "users.email")
                        .select("users.id AS user_id, users.email AS email, COUNT(orders.id) AS orders_count, SUM(orders.total_cents) AS total_cents")

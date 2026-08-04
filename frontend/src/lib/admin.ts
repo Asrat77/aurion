@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import type { Order, Product, RequestForQuote } from "@/types";
 
@@ -48,6 +48,16 @@ export function useAdminOrders() {
   return useQuery<Order[]>({
     queryKey: [ "admin", "orders" ],
     queryFn: () => apiFetch("/admin/orders"),
+  });
+}
+
+/** Admin intervention when a buyer and vendor cannot resolve an order. */
+export function useAdminCancelOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, note }: { id: number; note?: string }) =>
+      apiFetch<Order>(`/admin/orders/${id}/cancel`, { method: "POST", body: { note } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
   });
 }
 

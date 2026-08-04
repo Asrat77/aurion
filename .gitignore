@@ -16,6 +16,8 @@ backend/.byebug_history
 backend/storage/*
 !backend/storage/.keep
 backend/config/master.key
+# Per-worker sqlite databases created by parallel test runs
+backend/db/test.sqlite3*
 
 # OS
 .DS_Store

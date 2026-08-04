@@ -87,6 +87,64 @@ module Api
           assert_equal 0, body["grossCents"]
         end
 
+        test "vendor advances only their own line of a shared order" do
+          order = Order.create!(buyer: @buyer, status: :pending, subtotal_cents: 3000, shipping_cents: 0,
+                                 tax_cents: 0, total_cents: 3000, currency: "USD", fx_rate: 1)
+          item_a = order.order_items.create!(product: @product_a, vendor: @vendor_a, product_name: @product_a.name,
+                                              unit_price_cents: 1000, quantity: 1, line_total_cents: 1000,
+                                              commission_cents: 150, net_cents: 850)
+          item_b = order.order_items.create!(product: @product_b, vendor: @vendor_b, product_name: @product_b.name,
+                                              unit_price_cents: 2000, quantity: 1, line_total_cents: 2000,
+                                              commission_cents: 300, net_cents: 1700)
+          order.mark_paid!
+
+          login_as(@user_a)
+          patch "/api/v1/vendor/orders/#{item_a.id}", params: { fulfillment_status: "processing" }, as: :json
+          assert_response :success
+          assert_equal "processing", item_a.reload.fulfillment_status
+
+          # Vendor A must not be able to touch Vendor B's line.
+          patch "/api/v1/vendor/orders/#{item_b.id}", params: { fulfillment_status: "processing" }, as: :json
+          assert_response :not_found
+          assert_equal "awaiting", item_b.reload.fulfillment_status
+        end
+
+        test "vendor shipping a line records carrier and tracking" do
+          order = Order.create!(buyer: @buyer, status: :pending, subtotal_cents: 1000, shipping_cents: 0,
+                                 tax_cents: 0, total_cents: 1000, currency: "USD", fx_rate: 1)
+          item = order.order_items.create!(product: @product_a, vendor: @vendor_a, product_name: @product_a.name,
+                                            unit_price_cents: 1000, quantity: 1, line_total_cents: 1000,
+                                            commission_cents: 150, net_cents: 850)
+          order.mark_paid!
+
+          login_as(@user_a)
+          patch "/api/v1/vendor/orders/#{item.id}", params: { fulfillment_status: "processing" }, as: :json
+          patch "/api/v1/vendor/orders/#{item.id}", params: {
+            fulfillment_status: "shipped", carrier: "DHL", tracking_number: "ET-99",
+          }, as: :json
+
+          assert_response :success
+          body = JSON.parse(response.body)
+          assert_equal "shipped", body["fulfillmentStatus"]
+          assert_equal "DHL", body["carrier"]
+          assert_equal "ET-99", body["trackingNumber"]
+          assert_equal "shipped", order.reload.status
+        end
+
+        test "vendor cannot skip a fulfilment step" do
+          order = Order.create!(buyer: @buyer, status: :pending, subtotal_cents: 1000, shipping_cents: 0,
+                                 tax_cents: 0, total_cents: 1000, currency: "USD", fx_rate: 1)
+          item = order.order_items.create!(product: @product_a, vendor: @vendor_a, product_name: @product_a.name,
+                                            unit_price_cents: 1000, quantity: 1, line_total_cents: 1000,
+                                            commission_cents: 150, net_cents: 850)
+          order.mark_paid!
+
+          login_as(@user_a)
+          patch "/api/v1/vendor/orders/#{item.id}", params: { fulfillment_status: "delivered" }, as: :json
+          assert_response :unprocessable_entity
+          assert_equal "awaiting", item.reload.fulfillment_status
+        end
+
         test "payouts index only shows the current vendor's payouts" do
           order = Order.create!(buyer: @buyer, status: :pending, subtotal_cents: 1000, shipping_cents: 500,
                                  tax_cents: 80, total_cents: 1580, currency: "USD", fx_rate: 1)

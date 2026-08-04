@@ -3,13 +3,13 @@ module Api
     module Admin
       class AnalyticsController < BaseController
         def show
-          paid_orders = Order.where(status: [ :paid, :fulfilled ])
+          paid_orders = Order.settled
           total_orders = paid_orders.count
           total_revenue_cents = paid_orders.sum(:total_cents)
           avg_order_cents = total_orders > 0 ? (total_revenue_cents.to_f / total_orders).round : 0
 
           top_row = OrderItem.joins(:order)
-                              .where(orders: { status: [ :paid, :fulfilled ] })
+                              .where(orders: { status: Order::SETTLED_STATUSES })
                               .group(:product_id)
                               .order(Arel.sql("SUM(quantity) DESC"))
                               .sum(:quantity)

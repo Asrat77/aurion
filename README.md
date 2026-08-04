@@ -50,7 +50,13 @@ npm run dev            # http://localhost:3000
 
 ## Payments
 
-Gateway is chosen by currency: **Chapa** for ETB (Ethiopia), **Stripe** test
-mode for USD. If the relevant API key isn't set, checkout falls back to a
-**mock gateway** that completes the order instantly — the full loop works with
-zero external accounts configured.
+No live payment gateway is wired yet. Checkout uses a **mock gateway** that
+completes the order instantly, so the full loop works with zero external
+accounts configured.
+
+**Chapa** is the intended live gateway for real transactions: it fronts
+Telebirr and CBE Birr behind a single REST API, which is why it beats
+integrating Telebirr directly (whose RSA signature verification is the usual
+source of production `60200099` errors). It requires registered-business
+credentials, so the adapter is intentionally unwritten rather than half-wired
+— see `backend/app/services/payment_gateway.rb` for where it plugs in.
