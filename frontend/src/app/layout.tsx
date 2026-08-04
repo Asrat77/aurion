@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, JetBrains_Mono, Manrope } from "next/font/google";
+import { Cormorant_Garamond, JetBrains_Mono, Manrope, Noto_Sans_Ethiopic } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import Navbar from "@/components/Navbar";
@@ -18,6 +18,15 @@ const cormorant = Cormorant_Garamond({
 const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+// Amharic renders in Ethiopic script, which none of the Latin faces cover.
+// Loaded alongside them so switching language does not fall back to a system
+// font mid-page.
+const notoEthiopic = Noto_Sans_Ethiopic({
+  variable: "--font-ethiopic",
+  subsets: ["ethiopic"],
   weight: ["400", "500", "600", "700"],
 });
 
@@ -50,7 +59,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
+      className={`${cormorant.variable} ${manrope.variable} ${jetbrainsMono.variable} ${notoEthiopic.variable}`}
     >
       <body className="min-h-dvh flex flex-col overflow-x-hidden">
         <a href="#main-content" className="skip-link">

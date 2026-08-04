@@ -4,8 +4,10 @@ import { ChatCircleText } from "@phosphor-icons/react";
 import { useProductReviews } from "@/lib/reviews";
 import { StarRating } from "@/components/reviews/StarRating";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useTranslation } from "react-i18next";
 
 export default function ProductReviews({ slug }: { slug: string }) {
+  const { t } = useTranslation();
   const { data, isLoading } = useProductReviews(slug);
 
   if (isLoading) {
@@ -23,14 +25,14 @@ export default function ProductReviews({ slug }: { slug: string }) {
   return (
     <section aria-labelledby="reviews-heading">
       <h2 id="reviews-heading" className="display-heading mb-5">
-        Reviews
+        {t("reviews.heading")}
       </h2>
 
       {!summary || summary.total === 0 ? (
         <div className="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-deep)] px-5 py-4">
           <ChatCircleText size={22} className="text-[var(--gold)] shrink-0" />
           <p className="text-sm text-[var(--text-secondary)]">
-            No reviews yet. Buyers can review a product once their order is delivered.
+            {t("reviews.none")}
           </p>
         </div>
       ) : (
@@ -42,7 +44,7 @@ export default function ProductReviews({ slug }: { slug: string }) {
               </div>
               <StarRating rating={summary.average ?? 0} className="mt-1.5" />
               <p className="mt-1.5 text-xs text-[var(--text-muted)]">
-                {summary.total} review{summary.total === 1 ? "" : "s"}
+                {t("reviews.count", { count: summary.total })}
               </p>
             </div>
 
@@ -82,7 +84,7 @@ export default function ProductReviews({ slug }: { slug: string }) {
                   <p className="mt-2 leading-relaxed text-[var(--text-secondary)]">{review.body}</p>
                 )}
                 <p className="mt-2 text-xs text-[var(--text-muted)]">
-                  {review.authorName} &middot; verified purchase &middot;{" "}
+                  {review.authorName} &middot; {t("reviews.verifiedPurchase")} &middot;{" "}
                   {new Date(review.createdAt).toLocaleDateString()}
                 </p>
               </li>

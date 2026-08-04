@@ -6,6 +6,7 @@ import { Receipt, CaretDown, Truck, ShieldCheck, Star } from "@phosphor-icons/re
 import { useMe } from "@/lib/auth";
 import { useOrders, useCancelOrder } from "@/lib/orders";
 import { formatMoney } from "@/lib/money";
+import { useTranslation } from "react-i18next";
 import { ApiError } from "@/lib/api";
 import { useUiStore } from "@/store/ui";
 import PageHeader from "@/components/ui/PageHeader";
@@ -20,6 +21,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import type { Order, OrderItem, OrderStatus } from "@/types";
 
 export default function OrdersPage() {
+  const { t } = useTranslation();
   const { data: user, isLoading: userLoading } = useMe();
   const { data: orders, isLoading } = useOrders();
   const openAuth = useUiStore((s) => s.openAuth);
@@ -27,7 +29,7 @@ export default function OrdersPage() {
   return (
     <section className="px-4 sm:px-6 lg:px-8 pt-32 pb-20">
       <div className="max-w-[var(--container-content)] mx-auto">
-        <PageHeader title="My Orders" />
+        <PageHeader title={t("orders.title")} />
 
         {userLoading || isLoading ? (
           <div className="flex flex-col gap-4">
@@ -38,21 +40,21 @@ export default function OrdersPage() {
         ) : !user ? (
           <EmptyState
             icon={<Receipt size={32} />}
-            title="Sign in to view your orders"
+            title={t("orders.signInPrompt")}
             action={
               <button className="btn btn-primary" onClick={() => openAuth("login")}>
-                Sign In
+                {t("common.signIn")}
               </button>
             }
           />
         ) : !orders || orders.length === 0 ? (
           <EmptyState
             icon={<Receipt size={32} />}
-            title="No orders yet"
-            body="Start shopping to see your order history here."
+            title={t("orders.none")}
+            body={t("orders.noneBody")}
             action={
               <Link href="/store" className="btn btn-primary">
-                Browse the Store
+                {t("cart.browseStore")}
               </Link>
             }
           />
@@ -69,6 +71,7 @@ export default function OrdersPage() {
 }
 
 function OrderCard({ order }: { order: Order }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const cancelOrder = useCancelOrder();
   const showToast = useUiStore((s) => s.showToast);
@@ -77,9 +80,9 @@ function OrderCard({ order }: { order: Order }) {
   async function handleCancel() {
     try {
       await cancelOrder.mutateAsync(order.id);
-      showToast("Order cancelled. Any reserved stock has been released.", "success");
+      showToast(t("orders.cancelled"), "success");
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Could not cancel this order.", "error");
+      showToast(err instanceof ApiError ? err.message : t("orders.couldNotCancel"), "error");
     }
   }
 
@@ -117,8 +120,8 @@ function OrderCard({ order }: { order: Order }) {
             size={14}
             className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
           />
-          {order.items.length} item{order.items.length === 1 ? "" : "s"} &middot;{" "}
-          {open ? "Hide" : "Show"} breakdown
+          {t("store.itemCount", { count: order.items.length })} &middot;{" "}
+          {open ? t("orders.hideBreakdown") : t("orders.showBreakdown")}
         </button>
         <span className="font-mono font-semibold text-[var(--gold)]">
           {money(order.totalCents)}
@@ -127,14 +130,14 @@ function OrderCard({ order }: { order: Order }) {
 
       {open && (
         <div className="mt-3 rounded-xl bg-[var(--bg-deep)] p-4">
-          <SummaryRow label="Subtotal" value={money(order.subtotalCents)} />
+          <SummaryRow label={t("checkout.subtotal")} value={money(order.subtotalCents)} />
           <SummaryRow
-            label="Shipping"
-            value={order.shippingCents === 0 ? "Free" : money(order.shippingCents)}
+            label={t("checkout.shipping")}
+            value={order.shippingCents === 0 ? t("common.free") : money(order.shippingCents)}
           />
-          {order.taxCents > 0 && <SummaryRow label="VAT" value={money(order.taxCents)} />}
+          {order.taxCents > 0 && <SummaryRow label={t("orders.vat")} value={money(order.taxCents)} />}
           <div className="flex justify-between pt-2 mt-2 border-t border-[var(--border-subtle)] text-sm font-semibold text-white">
-            <span>Total</span>
+            <span>{t("checkout.total")}</span>
             <span>{money(order.totalCents)}</span>
           </div>
 
@@ -163,7 +166,7 @@ function OrderCard({ order }: { order: Order }) {
             onClick={handleCancel}
             disabled={cancelOrder.isPending}
           >
-            {cancelOrder.isPending ? "Cancelling…" : "Cancel order"}
+            {cancelOrder.isPending ? t("orders.cancelling") : t("orders.cancelOrder")}
           </button>
         </div>
       )}
@@ -193,6 +196,7 @@ function OrderItemRow({
   orderStatus: OrderStatus;
   orderId: number;
 }) {
+  const { t } = useTranslation();
   const [panel, setPanel] = useState<"review" | "refund" | null>(null);
 
   return (
@@ -236,13 +240,13 @@ function OrderItemRow({
 
       {(item.reviewable || item.refundable || item.reviewed) && (
         <div className="mt-2 ml-11 flex flex-wrap items-center gap-4 text-xs">
-          {item.reviewed && <span className="text-[var(--text-muted)]">You reviewed this</span>}
+          {item.reviewed && <span className="text-[var(--text-muted)]">{t("reviews.youReviewed")}</span>}
           {item.reviewable && (
             <button
               className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 text-[var(--gold)] hover:underline"
               onClick={() => setPanel(panel === "review" ? null : "review")}
             >
-              <Star size={14} weight="fill" /> Write a review
+              <Star size={14} weight="fill" /> {t("reviews.writeReview")}
             </button>
           )}
           {item.refundable && (
@@ -250,7 +254,7 @@ function OrderItemRow({
               className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 text-[var(--text-muted)] hover:text-[var(--gold)]"
               onClick={() => setPanel(panel === "refund" ? null : "refund")}
             >
-              <ShieldCheck size={14} /> Report a problem
+              <ShieldCheck size={14} /> {t("orders.reportProblem")}
             </button>
           )}
           {item.vendorId != null && item.vendorName && (

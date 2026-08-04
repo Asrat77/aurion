@@ -2,7 +2,8 @@
 
 import { Star, X } from "@phosphor-icons/react";
 import { useProductFacets, type ProductsQuery } from "@/lib/products";
-import { formatBase } from "@/lib/money";
+import { usePrice } from "@/lib/money";
+import { useTranslation } from "react-i18next";
 
 export interface FilterState {
   origin: string[];
@@ -52,6 +53,8 @@ export default function ProductFilters({
   filters: FilterState;
   onChange: (next: FilterState) => void;
 }) {
+  const { t } = useTranslation();
+  const price = usePrice();
   const { data: facets } = useProductFacets();
 
   function patch(partial: Partial<FilterState>) {
@@ -82,26 +85,26 @@ export default function ProductFilters({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h3 className="section-label">Refine</h3>
+        <h3 className="section-label">{t("filters.refine")}</h3>
         {count > 0 && (
           <button
             className="inline-flex min-h-9 cursor-pointer items-center gap-1 text-xs text-[var(--text-muted)] hover:text-[var(--gold)]"
             onClick={() => onChange(EMPTY_FILTERS)}
           >
-            <X size={12} /> Clear {count}
+            <X size={12} /> {t("filters.clear", { count })}
           </button>
         )}
       </div>
 
       <fieldset>
-        <legend className="field-label">Price</legend>
+        <legend className="field-label">{t("filters.price")}</legend>
         <div className="flex items-center gap-2">
           <input
             className="input"
             type="number"
             min="0"
             inputMode="decimal"
-            aria-label="Minimum price"
+            aria-label={t("filters.min")}
             placeholder={facets ? String(Math.floor(facets.priceRange.minCents / 100)) : "Min"}
             value={priceInput(filters.minPriceCents)}
             onChange={(e) => patch({ minPriceCents: parsePrice(e.target.value) })}
@@ -112,7 +115,7 @@ export default function ProductFilters({
             type="number"
             min="0"
             inputMode="decimal"
-            aria-label="Maximum price"
+            aria-label={t("filters.max")}
             placeholder={facets ? String(Math.ceil(facets.priceRange.maxCents / 100)) : "Max"}
             value={priceInput(filters.maxPriceCents)}
             onChange={(e) => patch({ maxPriceCents: parsePrice(e.target.value) })}
@@ -120,14 +123,16 @@ export default function ProductFilters({
         </div>
         {facets && (
           <p className="field-help">
-            Catalogue runs {formatBase(facets.priceRange.minCents)} to{" "}
-            {formatBase(facets.priceRange.maxCents)}.
+            {t("filters.catalogueRange", {
+              min: price(facets.priceRange.minCents),
+              max: price(facets.priceRange.maxCents),
+            })}
           </p>
         )}
       </fieldset>
 
       <fieldset>
-        <legend className="field-label">Rating</legend>
+        <legend className="field-label">{t("filters.rating")}</legend>
         <div className="flex flex-col gap-1">
           {RATINGS.map((rating) => (
             <label
@@ -143,7 +148,7 @@ export default function ProductFilters({
               />
               <span className="inline-flex items-center gap-1">
                 <Star size={13} weight="fill" className="text-[var(--gold)]" />
-                {`${rating} & up`}
+                {t("filters.andUp", { count: rating })}
               </span>
             </label>
           ))}
@@ -155,14 +160,14 @@ export default function ProductFilters({
               checked={filters.minRating == null}
               onChange={() => patch({ minRating: null })}
             />
-            Any rating
+            {t("filters.anyRating")}
           </label>
         </div>
       </fieldset>
 
       {facets && facets.origins.length > 0 && (
         <fieldset>
-          <legend className="field-label">Origin</legend>
+          <legend className="field-label">{t("filters.origin")}</legend>
           <div className="flex max-h-56 flex-col gap-1 overflow-y-auto pr-1">
             {facets.origins.map((origin) => (
               <label
@@ -183,7 +188,7 @@ export default function ProductFilters({
       )}
 
       <fieldset>
-        <legend className="field-label">Availability</legend>
+        <legend className="field-label">{t("filters.availability")}</legend>
         <label className="flex min-h-10 cursor-pointer items-center gap-2.5 text-sm text-[var(--text-secondary)]">
           <input
             type="checkbox"
@@ -191,7 +196,7 @@ export default function ProductFilters({
             checked={filters.inStock}
             onChange={(e) => patch({ inStock: e.target.checked })}
           />
-          In stock only
+          {t("filters.inStockOnly")}
           {facets && <span className="text-[var(--text-muted)]">({facets.inStockCount})</span>}
         </label>
         <label className="flex min-h-10 cursor-pointer items-center gap-2.5 text-sm text-[var(--text-secondary)]">
@@ -201,7 +206,7 @@ export default function ProductFilters({
             checked={filters.freeShipping}
             onChange={(e) => patch({ freeShipping: e.target.checked })}
           />
-          Free shipping
+          {t("filters.freeShipping")}
           {facets && (
             <span className="text-[var(--text-muted)]">({facets.freeShippingCount})</span>
           )}

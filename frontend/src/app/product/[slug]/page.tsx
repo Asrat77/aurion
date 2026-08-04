@@ -25,7 +25,8 @@ import EmptyState from "@/components/ui/EmptyState";
 import ProductReviews from "@/components/reviews/ProductReviews";
 import ContactVendorButton from "@/components/messages/ContactVendorButton";
 import { StarRating } from "@/components/reviews/StarRating";
-import { formatBase } from "@/lib/money";
+import { usePrice } from "@/lib/money";
+import { useTranslation } from "react-i18next";
 import type { Product } from "@/types";
 
 // Below this, the buy box warns that stock is nearly gone.
@@ -36,6 +37,7 @@ export default function ProductDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  const { t } = useTranslation();
   const { slug } = use(params);
   const { data: product, isLoading } = useProduct(slug);
 
@@ -55,11 +57,11 @@ export default function ProductDetailPage({
         <div className="max-w-[var(--container-content)] mx-auto">
           <EmptyState
             icon={<Storefront size={32} />}
-            title="Product not found"
-            body="This product may have been removed or the link is incorrect."
+            title={t("product.notFound")}
+            body={t("product.notFoundBody")}
             action={
               <Link href="/store" className="btn btn-primary">
-                Back to Store
+                {t("product.backToStore")}
               </Link>
             }
           />
@@ -75,7 +77,7 @@ export default function ProductDetailPage({
           <ol className="flex flex-wrap items-center gap-1.5 text-sm text-[var(--text-muted)]">
             <li>
               <Link href="/store" className="inline-flex items-center gap-1.5 text-[var(--gold)] hover:underline">
-                <ArrowLeft size={16} /> Store
+                <ArrowLeft size={16} /> {t("nav.marketplace")}
               </Link>
             </li>
             <li aria-hidden>/</li>
@@ -116,6 +118,8 @@ export default function ProductDetailPage({
 }
 
 function BuyBox({ product }: { product: Product }) {
+  const { t } = useTranslation();
+  const price = usePrice();
   const router = useRouter();
   const cartItems = useCartStore((s) => s.items);
   const addItem = useCartStore((s) => s.addItem);
@@ -133,7 +137,7 @@ function BuyBox({ product }: { product: Product }) {
 
   function add() {
     addItem(product, qty);
-    showToast(`Added ${qty} × ${product.name} to cart`, "success");
+    showToast(t("product.addedToCart", { count: qty, name: product.name }), "success");
   }
 
   function buyNow() {
@@ -154,50 +158,49 @@ function BuyBox({ product }: { product: Product }) {
         <a href="#reviews-heading" className="inline-flex items-center gap-2 mb-3 hover:underline">
           <StarRating rating={product.rating} size={15} />
           <span className="text-sm text-[var(--gold)]">
-            {product.rating.toFixed(1)} ({product.reviewsCount}{" "}
-            {product.reviewsCount === 1 ? "review" : "reviews"})
+            {product.rating.toFixed(1)} ({t("reviews.count", { count: product.reviewsCount })})
           </span>
         </a>
       ) : (
-        <div className="text-sm text-[var(--text-muted)] mb-3">No reviews yet</div>
+        <div className="text-sm text-[var(--text-muted)] mb-3">{t("reviews.noneShort")}</div>
       )}
 
       <div className="font-mono text-3xl font-semibold text-[var(--gold-light)] mb-4">
-        {formatBase(product.priceCents)}
+        {price(product.priceCents)}
       </div>
 
       <p className="text-[var(--text-secondary)] leading-relaxed mb-6">{product.description}</p>
 
       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 border-y border-[var(--border-subtle)] py-5 mb-6 text-sm">
-        <Spec icon={<MapPin size={16} />} label="Origin" value={product.origin} />
+        <Spec icon={<MapPin size={16} />} label={t("product.origin")} value={product.origin} />
         <Spec
           icon={<Storefront size={16} />}
-          label="Sold by"
+          label={t("product.soldBy")}
           value={product.vendor.storeName}
         />
         <Spec
           icon={<Package size={16} />}
-          label="Availability"
+          label={t("product.availability")}
           value={
             soldOut
-              ? "Out of stock"
+              ? t("product.outOfStock")
               : lowStock
-              ? `Only ${product.stock} left`
-              : `${product.stock} in stock`
+              ? t("product.onlyLeft", { count: product.stock })
+              : t("product.inStock", { count: product.stock })
           }
           tone={soldOut ? "danger" : lowStock ? "warning" : undefined}
         />
         <Spec
           icon={<Truck size={16} />}
-          label="Shipping"
-          value={product.freeShipping ? "Free shipping" : "Calculated at checkout"}
+          label={t("product.shipping")}
+          value={product.freeShipping ? t("product.freeShipping") : t("product.calculatedAtCheckout")}
           tone={product.freeShipping ? "success" : undefined}
         />
       </dl>
 
       <div className="mb-5 flex items-center gap-4">
         <label className="field-label mb-0" htmlFor="qty">
-          Quantity
+          {t("product.quantity")}
         </label>
         <div className="inline-flex items-center rounded-full border border-[var(--border-subtle)]">
           <button
@@ -232,7 +235,7 @@ function BuyBox({ product }: { product: Product }) {
         </div>
         {!soldOut && qty > 1 && (
           <span className="font-mono text-sm text-[var(--gold)]">
-            {formatBase(product.priceCents * qty)}
+            {price(product.priceCents * qty)}
           </span>
         )}
       </div>
@@ -246,14 +249,18 @@ function BuyBox({ product }: { product: Product }) {
           disabled={soldOut}
         >
           {inCart && <Check size={16} weight="bold" />}
-          {soldOut ? "Out of stock" : inCart ? "Add another" : "Add to Cart"}
+          {soldOut
+            ? t("product.outOfStock")
+            : inCart
+            ? t("product.addAnother")
+            : t("product.addToCart")}
         </button>
         <button
           className="btn btn-success flex-1 min-w-[10rem]"
           onClick={buyNow}
           disabled={soldOut}
         >
-          Buy Now
+          {t("product.buyNow")}
         </button>
         <button
           className={`btn btn-outline flex items-center justify-center gap-2 ${
@@ -274,7 +281,7 @@ function BuyBox({ product }: { product: Product }) {
           className="mt-3 inline-flex min-h-10 cursor-pointer items-center text-sm text-[var(--gold)] hover:underline"
           onClick={openCart}
         >
-          View cart
+          {t("product.viewCart")}
         </button>
       )}
 
@@ -292,8 +299,8 @@ function BuyBox({ product }: { product: Product }) {
       >
         <ShieldCheck size={20} className="text-[var(--gold)] shrink-0 mt-0.5" />
         <span className="text-sm text-[var(--text-secondary)]">
-          <span className="font-semibold text-white">Covered by buyer protection.</span> If it
-          never arrives, arrives damaged, or is not as described, you can claim a refund.
+          <span className="font-semibold text-white">{t("product.protectionTitle")}</span>{" "}
+          {t("product.protectionBody")}
         </span>
       </Link>
     </div>

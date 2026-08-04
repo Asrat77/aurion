@@ -5,6 +5,7 @@ import { useCreateReview } from "@/lib/reviews";
 import { ApiError } from "@/lib/api";
 import { useUiStore } from "@/store/ui";
 import { StarPicker } from "@/components/reviews/StarRating";
+import { useTranslation } from "react-i18next";
 import type { PendingReview } from "@/types";
 
 export default function WriteReviewForm({
@@ -14,6 +15,7 @@ export default function WriteReviewForm({
   pending: PendingReview;
   onDone: () => void;
 }) {
+  const { t } = useTranslation();
   const createReview = useCreateReview();
   const showToast = useUiStore((s) => s.showToast);
 
@@ -32,7 +34,7 @@ export default function WriteReviewForm({
         title: title || undefined,
         body: body || undefined,
       });
-      showToast("Thank you — your review is live.", "success");
+      showToast(t("reviews.thanks"), "success");
       onDone();
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : "Could not post your review.", "error");
@@ -44,19 +46,19 @@ export default function WriteReviewForm({
       className="rounded-xl border border-[var(--border-gold)] bg-[var(--bg-deep)] p-5"
       onSubmit={submit}
     >
-      <p className="section-label mb-1">Review your purchase</p>
+      <p className="section-label mb-1">{t("reviews.reviewYourPurchase")}</p>
       <h4 className="text-base font-semibold text-white mb-4">{pending.productName}</h4>
 
       <div className="mb-4">
         <label className="field-label" id={`rating-label-${pending.orderItemId}`}>
-          Your rating <span className="text-[var(--gold)]">*</span>
+          {t("reviews.yourRating")} <span className="text-[var(--gold)]">*</span>
         </label>
         <StarPicker value={rating} onChange={setRating} />
       </div>
 
       <div className="mb-4">
         <label className="field-label" htmlFor={`title-${pending.orderItemId}`}>
-          Headline
+          {t("reviews.headline")}
         </label>
         <input
           id={`title-${pending.orderItemId}`}
@@ -64,13 +66,13 @@ export default function WriteReviewForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={120}
-          placeholder="Sum it up in a few words"
+          placeholder={t("reviews.headlinePlaceholder")}
         />
       </div>
 
       <div className="mb-4">
         <label className="field-label" htmlFor={`body-${pending.orderItemId}`}>
-          Your review
+          {t("reviews.yourReview")}
         </label>
         <textarea
           id={`body-${pending.orderItemId}`}
@@ -79,20 +81,20 @@ export default function WriteReviewForm({
           value={body}
           onChange={(e) => setBody(e.target.value)}
           maxLength={2000}
-          placeholder="How was the quality, the packaging, the delivery?"
+          placeholder={t("reviews.bodyPlaceholder")}
         />
       </div>
 
       <div className="flex justify-end gap-3">
         <button type="button" className="btn btn-outline" onClick={onDone}>
-          Not now
+          {t("reviews.notNow")}
         </button>
         <button
           type="submit"
           className="btn btn-primary"
           disabled={rating === 0 || createReview.isPending}
         >
-          {createReview.isPending ? "Posting…" : "Post review"}
+          {createReview.isPending ? t("reviews.posting") : t("reviews.post")}
         </button>
       </div>
     </form>

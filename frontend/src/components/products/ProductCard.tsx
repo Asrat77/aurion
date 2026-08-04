@@ -14,9 +14,10 @@ import { useCartStore } from "@/store/cart";
 import { useWishlistStore } from "@/store/wishlist";
 import { useUiStore } from "@/store/ui";
 import ProductImage from "@/components/ui/ProductImage";
-import { formatBase } from "@/lib/money";
+import { usePrice } from "@/lib/money";
 
 export default function ProductCard({ product }: { product: Product }) {
+  const price = usePrice();
   const cartItems = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
   const wishlistIds = useWishlistStore((state) => state.ids);
@@ -79,7 +80,7 @@ export default function ProductCard({ product }: { product: Product }) {
             </h3>
           </Link>
           <span className="shrink-0 text-base font-semibold text-[var(--gold-light)]">
-            {formatBase(product.priceCents)}
+            {price(product.priceCents)}
           </span>
         </div>
 

@@ -3,6 +3,7 @@
 import { Suspense, useDeferredValue, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -22,15 +23,16 @@ import ProductFilters, {
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
 
-const SORTS = [
-  { value: "popular", label: "Most popular" },
-  { value: "price_asc", label: "Price: low to high" },
-  { value: "price_desc", label: "Price: high to low" },
-  { value: "newest", label: "Newest first" },
-  { value: "name", label: "Name A to Z" },
+const SORT_KEYS = [
+  { value: "popular", key: "store.sort.popular" },
+  { value: "price_asc", key: "store.sort.priceAsc" },
+  { value: "price_desc", key: "store.sort.priceDesc" },
+  { value: "newest", key: "store.sort.newest" },
+  { value: "name", key: "store.sort.name" },
 ];
 
 function StoreContent() {
+  const { t } = useTranslation();
   const searchParams = useSearchParams();
   const [category, setCategory] = useState(searchParams.get("category") ?? "all");
   const [search, setSearch] = useState("");
@@ -64,19 +66,18 @@ function StoreContent() {
         <div className="relative mx-auto max-w-[var(--container-wide)]">
           <div className="grid gap-10 lg:grid-cols-[1fr_0.65fr] lg:items-end">
             <div>
-              <p className="section-label">The retail marketplace</p>
-              <h1 className="display-title max-w-[860px]">Ethiopian goods, presented with their origin intact.</h1>
+              <p className="section-label">{t("store.eyebrow")}</p>
+              <h1 className="display-title max-w-[860px]">{t("store.title")}</h1>
             </div>
             <div className="lg:justify-self-end">
               <p className="max-w-[550px] text-base leading-[1.9] text-[var(--text-secondary)]">
-                Discover coffee, grains, spices, honey, textiles, jewelry, and more from
-                vendors across Ethiopia.
+{t("store.intro")}
               </p>
               <Link
                 href="/source"
                 className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--gold)] transition-colors hover:text-white"
               >
-                Buying commercially? Source at scale <ArrowUpRight size={16} />
+                {t("store.commercialCta")} <ArrowUpRight size={16} />
               </Link>
             </div>
           </div>
@@ -89,7 +90,7 @@ function StoreContent() {
             <div className="flex gap-2 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <CategoryButton
                 active={category === "all"}
-                label="All products"
+                label={t("store.allProducts")}
                 onClick={() => setCategory("all")}
               />
               {categories?.map((item) => (
@@ -104,14 +105,14 @@ function StoreContent() {
 
             <div className="mt-3 grid gap-3 border-t border-[var(--border-subtle)] pt-4 sm:grid-cols-[1fr_auto]">
               <label className="relative block">
-                <span className="sr-only">Search marketplace products</span>
+                <span className="sr-only">{t("store.searchLabel")}</span>
                 <MagnifyingGlass
                   size={18}
                   className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
                 />
                 <input
                   type="search"
-                  placeholder="Search coffee, teff, textiles, jewelry..."
+                  placeholder={t("store.searchPlaceholder")}
                   className="input pl-11"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
@@ -119,7 +120,7 @@ function StoreContent() {
               </label>
               <div className="flex gap-3">
                 <label className="relative block min-w-[200px] flex-1">
-                  <span className="sr-only">Sort products</span>
+                  <span className="sr-only">{t("store.sortLabel")}</span>
                   <SlidersHorizontal
                     size={17}
                     className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-[var(--gold)]"
@@ -129,9 +130,9 @@ function StoreContent() {
                     value={sort}
                     onChange={(event) => setSort(event.target.value)}
                   >
-                    {SORTS.map((option) => (
+                    {SORT_KEYS.map((option) => (
                       <option key={option.value} value={option.value}>
-                        {option.label}
+                        {t(option.key)}
                       </option>
                     ))}
                   </select>
@@ -143,7 +144,7 @@ function StoreContent() {
                   aria-expanded={filtersOpen}
                 >
                   <Funnel size={15} />
-                  Filters
+                  {t("store.filters")}
                   {filterCount > 0 && (
                     <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--gold)] px-1.5 font-[family-name:var(--font-mono)] text-[0.6rem] text-[var(--bg-deep)]">
                       {filterCount}
@@ -163,17 +164,17 @@ function StoreContent() {
           <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
             <div>
               <span className="font-[family-name:var(--font-mono)] text-[0.58rem] uppercase tracking-[0.2em] text-[var(--gold)]">
-                Curated marketplace
+                {t("store.curated")}
               </span>
               <h2 className="mt-1 font-[family-name:var(--font-display)] text-3xl text-white sm:text-4xl">
                 {category === "all"
-                  ? "All products"
+                  ? t("store.allProducts")
                   : categories?.find((item) => item.slug === category)?.name ?? "Products"}
               </h2>
             </div>
             {!isLoading && !isError ? (
               <span className="font-[family-name:var(--font-mono)] text-[0.62rem] uppercase tracking-[0.16em] text-[var(--text-muted)]">
-                {data?.meta.total ?? 0} {(data?.meta.total ?? 0) === 1 ? "item" : "items"}
+                {t("store.itemCount", { count: data?.meta.total ?? 0 })}
               </span>
             ) : null}
           </div>
@@ -189,22 +190,22 @@ function StoreContent() {
               ) : isError ? (
                 <EmptyState
                   icon={<MagnifyingGlass size={32} />}
-                  title="The marketplace could not load"
-                  body="The connection did not complete. Your filters are still here, so you can safely try again."
+                  title={t("store.loadFailed")}
+                  body={t("store.loadFailedBody")}
                   action={
                     <button type="button" className="btn btn-outline" onClick={() => refetch()}>
-                      Try again
+                      {t("store.tryAgain")}
                     </button>
                   }
                 />
               ) : !data || data.products.length === 0 ? (
                 <EmptyState
                   icon={<MagnifyingGlass size={32} />}
-                  title="No products match"
-                  body="Try another search or reset the marketplace filters."
+                  title={t("store.noMatch")}
+                  body={t("store.noMatchBody")}
                   action={
                     <button type="button" className="btn btn-outline" onClick={clearFilters}>
-                      Clear filters
+                      {t("store.clearFilters")}
                     </button>
                   }
                 />

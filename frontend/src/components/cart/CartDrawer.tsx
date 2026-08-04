@@ -5,9 +5,12 @@ import { X, Minus, Plus, Bag } from "@phosphor-icons/react";
 import { useCartStore, cartTotalCents } from "@/store/cart";
 import ProductImage from "@/components/ui/ProductImage";
 import EmptyState from "@/components/ui/EmptyState";
-import { formatBase } from "@/lib/money";
+import { usePrice } from "@/lib/money";
+import { useTranslation } from "react-i18next";
 
 export default function CartDrawer() {
+  const { t } = useTranslation();
+  const price = usePrice();
   const { items, isOpen, close, removeItem, updateQty } = useCartStore();
   const total = cartTotalCents(items);
 
@@ -32,7 +35,7 @@ export default function CartDrawer() {
       >
         <div className="flex justify-between items-center border-b border-[var(--border-subtle)] pb-4 mb-4">
           <h2 id="cart-drawer-title" className="font-[family-name:var(--font-display)] text-2xl text-white">
-            Your Cart
+            {t("cart.title")}
           </h2>
           <button
             className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-white/[0.05] hover:text-[var(--gold)]"
@@ -47,11 +50,11 @@ export default function CartDrawer() {
           {items.length === 0 ? (
             <EmptyState
               icon={<Bag size={32} />}
-              title="Your cart is empty"
-              body="Start exploring our Ethiopian products."
+              title={t("cart.empty")}
+              body={t("cart.emptyBody")}
               action={
                 <button className="btn btn-outline" onClick={close}>
-                  Browse the Store
+                  {t("cart.browseStore")}
                 </button>
               }
             />
@@ -72,7 +75,7 @@ export default function CartDrawer() {
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm text-white truncate">{item.name}</h4>
                     <div className="text-sm text-[var(--gold)]">
-                      {formatBase(item.priceCents)} each
+                      {t("cart.each", { price: price(item.priceCents) })}
                     </div>
                   </div>
                   <div className="col-span-2 flex items-center justify-end gap-2 border-t border-[var(--border-subtle)] pt-3">
@@ -109,7 +112,7 @@ export default function CartDrawer() {
           <div className="border-t border-[var(--border-subtle)] pt-4 mt-2">
             <div className="flex justify-between text-lg font-semibold text-white mb-4">
               <span>Total</span>
-              <span className="text-[var(--gold)]">{formatBase(total)}</span>
+              <span className="text-[var(--gold)]">{price(total)}</span>
             </div>
             <Link
               href="/checkout"
@@ -118,7 +121,7 @@ export default function CartDrawer() {
                 close();
               }}
             >
-              Proceed to Checkout
+              {t("cart.checkout")}
             </Link>
           </div>
         )}

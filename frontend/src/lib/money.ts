@@ -2,6 +2,8 @@
 // (USD cents). An order also carries the currency the buyer was quoted in and
 // the rate used, so display is always base cents × rate — never a raw `$`.
 
+import { usePreferencesStore } from "@/store/preferences";
+
 export const BASE_CURRENCY = "USD";
 
 const SYMBOLS: Record<string, string> = {
@@ -32,7 +34,24 @@ export function formatMoney(cents: number, currency = BASE_CURRENCY, fxRate = 1)
   })}`;
 }
 
-/** Convenience for prices that are always shown in the base currency. */
+/**
+ * Formats an amount in the platform's base currency, ignoring the buyer's
+ * display preference. Use for figures that must stay comparable across the
+ * platform — vendor payouts, admin revenue, commission.
+ */
 export function formatBase(cents: number) {
   return formatMoney(cents, BASE_CURRENCY, 1);
+}
+
+/**
+ * Formats a catalogue price in whatever currency the buyer has chosen to
+ * browse in. This is presentation only: an order is always priced by the
+ * server, which decides the real currency from the shipping destination.
+ */
+export function usePrice() {
+  const currency = usePreferencesStore((s) => s.currency);
+  const etbPerUsd = usePreferencesStore((s) => s.etbPerUsd);
+
+  return (cents: number) =>
+    currency === "ETB" ? formatMoney(cents, "ETB", etbPerUsd) : formatBase(cents);
 }

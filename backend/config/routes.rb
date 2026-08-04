@@ -15,6 +15,7 @@ Rails.application.routes.draw do
         get :facets, on: :collection
       end
       resources :categories, only: [ :index ]
+      get "settings", to: "settings#show"
       resources :orders, only: [ :index, :show, :create ] do
         post :quote, on: :collection
         post :cancel, on: :member

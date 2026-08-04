@@ -1,20 +1,22 @@
 "use client";
 
 import { CheckCircle, Circle, Truck, Package, XCircle } from "@phosphor-icons/react";
+import { useTranslation } from "react-i18next";
 import type { Order, OrderStatus } from "@/types";
 
 // The happy path a buyer is walked through. Cancelled and refunded orders leave
 // this track, so they render as a single terminal step instead.
-const TRACK: { status: OrderStatus; label: string; hint: string }[] = [
-  { status: "paid", label: "Confirmed", hint: "Payment received" },
-  { status: "processing", label: "Processing", hint: "Vendor preparing your items" },
-  { status: "shipped", label: "Shipped", hint: "On its way to you" },
-  { status: "delivered", label: "Delivered", hint: "Order complete" },
+const TRACK: { status: OrderStatus; labelKey: string; hintKey: string }[] = [
+  { status: "paid", labelKey: "orders.timeline.confirmed", hintKey: "orders.timeline.confirmedHint" },
+  { status: "processing", labelKey: "orders.timeline.processing", hintKey: "orders.timeline.processingHint" },
+  { status: "shipped", labelKey: "orders.timeline.shipped", hintKey: "orders.timeline.shippedHint" },
+  { status: "delivered", labelKey: "orders.timeline.delivered", hintKey: "orders.timeline.deliveredHint" },
 ];
 
 const TRACK_ORDER: OrderStatus[] = TRACK.map((s) => s.status);
 
 export default function OrderTimeline({ order }: { order: Order }) {
+  const { t } = useTranslation();
   if (order.status === "cancelled" || order.status === "refunded") {
     const cancelled = order.status === "cancelled";
     return (
@@ -22,7 +24,7 @@ export default function OrderTimeline({ order }: { order: Order }) {
         <XCircle size={20} weight="fill" className="text-[var(--text-muted)] shrink-0" />
         <div>
           <p className="text-sm font-semibold text-[var(--text-secondary)]">
-            {cancelled ? "Order cancelled" : "Order refunded"}
+            {cancelled ? t("orders.timeline.orderCancelled") : t("orders.timeline.orderRefunded")}
           </p>
           {(order.cancelledAt ?? order.createdAt) && (
             <p className="text-xs text-[var(--text-muted)]">
@@ -81,9 +83,9 @@ export default function OrderTimeline({ order }: { order: Order }) {
                     : "text-[var(--text-muted)]"
                 }`}
               >
-                {step.label}
+                {t(step.labelKey)}
               </p>
-              <p className="text-xs text-[var(--text-muted)]">{step.hint}</p>
+              <p className="text-xs text-[var(--text-muted)]">{t(step.hintKey)}</p>
             </div>
           </li>
         );
