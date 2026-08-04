@@ -1,10 +1,20 @@
-# AURION Marketplace — Phase 1
+# AURION Marketplace
 
-Full-loop multi-vendor marketplace: vendor lists a product → buyer purchases it →
-admin sees the order → vendor gets a payout line.
+Multi-vendor marketplace for Ethiopian goods, at retail and at commercial scale.
 
 - `backend/` — Rails 8 API-only app, Postgres (Neon)
 - `frontend/` — Next.js (App Router) + TypeScript
+
+**Retail:** faceted discovery → cart → server-priced checkout → per-vendor
+fulfilment with tracking → delivery → verified review, with buyer protection
+covering the whole path.
+
+**Commercial:** a wholesale catalogue carrying MOQ, volume pricing, lead times
+and sample terms, feeding an RFQ pipeline an admin can quote against.
+
+**Both sides:** public vendor onboarding with admin approval, buyer–vendor
+messaging, vendor sales analytics and inventory, and an English/Amharic
+interface with USD or ETB pricing.
 
 ## Prerequisites
 
@@ -38,15 +48,39 @@ npm run dev            # http://localhost:3000
 | Buyer | buyer@aurion.et |
 | Vendor (Aurion Coffee Co.) | vendor@aurion.et |
 
+Seeding also creates buyer accounts with real delivered orders and reviews
+behind them, so ratings, vendor analytics and fulfilment history are populated
+rather than fabricated.
+
 ## Demo script (the full loop)
 
-1. Sign in as **vendor** → add a new product → confirm it appears in `/store`.
-2. Sign out, sign in as **buyer** → add products to cart → checkout → pay (mock
-   or sandbox gateway) → order confirmed → visible in `/orders`.
-3. Sign in as **admin** → order appears in `/admin/orders`; revenue/customer
-   stats update.
-4. Sign in as **vendor** again → `/vendor/payouts` shows the payout line
-   (line total minus 15% commission) for the item sold.
+1. Sign in as **buyer** → filter `/store` by price, origin, rating or free
+   shipping → open a product → set a quantity → checkout. Shipping and VAT are
+   priced by the server from the destination: Ethiopia is domestic with 15% VAT
+   and quoted in birr, exports are zero-rated.
+2. Sign in as **vendor** → `/vendor` → Orders → move your line from awaiting to
+   processing to shipped, adding carrier and tracking. In a multi-vendor order
+   the buyer's order only reads "shipped" once every vendor has shipped.
+3. Back as **buyer** → `/orders` shows the timeline and tracking. Once
+   delivered, write a review; the product's rating recomputes. Or report a
+   problem to open a buyer protection claim.
+4. Sign in as **admin** → `/admin` → uphold the claim: the vendor's payout for
+   that line is reversed and the stock returned.
+5. Still as **vendor** → Analytics for revenue over time, best sellers and open
+   fulfilment; Inventory for low-stock warnings and inline stock edits.
+
+Other paths worth showing: `/sell` (vendor application → admin approval →
+dashboard access), `/source` (wholesale catalogue → RFQ → admin quote),
+`/messages` (buyer–vendor threads), and the EN | አማርኛ and USD | ETB switchers
+in the account menu.
+
+## Currency
+
+All `*_cents` values are denominated in the platform's base currency (USD). An
+order additionally carries the currency the buyer was quoted in and the FX rate
+used, so figures stay comparable across orders while buyers see their own
+currency. `Order#charge_amount_cents` gives a gateway the amount to charge.
+`ETB_PER_USD` sets the rate.
 
 ## Payments
 
