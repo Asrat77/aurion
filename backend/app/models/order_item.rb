@@ -23,6 +23,11 @@ class OrderItem < ApplicationRecord
   has_one :payout, dependent: :restrict_with_error
   has_one :review, dependent: :destroy
   has_many :refund_requests, dependent: :destroy
+  # Nullify rather than destroy: the event still happened, and the order's own
+  # timeline should survive a line being removed. This also has to be declared,
+  # or destroying an order trips the order_events -> order_items foreign key
+  # when its items are destroyed before its events.
+  has_many :order_events, dependent: :nullify
 
   enum :fulfillment_status, FULFILLMENT_STATUSES, prefix: :fulfillment
 
