@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -113,6 +113,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_090000) do
     t.index ["vendor_id"], name: "index_products_on_vendor_id"
   end
 
+  create_table "refund_requests", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.bigint "buyer_id", null: false
+    t.datetime "created_at", null: false
+    t.text "detail"
+    t.bigint "order_id", null: false
+    t.bigint "order_item_id", null: false
+    t.integer "reason", default: 0, null: false
+    t.string "resolution_note"
+    t.datetime "resolved_at"
+    t.bigint "resolved_by_id"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["buyer_id"], name: "index_refund_requests_on_buyer_id"
+    t.index ["order_id"], name: "index_refund_requests_on_order_id"
+    t.index ["order_item_id", "status"], name: "index_refund_requests_on_order_item_id_and_status"
+    t.index ["order_item_id"], name: "index_refund_requests_on_order_item_id"
+    t.index ["resolved_by_id"], name: "index_refund_requests_on_resolved_by_id"
+  end
+
   create_table "request_for_quotes", force: :cascade do |t|
     t.string "company_name", null: false
     t.string "contact_name"
@@ -127,6 +147,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_090000) do
     t.datetime "updated_at", null: false
     t.index ["reference"], name: "index_request_for_quotes_on_reference", unique: true
     t.index ["status", "created_at"], name: "index_request_for_quotes_on_status_and_created_at"
+  end
+
+  create_table "reviews", force: :cascade do |t|
+    t.text "body"
+    t.bigint "buyer_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "order_item_id", null: false
+    t.bigint "product_id", null: false
+    t.integer "rating", null: false
+    t.integer "status", default: 0, null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["buyer_id"], name: "index_reviews_on_buyer_id"
+    t.index ["order_item_id"], name: "index_reviews_on_order_item_id", unique: true
+    t.index ["product_id", "status"], name: "index_reviews_on_product_id_and_status"
+    t.index ["product_id"], name: "index_reviews_on_product_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -165,5 +201,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_090000) do
   add_foreign_key "payouts", "vendors"
   add_foreign_key "products", "categories"
   add_foreign_key "products", "vendors"
+  add_foreign_key "refund_requests", "order_items"
+  add_foreign_key "refund_requests", "orders"
+  add_foreign_key "refund_requests", "users", column: "buyer_id"
+  add_foreign_key "refund_requests", "users", column: "resolved_by_id"
+  add_foreign_key "reviews", "order_items"
+  add_foreign_key "reviews", "products"
+  add_foreign_key "reviews", "users", column: "buyer_id"
   add_foreign_key "vendors", "users"
 end

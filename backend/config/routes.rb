@@ -19,6 +19,12 @@ Rails.application.routes.draw do
       end
       resources :request_for_quotes, only: [ :create ]
 
+      get "products/:product_slug/reviews", to: "reviews#index"
+      get "reviews/pending", to: "reviews#pending"
+      resources :reviews, only: [ :create ]
+
+      resources :refund_requests, only: [ :index, :create ]
+
       post "payments/:order_id/intent", to: "payments#create"
       post "payments/:order_id/mock_confirm", to: "payments#mock_confirm"
 
@@ -38,6 +44,11 @@ Rails.application.routes.draw do
         resources :vendors, only: [ :index ]
         resources :products, only: [ :index ]
         resources :request_for_quotes, only: [ :index ]
+        resources :reviews, only: [ :index, :update ]
+        resources :refund_requests, only: [ :index ] do
+          post :approve, on: :member
+          post :reject, on: :member
+        end
         get "analytics", to: "analytics#show"
       end
     end

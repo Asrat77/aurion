@@ -80,11 +80,73 @@ export interface OrderItem {
   commissionCents: number;
   netCents: number;
   fulfillmentStatus: FulfillmentStatus;
+  refundStatus: RefundStatus | null;
+  refundable: boolean;
+  reviewable: boolean;
+  reviewed: boolean;
   carrier: string | null;
   trackingNumber: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
   vendorName?: string;
+}
+
+export type RefundStatus = "open" | "approved" | "rejected";
+
+export type RefundReason =
+  | "not_received"
+  | "damaged"
+  | "not_as_described"
+  | "wrong_item"
+  | "other";
+
+export interface RefundRequest {
+  id: number;
+  orderId: number;
+  orderReference: string;
+  orderItemId: number;
+  productName: string;
+  vendorName: string;
+  reason: RefundReason;
+  reasonLabel: string;
+  detail: string | null;
+  status: RefundStatus;
+  amountCents: number;
+  currency: string;
+  fxRate: number;
+  resolutionNote: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  buyerEmail?: string;
+}
+
+export interface Review {
+  id: number;
+  rating: number;
+  title: string | null;
+  body: string | null;
+  status: "published" | "hidden";
+  authorName: string;
+  productName: string;
+  productSlug: string;
+  createdAt: string;
+}
+
+export interface ReviewSummary {
+  average: number | null;
+  total: number;
+  /** Count of reviews at each star rating, keyed "1".."5". */
+  distribution: Record<string, number>;
+}
+
+export interface PendingReview {
+  orderItemId: number;
+  orderReference: string;
+  productId: number;
+  productSlug: string | null;
+  productName: string;
+  emoji: string | null;
+  deliveredAt: string | null;
 }
 
 export interface OrderEvent {

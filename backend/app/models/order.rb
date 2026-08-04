@@ -21,6 +21,7 @@ class Order < ApplicationRecord
   belongs_to :buyer, class_name: "User"
   has_many :order_items, dependent: :destroy
   has_many :order_events, dependent: :destroy
+  has_many :refund_requests, dependent: :destroy
 
   enum :status, STATUSES
 

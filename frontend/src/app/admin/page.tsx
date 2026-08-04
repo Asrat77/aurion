@@ -2,7 +2,18 @@
 
 import { useState } from "react";
 import type { Icon } from "@phosphor-icons/react";
-import { SquaresFour, Package, Receipt, Users, TrendUp, Storefront, FileText, XCircle } from "@phosphor-icons/react";
+import {
+  SquaresFour,
+  Package,
+  Receipt,
+  Users,
+  TrendUp,
+  Storefront,
+  FileText,
+  XCircle,
+  ShieldCheck,
+  Star,
+} from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import {
   useAdminOverview,
@@ -13,6 +24,10 @@ import {
   useAdminAnalytics,
   useAdminRequestForQuotes,
   useAdminCancelOrder,
+  useAdminRefundRequests,
+  useResolveRefundRequest,
+  useAdminReviews,
+  useModerateReview,
 } from "@/lib/admin";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
@@ -23,13 +38,15 @@ import EmptyState from "@/components/ui/EmptyState";
 import { formatBase } from "@/lib/money";
 import { ApiError } from "@/lib/api";
 import { useUiStore } from "@/store/ui";
-import type { Order } from "@/types";
+import type { Order, RefundRequest, Review } from "@/types";
 
 const VIEWS: { key: string; label: string; icon: Icon }[] = [
   { key: "overview", label: "Overview", icon: SquaresFour },
   { key: "products", label: "Products", icon: Package },
   { key: "orders", label: "Orders", icon: Receipt },
   { key: "rfqs", label: "Sourcing", icon: FileText },
+  { key: "refunds", label: "Refunds", icon: ShieldCheck },
+  { key: "reviews", label: "Reviews", icon: Star },
   { key: "customers", label: "Customers", icon: Users },
   { key: "analytics", label: "Analytics", icon: TrendUp },
   { key: "vendors", label: "Vendors", icon: Storefront },
@@ -99,6 +116,8 @@ export default function AdminPage() {
             {view === "products" && <ProductsView />}
             {view === "orders" && <OrdersView />}
             {view === "rfqs" && <RequestForQuotesView />}
+            {view === "refunds" && <RefundRequestsView />}
+            {view === "reviews" && <ReviewsView />}
             {view === "customers" && <CustomersView />}
             {view === "analytics" && <AnalyticsView />}
             {view === "vendors" && <VendorsView />}
@@ -479,6 +498,191 @@ function VendorsView() {
             ))}
           </tbody>
         </table>
+      )}
+    </div>
+  );
+}
+
+function RefundRequestsView() {
+  const { data, isLoading } = useAdminRefundRequests();
+  const resolve = useResolveRefundRequest();
+  const showToast = useUiStore((s) => s.showToast);
+
+  async function decide(claim: RefundRequest, decision: "approve" | "reject") {
+    const note = window.prompt(
+      decision === "approve"
+        ? `Uphold this claim? The vendor's payout for ${claim.productName} will be reversed and the stock returned.`
+        : `Decline this claim? Give the buyer a reason:`,
+    );
+    if (note === null) return;
+
+    try {
+      await resolve.mutateAsync({ id: claim.id, decision, note: note || undefined });
+      showToast(
+        decision === "approve" ? "Claim upheld and payout reversed." : "Claim declined.",
+        "success",
+      );
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : "Could not resolve this claim.", "error");
+    }
+  }
+
+  if (isLoading) return <TableSkeleton cols={6} />;
+
+  const open = data?.filter((c) => c.status === "open") ?? [];
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="section-label mb-2">Buyer protection</p>
+          <h3 className="display-heading">Refund Claims</h3>
+        </div>
+        <span className="text-xs text-[var(--text-muted)]">
+          {open.length} awaiting a decision
+        </span>
+      </div>
+
+      {!data || data.length === 0 ? (
+        <EmptyState
+          icon={<ShieldCheck size={24} />}
+          title="No refund claims"
+          body="Claims raised by buyers against an order will appear here."
+        />
+      ) : (
+        <div className="flex flex-col gap-3">
+          {data.map((claim) => (
+            <article
+              key={claim.id}
+              className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-deep)] p-5"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="font-[family-name:var(--font-mono)] text-xs text-[var(--gold)]">
+                    {claim.orderReference}
+                  </span>
+                  <h4 className="mt-1 text-base font-semibold text-white">{claim.productName}</h4>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    {claim.buyerEmail} &middot; sold by {claim.vendorName}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <StatusBadge status={claim.status} />
+                  <span className="font-mono text-sm text-[var(--gold)]">
+                    {formatBase(claim.amountCents)}
+                  </span>
+                </div>
+              </div>
+
+              <p className="mt-3 text-sm text-[var(--text-secondary)]">
+                <span className="text-[var(--gold-light)]">{claim.reasonLabel}</span>
+                {claim.detail && <> &mdash; {claim.detail}</>}
+              </p>
+
+              {claim.resolutionNote && (
+                <p className="mt-2 text-xs text-[var(--text-muted)]">
+                  Resolution: {claim.resolutionNote}
+                </p>
+              )}
+
+              {claim.status === "open" && (
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border-subtle)] pt-3">
+                  <button
+                    className="btn btn-primary"
+                    style={{ padding: "10px 16px", fontSize: "0.72rem" }}
+                    disabled={resolve.isPending}
+                    onClick={() => decide(claim, "approve")}
+                  >
+                    Uphold and refund
+                  </button>
+                  <button
+                    className="btn btn-outline"
+                    style={{ padding: "10px 16px", fontSize: "0.72rem" }}
+                    disabled={resolve.isPending}
+                    onClick={() => decide(claim, "reject")}
+                  >
+                    Decline
+                  </button>
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReviewsView() {
+  const { data, isLoading } = useAdminReviews();
+  const moderate = useModerateReview();
+  const showToast = useUiStore((s) => s.showToast);
+
+  async function toggle(review: Review) {
+    const status = review.status === "published" ? "hidden" : "published";
+    try {
+      await moderate.mutateAsync({ id: review.id, status });
+      showToast(status === "hidden" ? "Review hidden." : "Review restored.", "success");
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : "Could not update this review.", "error");
+    }
+  }
+
+  if (isLoading) return <TableSkeleton cols={5} />;
+
+  return (
+    <div>
+      <div className="mb-6">
+        <p className="section-label mb-2">Moderation</p>
+        <h3 className="display-heading">Reviews</h3>
+        <p className="mt-2 text-sm text-[var(--text-muted)]">
+          Reviews publish immediately. Hiding one removes it from the product page and from
+          that product&apos;s average rating.
+        </p>
+      </div>
+
+      {!data || data.length === 0 ? (
+        <EmptyState icon={<Star size={24} />} title="No reviews yet" />
+      ) : (
+        <div className="flex flex-col gap-3">
+          {data.map((review) => (
+            <article
+              key={review.id}
+              className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-deep)] p-5"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h4 className="text-base font-semibold text-white">{review.productName}</h4>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    {review.authorName} &middot; {new Date(review.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-sm text-[var(--gold)]">{review.rating}/5</span>
+                  <StatusBadge status={review.status} />
+                </div>
+              </div>
+
+              {review.title && <p className="mt-3 font-semibold text-white">{review.title}</p>}
+              {review.body && (
+                <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
+                  {review.body}
+                </p>
+              )}
+
+              <div className="mt-4 border-t border-[var(--border-subtle)] pt-3">
+                <button
+                  className="btn btn-outline"
+                  style={{ padding: "10px 16px", fontSize: "0.72rem" }}
+                  disabled={moderate.isPending}
+                  onClick={() => toggle(review)}
+                >
+                  {review.status === "published" ? "Hide review" : "Restore review"}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
       )}
     </div>
   );

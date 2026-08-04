@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Receipt, CaretDown, Truck } from "@phosphor-icons/react";
+import { Receipt, CaretDown, Truck, ShieldCheck, Star } from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import { useOrders, useCancelOrder } from "@/lib/orders";
 import { formatMoney } from "@/lib/money";
@@ -12,9 +12,11 @@ import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import ProductImage from "@/components/ui/ProductImage";
 import OrderTimeline from "@/components/orders/OrderTimeline";
+import RequestRefundForm from "@/components/orders/RequestRefundForm";
+import WriteReviewForm from "@/components/reviews/WriteReviewForm";
 import { OrderCardSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
-import type { Order } from "@/types";
+import type { Order, OrderItem, OrderStatus } from "@/types";
 
 export default function OrdersPage() {
   const { data: user, isLoading: userLoading } = useMe();
@@ -98,38 +100,9 @@ function OrderCard({ order }: { order: Order }) {
         </div>
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {order.items.map((i) => (
-          <div key={i.id} className="flex items-center gap-3 flex-wrap">
-            <div className="relative w-8 h-8 shrink-0 rounded-lg overflow-hidden border border-[var(--border-subtle)]">
-              <ProductImage
-                name={i.productName}
-                emoji={i.emoji ?? "\u{1F4E6}"}
-                width={64}
-                height={64}
-                sizes="32px"
-                frame={false}
-              />
-            </div>
-            <span className="text-sm text-[var(--text-secondary)] flex-1 min-w-[8rem]">
-              {i.productSlug ? (
-                <Link href={`/product/${i.productSlug}`} className="hover:text-[var(--gold)]">
-                  {i.productName}
-                </Link>
-              ) : (
-                i.productName
-              )}{" "}
-              &times;{i.quantity}
-            </span>
-            {order.status !== "pending" && <StatusBadge status={i.fulfillmentStatus} />}
-            {i.trackingNumber && (
-              <span className="inline-flex items-center gap-1.5 font-mono text-xs text-[var(--text-muted)]">
-                <Truck size={14} className="text-[var(--gold)]" />
-                {i.carrier ? `${i.carrier} ` : ""}
-                {i.trackingNumber}
-              </span>
-            )}
-          </div>
+          <OrderItemRow key={i.id} item={i} orderStatus={order.status} />
         ))}
       </div>
 
@@ -202,6 +175,100 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between py-1 text-sm">
       <span className="text-[var(--text-muted)]">{label}</span>
       <span className="text-[var(--gold)]">{value}</span>
+    </div>
+  );
+}
+
+/**
+ * One line of an order, plus whatever the buyer can do about it right now:
+ * write a review once it is delivered, or open a buyer protection claim.
+ */
+function OrderItemRow({ item, orderStatus }: { item: OrderItem; orderStatus: OrderStatus }) {
+  const [panel, setPanel] = useState<"review" | "refund" | null>(null);
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative w-8 h-8 shrink-0 rounded-lg overflow-hidden border border-[var(--border-subtle)]">
+          <ProductImage
+            name={item.productName}
+            emoji={item.emoji ?? "\u{1F4E6}"}
+            width={64}
+            height={64}
+            sizes="32px"
+            frame={false}
+          />
+        </div>
+        <span className="text-sm text-[var(--text-secondary)] flex-1 min-w-[8rem]">
+          {item.productSlug ? (
+            <Link href={`/product/${item.productSlug}`} className="hover:text-[var(--gold)]">
+              {item.productName}
+            </Link>
+          ) : (
+            item.productName
+          )}{" "}
+          &times;{item.quantity}
+        </span>
+        {orderStatus !== "pending" && <StatusBadge status={item.fulfillmentStatus} />}
+        {item.refundStatus && (
+          <span className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+            <ShieldCheck size={14} className="text-[var(--gold)]" />
+            Refund {item.refundStatus}
+          </span>
+        )}
+        {item.trackingNumber && (
+          <span className="inline-flex items-center gap-1.5 font-mono text-xs text-[var(--text-muted)]">
+            <Truck size={14} className="text-[var(--gold)]" />
+            {item.carrier ? `${item.carrier} ` : ""}
+            {item.trackingNumber}
+          </span>
+        )}
+      </div>
+
+      {(item.reviewable || item.refundable || item.reviewed) && (
+        <div className="mt-2 ml-11 flex flex-wrap items-center gap-4 text-xs">
+          {item.reviewed && <span className="text-[var(--text-muted)]">You reviewed this</span>}
+          {item.reviewable && (
+            <button
+              className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 text-[var(--gold)] hover:underline"
+              onClick={() => setPanel(panel === "review" ? null : "review")}
+            >
+              <Star size={14} weight="fill" /> Write a review
+            </button>
+          )}
+          {item.refundable && (
+            <button
+              className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 text-[var(--text-muted)] hover:text-[var(--gold)]"
+              onClick={() => setPanel(panel === "refund" ? null : "refund")}
+            >
+              <ShieldCheck size={14} /> Report a problem
+            </button>
+          )}
+        </div>
+      )}
+
+      {panel === "review" && (
+        <div className="mt-3">
+          <WriteReviewForm
+            pending={{
+              orderItemId: item.id,
+              orderReference: "",
+              productId: item.productId,
+              productSlug: item.productSlug,
+              productName: item.productName,
+              emoji: item.emoji ?? null,
+              deliveredAt: item.deliveredAt,
+            }}
+            onDone={() => setPanel(null)}
+          />
+        </div>
+      )}
+
+      {panel === "refund" && (
+        <div className="mt-3">
+          <RequestRefundForm item={item} onDone={() => setPanel(null)} />
+        </div>
+      )}
     </div>
   );
 }

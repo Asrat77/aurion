@@ -10,6 +10,7 @@ import { useUiStore } from "@/store/ui";
 import ProductImage from "@/components/ui/ProductImage";
 import { DetailSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
+import ProductReviews from "@/components/reviews/ProductReviews";
 import { formatBase } from "@/lib/money";
 
 export default function ProductDetailPage({
@@ -87,10 +88,14 @@ export default function ProductDetailPage({
               {product.name}
             </h1>
             {product.rating != null ? (
-              <div className="flex items-center gap-1 text-sm text-[var(--gold)] mb-3">
+              <a
+                href="#reviews-heading"
+                className="inline-flex items-center gap-1.5 text-sm text-[var(--gold)] mb-3 hover:underline"
+              >
                 <Star size={16} weight="fill" />
-                {product.rating} ({product.reviewsCount} reviews)
-              </div>
+                {product.rating.toFixed(1)} ({product.reviewsCount}{" "}
+                {product.reviewsCount === 1 ? "review" : "reviews"})
+              </a>
             ) : (
               <div className="text-sm text-[var(--text-muted)] mb-3">No reviews yet</div>
             )}
@@ -135,6 +140,10 @@ export default function ProductDetailPage({
               </button>
             </div>
           </div>
+        </div>
+
+        <div className="mt-16 border-t border-[var(--border-subtle)] pt-12">
+          <ProductReviews slug={product.slug} />
         </div>
       </div>
     </section>

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
-import type { Order, Product, RequestForQuote } from "@/types";
+import type { Order, Product, RequestForQuote, RefundRequest, Review } from "@/types";
 
 export interface AdminOverview {
   totalProducts: number;
@@ -93,5 +93,41 @@ export function useAdminRequestForQuotes() {
   return useQuery<RequestForQuote[]>({
     queryKey: [ "admin", "request-for-quotes" ],
     queryFn: () => apiFetch("/admin/request_for_quotes"),
+  });
+}
+
+export function useAdminRefundRequests() {
+  return useQuery<RefundRequest[]>({
+    queryKey: [ "admin", "refund-requests" ],
+    queryFn: () => apiFetch("/admin/refund_requests"),
+  });
+}
+
+/** Upholds or declines a buyer protection claim. */
+export function useResolveRefundRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, decision, note }: { id: number; decision: "approve" | "reject"; note?: string }) =>
+      apiFetch<RefundRequest>(`/admin/refund_requests/${id}/${decision}`, {
+        method: "POST",
+        body: { note },
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
+  });
+}
+
+export function useAdminReviews() {
+  return useQuery<Review[]>({
+    queryKey: [ "admin", "reviews" ],
+    queryFn: () => apiFetch("/admin/reviews"),
+  });
+}
+
+export function useModerateReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: "published" | "hidden" }) =>
+      apiFetch<Review>(`/admin/reviews/${id}`, { method: "PATCH", body: { status } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
   });
 }

@@ -21,6 +21,8 @@ class OrderItem < ApplicationRecord
   belongs_to :product
   belongs_to :vendor
   has_one :payout, dependent: :restrict_with_error
+  has_one :review, dependent: :destroy
+  has_many :refund_requests, dependent: :destroy
 
   enum :fulfillment_status, FULFILLMENT_STATUSES, prefix: :fulfillment
 
