@@ -30,6 +30,10 @@ Rails.application.routes.draw do
       get "vendor_application", to: "vendor_applications#show"
       post "vendor_application", to: "vendor_applications#create"
 
+      resources :conversations, only: [ :index, :show, :create ] do
+        post :reply, on: :member
+      end
+
       post "payments/:order_id/intent", to: "payments#create"
       post "payments/:order_id/mock_confirm", to: "payments#mock_confirm"
 

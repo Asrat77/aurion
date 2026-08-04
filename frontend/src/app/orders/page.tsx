@@ -14,6 +14,7 @@ import ProductImage from "@/components/ui/ProductImage";
 import OrderTimeline from "@/components/orders/OrderTimeline";
 import RequestRefundForm from "@/components/orders/RequestRefundForm";
 import WriteReviewForm from "@/components/reviews/WriteReviewForm";
+import ContactVendorButton from "@/components/messages/ContactVendorButton";
 import { OrderCardSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
 import type { Order, OrderItem, OrderStatus } from "@/types";
@@ -102,7 +103,7 @@ function OrderCard({ order }: { order: Order }) {
 
       <div className="flex flex-col gap-4">
         {order.items.map((i) => (
-          <OrderItemRow key={i.id} item={i} orderStatus={order.status} />
+          <OrderItemRow key={i.id} item={i} orderStatus={order.status} orderId={order.id} />
         ))}
       </div>
 
@@ -183,7 +184,15 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
  * One line of an order, plus whatever the buyer can do about it right now:
  * write a review once it is delivered, or open a buyer protection claim.
  */
-function OrderItemRow({ item, orderStatus }: { item: OrderItem; orderStatus: OrderStatus }) {
+function OrderItemRow({
+  item,
+  orderStatus,
+  orderId,
+}: {
+  item: OrderItem;
+  orderStatus: OrderStatus;
+  orderId: number;
+}) {
   const [panel, setPanel] = useState<"review" | "refund" | null>(null);
 
   return (
@@ -243,6 +252,14 @@ function OrderItemRow({ item, orderStatus }: { item: OrderItem; orderStatus: Ord
             >
               <ShieldCheck size={14} /> Report a problem
             </button>
+          )}
+          {item.vendorId != null && item.vendorName && (
+            <ContactVendorButton
+              vendorId={item.vendorId}
+              vendorName={item.vendorName}
+              orderId={orderId}
+              className="text-xs"
+            />
           )}
         </div>
       )}

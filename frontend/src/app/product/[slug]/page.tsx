@@ -23,6 +23,7 @@ import ProductImage from "@/components/ui/ProductImage";
 import { DetailSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
 import ProductReviews from "@/components/reviews/ProductReviews";
+import ContactVendorButton from "@/components/messages/ContactVendorButton";
 import { StarRating } from "@/components/reviews/StarRating";
 import { formatBase } from "@/lib/money";
 import type { Product } from "@/types";
@@ -276,6 +277,14 @@ function BuyBox({ product }: { product: Product }) {
           View cart
         </button>
       )}
+
+      <div className="mt-5">
+        <ContactVendorButton
+          vendorId={product.vendor.id}
+          vendorName={product.vendor.storeName}
+          productId={product.id}
+        />
+      </div>
 
       <Link
         href="/buyer-protection"

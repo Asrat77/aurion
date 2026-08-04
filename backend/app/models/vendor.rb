@@ -8,6 +8,7 @@ class Vendor < ApplicationRecord
   has_many :products, dependent: :destroy
   has_many :order_items, dependent: :restrict_with_error
   has_many :payouts, dependent: :restrict_with_error
+  has_many :conversations, dependent: :destroy
 
   validates :store_name, presence: true
   validates :slug, presence: true, uniqueness: true

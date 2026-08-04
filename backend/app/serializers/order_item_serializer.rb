@@ -20,6 +20,7 @@ class OrderItemSerializer
       trackingNumber: item.tracking_number,
       shippedAt: item.shipped_at,
       deliveredAt: item.delivered_at,
+      vendorId: item.vendor_id,
       vendorName: item.vendor.store_name,
     }
   end

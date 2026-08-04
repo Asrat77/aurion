@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Bag, User, List, X } from "@phosphor-icons/react";
 import { useMe, useLogout } from "@/lib/auth";
+import { useInbox } from "@/lib/messages";
 import { useCartStore, cartItemCount } from "@/store/cart";
 import { useUiStore } from "@/store/ui";
 
@@ -15,6 +16,8 @@ export default function Navbar() {
   const logout = useLogout();
   const items = useCartStore((s) => s.items);
   const openCart = useCartStore((s) => s.open);
+  const { data: inbox } = useInbox(!!user);
+  const unreadMessages = inbox?.unreadTotal ?? 0;
   const openAuth = useUiStore((s) => s.openAuth);
   const showToast = useUiStore((s) => s.showToast);
 
@@ -158,6 +161,18 @@ export default function Navbar() {
                       onClick={() => setDropdownOpen(false)}
                     >
                       Orders
+                    </Link>
+                    <Link
+                      href="/messages"
+                      className="flex min-h-11 items-center justify-between gap-2 px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Messages
+                      {unreadMessages > 0 && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--gold)] px-1.5 font-[family-name:var(--font-mono)] text-[0.6rem] text-[var(--bg-deep)]">
+                          {unreadMessages}
+                        </span>
+                      )}
                     </Link>
                     <Link
                       href="/wishlist"

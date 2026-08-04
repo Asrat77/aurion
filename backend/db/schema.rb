@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,6 +20,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_120000) do
     t.string "slug", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_categories_on_slug", unique: true
+  end
+
+  create_table "conversations", force: :cascade do |t|
+    t.bigint "buyer_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "last_message_at", null: false
+    t.bigint "order_id"
+    t.bigint "product_id"
+    t.string "subject", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.index ["buyer_id", "vendor_id", "order_id", "product_id"], name: "index_conversations_on_participants_and_context", unique: true
+    t.index ["buyer_id"], name: "index_conversations_on_buyer_id"
+    t.index ["last_message_at"], name: "index_conversations_on_last_message_at"
+    t.index ["order_id"], name: "index_conversations_on_order_id"
+    t.index ["product_id"], name: "index_conversations_on_product_id"
+    t.index ["vendor_id"], name: "index_conversations_on_vendor_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "read_at"
+    t.bigint "sender_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["sender_id"], name: "index_messages_on_sender_id"
   end
 
   create_table "order_events", force: :cascade do |t|
@@ -203,6 +232,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_120000) do
     t.index ["user_id"], name: "index_vendors_on_user_id", unique: true
   end
 
+  add_foreign_key "conversations", "orders"
+  add_foreign_key "conversations", "products"
+  add_foreign_key "conversations", "users", column: "buyer_id"
+  add_foreign_key "conversations", "vendors"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "users", column: "sender_id"
   add_foreign_key "order_events", "order_items"
   add_foreign_key "order_events", "orders"
   add_foreign_key "order_events", "users", column: "actor_id"

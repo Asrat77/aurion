@@ -60,6 +60,36 @@ export interface Product {
   vendor: { id: number; storeName: string; slug: string };
 }
 
+export interface Message {
+  id: number;
+  body: string;
+  /** True when the signed-in user sent it — used to place the bubble. */
+  mine: boolean;
+  senderName: string;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: number;
+  subject: string;
+  /** The other party: the vendor's store name, or the buyer's name. */
+  counterpartName: string;
+  vendorSlug: string;
+  orderId: number | null;
+  orderReference: string | null;
+  productSlug: string | null;
+  productName: string | null;
+  unreadCount: number;
+  lastMessagePreview: string | null;
+  lastMessageAt: string;
+  createdAt: string;
+}
+
+export interface ConversationDetail extends Conversation {
+  messages: Message[];
+}
+
 export interface ProductFacets {
   origins: string[];
   priceRange: { minCents: number; maxCents: number };
@@ -113,6 +143,7 @@ export interface OrderItem {
   trackingNumber: string | null;
   shippedAt: string | null;
   deliveredAt: string | null;
+  vendorId?: number;
   vendorName?: string;
 }
 
