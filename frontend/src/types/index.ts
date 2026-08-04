@@ -60,6 +60,13 @@ export interface Product {
   vendor: { id: number; storeName: string; slug: string };
 }
 
+export interface ProductFacets {
+  origins: string[];
+  priceRange: { minCents: number; maxCents: number };
+  freeShippingCount: number;
+  inStockCount: number;
+}
+
 export interface CartLine {
   productId: number;
   slug: string;

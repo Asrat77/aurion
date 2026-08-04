@@ -11,7 +11,9 @@ Rails.application.routes.draw do
       patch "me", to: "me#update"
       delete "me", to: "me#destroy"
 
-      resources :products, only: [ :index, :show ], param: :slug
+      resources :products, only: [ :index, :show ], param: :slug do
+        get :facets, on: :collection
+      end
       resources :categories, only: [ :index ]
       resources :orders, only: [ :index, :show, :create ] do
         post :quote, on: :collection

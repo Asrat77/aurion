@@ -98,20 +98,111 @@ PRODUCT_DEFS = [
     description: "Whole black cumin seeds. 100g, earthy and slightly bitter flavor." },
 ]
 
-PRODUCT_DEFS.each do |p|
-  Product.find_or_create_by!(name: p[:name]) do |product|
-    product.category = categories_by_slug.fetch(p[:category])
-    product.vendor = vendors_by_store.fetch(p[:vendor])
-    product.price_cents = (p[:price] * 100).round
-    product.currency = "USD"
-    product.stock = 100
-    product.emoji = p[:emoji]
-    product.origin = p[:origin]
-    product.description = p[:description]
-    product.rating = p[:rating]
-    product.reviews_count = p[:reviews]
-    product.status = :active
+PRODUCT_DEFS.each_with_index do |p, index|
+  product = Product.find_or_create_by!(name: p[:name]) do |new_product|
+    new_product.category = categories_by_slug.fetch(p[:category])
+    new_product.vendor = vendors_by_store.fetch(p[:vendor])
+    new_product.price_cents = (p[:price] * 100).round
+    new_product.currency = "USD"
+    new_product.stock = 100
+    new_product.emoji = p[:emoji]
+    new_product.origin = p[:origin]
+    new_product.description = p[:description]
+    new_product.status = :active
+    # rating and reviews_count are derived from real Review rows below — never
+    # set them directly, or the product header and the reviews section disagree.
+  end
+
+  # Applied outside the create block so re-running the seed keeps it true of
+  # products that already exist. Every third product ships free, which gives the
+  # free-shipping filter something to find.
+  product.update!(free_shipping: (index % 3).zero?)
+end
+
+# Reviews are only meaningful when a real buyer received real goods, so the
+# demo ratings are backed by genuine delivered orders rather than typed in.
+puts "Seeding review history..."
+
+REVIEWER_DEFS = [
+  { email: "meron@buyers.aurion.et", name: "Meron Alemu" },
+  { email: "daniel@buyers.aurion.et", name: "Daniel Bekele" },
+  { email: "sara@buyers.aurion.et", name: "Sara Haile" },
+  { email: "yonas@buyers.aurion.et", name: "Yonas Girma" },
+]
+
+REVIEW_TEXTS = [
+  [ 5, "Exactly as described", "Arrived well packed and the quality is genuinely excellent." ],
+  [ 5, "Will order again", "Second time buying this. Consistent every time." ],
+  [ 4, "Very good", "Happy with it overall. Shipping took a little longer than I expected." ],
+  [ 4, "Good quality", "Does what it says. Packaging could be sturdier." ],
+  [ 5, "Worth it", "You can taste the difference against supermarket equivalents." ],
+]
+
+reviewers = REVIEWER_DEFS.map do |r|
+  User.find_or_create_by!(email: r[:email]) do |u|
+    u.name = r[:name]
+    u.password = "aurion123"
+    u.role = :buyer
   end
 end
 
-puts "Done. #{Category.count} categories, #{Vendor.count} vendors, #{Product.count} products, #{User.count} users."
+# Give the first dozen products a short review history each.
+Product.order(:id).limit(12).each_with_index do |product, product_index|
+  reviewers.take(2 + (product_index % 3)).each_with_index do |reviewer, reviewer_index|
+    next if Review.joins(:order_item)
+                  .where(buyer: reviewer, order_items: { product_id: product.id })
+                  .exists?
+
+    line_total = product.price_cents
+    commission = (line_total * product.vendor.commission_rate).round
+
+    order = Order.create!(
+      buyer: reviewer,
+      status: :delivered,
+      subtotal_cents: line_total,
+      shipping_cents: 0,
+      tax_cents: 0,
+      total_cents: line_total,
+      currency: "USD",
+      fx_rate: 1,
+      paid_at: (30 - product_index).days.ago,
+      delivered_at: (20 - product_index).days.ago,
+      payment_method: "mock",
+      shipping_address: { city: "Addis Ababa", country: "ET" },
+    )
+
+    item = order.order_items.create!(
+      product: product,
+      vendor: product.vendor,
+      product_name: product.name,
+      unit_price_cents: product.price_cents,
+      quantity: 1,
+      line_total_cents: line_total,
+      commission_cents: commission,
+      net_cents: line_total - commission,
+      fulfillment_status: :delivered,
+      shipped_at: (25 - product_index).days.ago,
+      delivered_at: (20 - product_index).days.ago,
+    )
+
+    Payout.find_or_create_by!(order_item: item) do |payout|
+      payout.vendor = item.vendor
+      payout.amount_cents = item.net_cents
+      payout.status = :pending
+    end
+
+    rating, title, body = REVIEW_TEXTS[(product_index + reviewer_index) % REVIEW_TEXTS.length]
+    Review.create!(
+      product: product,
+      buyer: reviewer,
+      order_item: item,
+      rating: rating,
+      title: title,
+      body: body,
+      status: :published,
+    )
+  end
+end
+
+puts "Done. #{Category.count} categories, #{Vendor.count} vendors, #{Product.count} products, " \
+     "#{User.count} users, #{Review.count} reviews."

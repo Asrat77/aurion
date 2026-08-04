@@ -7,11 +7,18 @@ import {
   ArrowRight,
   ArrowUpRight,
   Buildings,
+  Funnel,
   MagnifyingGlass,
   SlidersHorizontal,
 } from "@phosphor-icons/react";
 import { useCategories, useProducts } from "@/lib/products";
 import ProductCard from "@/components/products/ProductCard";
+import ProductFilters, {
+  EMPTY_FILTERS,
+  activeFilterCount,
+  filtersToQuery,
+  type FilterState,
+} from "@/components/products/ProductFilters";
 import { ProductCardSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
 
@@ -19,6 +26,7 @@ const SORTS = [
   { value: "popular", label: "Most popular" },
   { value: "price_asc", label: "Price: low to high" },
   { value: "price_desc", label: "Price: high to low" },
+  { value: "newest", label: "Newest first" },
   { value: "name", label: "Name A to Z" },
 ];
 
@@ -27,6 +35,8 @@ function StoreContent() {
   const [category, setCategory] = useState(searchParams.get("category") ?? "all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("popular");
+  const [filters, setFilters] = useState<FilterState>(EMPTY_FILTERS);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const deferredSearch = useDeferredValue(search);
 
   const { data: categories } = useCategories();
@@ -35,12 +45,15 @@ function StoreContent() {
     isLoading,
     isError,
     refetch,
-  } = useProducts({ category, q: deferredSearch, sort });
+  } = useProducts({ category, q: deferredSearch, sort, ...filtersToQuery(filters) });
+
+  const filterCount = activeFilterCount(filters);
 
   function clearFilters() {
     setCategory("all");
     setSearch("");
     setSort("popular");
+    setFilters(EMPTY_FILTERS);
   }
 
   return (
@@ -104,25 +117,47 @@ function StoreContent() {
                   onChange={(event) => setSearch(event.target.value)}
                 />
               </label>
-              <label className="relative block min-w-[220px]">
-                <span className="sr-only">Sort products</span>
-                <SlidersHorizontal
-                  size={17}
-                  className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-[var(--gold)]"
-                />
-                <select
-                  className="input cursor-pointer pl-11"
-                  value={sort}
-                  onChange={(event) => setSort(event.target.value)}
+              <div className="flex gap-3">
+                <label className="relative block min-w-[200px] flex-1">
+                  <span className="sr-only">Sort products</span>
+                  <SlidersHorizontal
+                    size={17}
+                    className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-[var(--gold)]"
+                  />
+                  <select
+                    className="input cursor-pointer pl-11"
+                    value={sort}
+                    onChange={(event) => setSort(event.target.value)}
+                  >
+                    {SORTS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="inline-flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full border border-[var(--border-gold)] px-5 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[var(--gold-light)] transition-colors hover:bg-[rgba(214,180,94,0.08)] lg:hidden"
+                  onClick={() => setFiltersOpen((open) => !open)}
+                  aria-expanded={filtersOpen}
                 >
-                  {SORTS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  <Funnel size={15} />
+                  Filters
+                  {filterCount > 0 && (
+                    <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--gold)] px-1.5 font-[family-name:var(--font-mono)] text-[0.6rem] text-[var(--bg-deep)]">
+                      {filterCount}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
+
+            {filtersOpen && (
+              <div className="mt-4 border-t border-[var(--border-subtle)] pt-5 lg:hidden">
+                <ProductFilters filters={filters} onChange={setFilters} />
+              </div>
+            )}
           </div>
 
           <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
@@ -143,37 +178,45 @@ function StoreContent() {
             ) : null}
           </div>
 
-          {isLoading ? (
-            <ProductGridSkeleton />
-          ) : isError ? (
-            <EmptyState
-              icon={<MagnifyingGlass size={32} />}
-              title="The marketplace could not load"
-              body="The connection did not complete. Your filters are still here, so you can safely try again."
-              action={
-                <button type="button" className="btn btn-outline" onClick={() => refetch()}>
-                  Try again
-                </button>
-              }
-            />
-          ) : !data || data.products.length === 0 ? (
-            <EmptyState
-              icon={<MagnifyingGlass size={32} />}
-              title="No products match"
-              body="Try another search or reset the marketplace filters."
-              action={
-                <button type="button" className="btn btn-outline" onClick={clearFilters}>
-                  Clear filters
-                </button>
-              }
-            />
-          ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {data.products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+          <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
+            <aside className="hidden h-fit rounded-[24px] border border-[var(--border-subtle)] bg-[rgba(9,13,22,0.82)] p-5 lg:sticky lg:top-28 lg:block">
+              <ProductFilters filters={filters} onChange={setFilters} />
+            </aside>
+
+            <div className="min-w-0">
+              {isLoading ? (
+                <ProductGridSkeleton />
+              ) : isError ? (
+                <EmptyState
+                  icon={<MagnifyingGlass size={32} />}
+                  title="The marketplace could not load"
+                  body="The connection did not complete. Your filters are still here, so you can safely try again."
+                  action={
+                    <button type="button" className="btn btn-outline" onClick={() => refetch()}>
+                      Try again
+                    </button>
+                  }
+                />
+              ) : !data || data.products.length === 0 ? (
+                <EmptyState
+                  icon={<MagnifyingGlass size={32} />}
+                  title="No products match"
+                  body="Try another search or reset the marketplace filters."
+                  action={
+                    <button type="button" className="btn btn-outline" onClick={clearFilters}>
+                      Clear filters
+                    </button>
+                  }
+                />
+              ) : (
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  {data.products.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
           <div className="relative mt-20 overflow-hidden rounded-[28px] border border-[var(--border-gold)] bg-[linear-gradient(120deg,#0b1729,#080b12)] p-7 sm:p-10 lg:p-12">
             <div className="absolute inset-0 aurion-pattern opacity-[0.15]" />
