@@ -9,13 +9,31 @@ export interface User {
   vendor?: Vendor | null;
 }
 
+export type VendorStatus = "pending" | "active" | "suspended" | "rejected";
+
 export interface Vendor {
   id: number;
   storeName: string;
   slug: string;
   commissionRate: number;
-  status: "pending" | "active" | "suspended";
+  status: VendorStatus;
   bio: string | null;
+}
+
+/** A Vendor record with the details supplied when applying to sell. */
+export interface VendorApplication extends Vendor {
+  contactName: string | null;
+  contactPhone: string | null;
+  businessRegistration: string | null;
+  city: string | null;
+  country: string | null;
+  website: string | null;
+  productFocus: string | null;
+  payoutMethod: string | null;
+  appliedAt: string | null;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+  ownerEmail: string;
 }
 
 export interface Category {

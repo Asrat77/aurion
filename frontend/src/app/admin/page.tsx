@@ -28,6 +28,8 @@ import {
   useResolveRefundRequest,
   useAdminReviews,
   useModerateReview,
+  useAdminVendorApplications,
+  useResolveVendorApplication,
 } from "@/lib/admin";
 import PageHeader from "@/components/ui/PageHeader";
 import StatCard from "@/components/ui/StatCard";
@@ -38,7 +40,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import { formatBase } from "@/lib/money";
 import { ApiError } from "@/lib/api";
 import { useUiStore } from "@/store/ui";
-import type { Order, RefundRequest, Review } from "@/types";
+import type { Order, RefundRequest, Review, VendorApplication } from "@/types";
 
 const VIEWS: { key: string; label: string; icon: Icon }[] = [
   { key: "overview", label: "Overview", icon: SquaresFour },
@@ -49,6 +51,7 @@ const VIEWS: { key: string; label: string; icon: Icon }[] = [
   { key: "reviews", label: "Reviews", icon: Star },
   { key: "customers", label: "Customers", icon: Users },
   { key: "analytics", label: "Analytics", icon: TrendUp },
+  { key: "applications", label: "Applications", icon: Storefront },
   { key: "vendors", label: "Vendors", icon: Storefront },
 ];
 
@@ -120,6 +123,7 @@ export default function AdminPage() {
             {view === "reviews" && <ReviewsView />}
             {view === "customers" && <CustomersView />}
             {view === "analytics" && <AnalyticsView />}
+            {view === "applications" && <VendorApplicationsView />}
             {view === "vendors" && <VendorsView />}
           </div>
         </div>
@@ -680,6 +684,119 @@ function ReviewsView() {
                   {review.status === "published" ? "Hide review" : "Restore review"}
                 </button>
               </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VendorApplicationsView() {
+  const { data, isLoading } = useAdminVendorApplications();
+  const resolve = useResolveVendorApplication();
+  const showToast = useUiStore((s) => s.showToast);
+
+  async function decide(application: VendorApplication, decision: "approve" | "reject") {
+    const note = window.prompt(
+      decision === "approve"
+        ? `Approve ${application.storeName}? Their account gains the vendor role and the store opens.`
+        : `Reject ${application.storeName}? Give a reason for the record:`,
+    );
+    if (note === null) return;
+
+    try {
+      await resolve.mutateAsync({ id: application.id, decision, note: note || undefined });
+      showToast(
+        decision === "approve" ? `${application.storeName} approved.` : "Application rejected.",
+        "success",
+      );
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : "Could not decide this application.", "error");
+    }
+  }
+
+  if (isLoading) return <TableSkeleton cols={5} />;
+
+  const pending = data?.filter((a) => a.status === "pending") ?? [];
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="section-label mb-2">Onboarding</p>
+          <h3 className="display-heading">Vendor Applications</h3>
+        </div>
+        <span className="text-xs text-[var(--text-muted)]">{pending.length} awaiting review</span>
+      </div>
+
+      {!data || data.length === 0 ? (
+        <EmptyState
+          icon={<Storefront size={24} />}
+          title="No applications yet"
+          body="Businesses applying through “Sell on AURION” will appear here."
+        />
+      ) : (
+        <div className="flex flex-col gap-3">
+          {data.map((application) => (
+            <article
+              key={application.id}
+              className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-deep)] p-5"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h4 className="text-base font-semibold text-white">{application.storeName}</h4>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    {application.contactName} &middot; {application.ownerEmail} &middot;{" "}
+                    {application.contactPhone}
+                  </p>
+                  <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+                    {[application.city, application.country].filter(Boolean).join(", ")}
+                    {application.businessRegistration && ` · Reg ${application.businessRegistration}`}
+                  </p>
+                </div>
+                <StatusBadge status={application.status} />
+              </div>
+
+              {application.productFocus && (
+                <p className="mt-3 text-sm text-[var(--gold-light)]">{application.productFocus}</p>
+              )}
+              {application.bio && (
+                <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
+                  {application.bio}
+                </p>
+              )}
+              {application.website && (
+                <p className="mt-2 text-xs text-[var(--text-muted)] break-all">
+                  {application.website}
+                </p>
+              )}
+              {application.reviewNote && (
+                <p className="mt-2 text-xs text-[var(--text-muted)]">
+                  Decision note: {application.reviewNote}
+                </p>
+              )}
+
+              {application.status === "pending" && (
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border-subtle)] pt-3">
+                  <button
+                    className="btn btn-primary"
+                    style={{ padding: "10px 16px", fontSize: "0.72rem" }}
+                    disabled={resolve.isPending}
+                    onClick={() => decide(application, "approve")}
+                  >
+                    Approve vendor
+                  </button>
+                  <button
+                    className="btn btn-outline"
+                    style={{ padding: "10px 16px", fontSize: "0.72rem" }}
+                    disabled={resolve.isPending}
+                    onClick={() => decide(application, "reject")}
+                  >
+                    Reject
+                  </button>
+                </div>
+              )}
             </article>
           ))}
         </div>

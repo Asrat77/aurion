@@ -166,6 +166,15 @@ export default function Navbar() {
                     >
                       Wishlist
                     </Link>
+                    {user.role === "buyer" && (
+                      <Link
+                        href="/sell"
+                        className="flex min-h-11 items-center px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        Sell on AURION
+                      </Link>
+                    )}
                     <hr className="border-[var(--border-subtle)] my-1" />
                     <button
                       className="w-full min-h-11 cursor-pointer text-left px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
@@ -180,15 +189,24 @@ export default function Navbar() {
                     </button>
                   </>
                 ) : (
-                  <button
-                    className="w-full min-h-11 cursor-pointer text-left px-5 text-sm text-[var(--gold)] hover:bg-[rgba(214,180,94,0.08)]"
-                    onClick={() => {
-                      openAuth("login");
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    Sign In
-                  </button>
+                  <>
+                    <button
+                      className="w-full min-h-11 cursor-pointer text-left px-5 text-sm text-[var(--gold)] hover:bg-[rgba(214,180,94,0.08)]"
+                      onClick={() => {
+                        openAuth("login");
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      Sign In
+                    </button>
+                    <Link
+                      href="/sell"
+                      className="flex min-h-11 items-center px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Sell on AURION
+                    </Link>
+                  </>
                 )}
             </div>
           </div>

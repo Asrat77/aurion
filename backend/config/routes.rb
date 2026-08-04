@@ -25,6 +25,9 @@ Rails.application.routes.draw do
 
       resources :refund_requests, only: [ :index, :create ]
 
+      get "vendor_application", to: "vendor_applications#show"
+      post "vendor_application", to: "vendor_applications#create"
+
       post "payments/:order_id/intent", to: "payments#create"
       post "payments/:order_id/mock_confirm", to: "payments#mock_confirm"
 
@@ -45,6 +48,10 @@ Rails.application.routes.draw do
         resources :products, only: [ :index ]
         resources :request_for_quotes, only: [ :index ]
         resources :reviews, only: [ :index, :update ]
+        resources :vendor_applications, only: [ :index ] do
+          post :approve, on: :member
+          post :reject, on: :member
+        end
         resources :refund_requests, only: [ :index ] do
           post :approve, on: :member
           post :reject, on: :member

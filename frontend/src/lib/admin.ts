@@ -2,7 +2,14 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
-import type { Order, Product, RequestForQuote, RefundRequest, Review } from "@/types";
+import type {
+  Order,
+  Product,
+  RequestForQuote,
+  RefundRequest,
+  Review,
+  VendorApplication,
+} from "@/types";
 
 export interface AdminOverview {
   totalProducts: number;
@@ -109,6 +116,26 @@ export function useResolveRefundRequest() {
   return useMutation({
     mutationFn: ({ id, decision, note }: { id: number; decision: "approve" | "reject"; note?: string }) =>
       apiFetch<RefundRequest>(`/admin/refund_requests/${id}/${decision}`, {
+        method: "POST",
+        body: { note },
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
+  });
+}
+
+export function useAdminVendorApplications() {
+  return useQuery<VendorApplication[]>({
+    queryKey: [ "admin", "vendor-applications" ],
+    queryFn: () => apiFetch("/admin/vendor_applications"),
+  });
+}
+
+/** Approving grants the applicant the vendor role and opens their store. */
+export function useResolveVendorApplication() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, decision, note }: { id: number; decision: "approve" | "reject"; note?: string }) =>
+      apiFetch<VendorApplication>(`/admin/vendor_applications/${id}/${decision}`, {
         method: "POST",
         body: { note },
       }),

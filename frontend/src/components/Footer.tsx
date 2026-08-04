@@ -37,6 +37,7 @@ export default function Footer() {
           <FooterLink href="/store">Marketplace</FooterLink>
           <FooterLink href="/source">Source at Scale</FooterLink>
           <FooterLink href="/#story">Our Story</FooterLink>
+          <FooterLink href="/sell">Sell on AURION</FooterLink>
           <FooterLink href="/buyer-protection">Buyer Protection</FooterLink>
         </div>
         <div>

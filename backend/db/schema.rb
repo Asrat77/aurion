@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_04_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -177,16 +177,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_110000) do
   end
 
   create_table "vendors", force: :cascade do |t|
+    t.datetime "applied_at"
     t.text "bio"
+    t.string "business_registration"
+    t.string "city"
     t.decimal "commission_rate", precision: 5, scale: 4, default: "0.15", null: false
+    t.string "contact_name"
+    t.string "contact_phone"
+    t.string "country"
     t.datetime "created_at", null: false
     t.string "payout_method"
+    t.string "product_focus"
+    t.string "review_note"
+    t.datetime "reviewed_at"
+    t.bigint "reviewed_by_id"
     t.string "slug", null: false
     t.integer "status", default: 0, null: false
     t.string "store_name", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.string "website"
+    t.index ["reviewed_by_id"], name: "index_vendors_on_reviewed_by_id"
     t.index ["slug"], name: "index_vendors_on_slug", unique: true
+    t.index ["status", "applied_at"], name: "index_vendors_on_status_and_applied_at"
     t.index ["user_id"], name: "index_vendors_on_user_id", unique: true
   end
 
@@ -209,4 +222,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_04_110000) do
   add_foreign_key "reviews", "products"
   add_foreign_key "reviews", "users", column: "buyer_id"
   add_foreign_key "vendors", "users"
+  add_foreign_key "vendors", "users", column: "reviewed_by_id"
 end
