@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { UserCircle } from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import { useUiStore } from "@/store/ui";
@@ -13,13 +14,14 @@ import EmptyState from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function AccountPage() {
+  const { t } = useTranslation();
   const { data: user, isLoading } = useMe();
   const openAuth = useUiStore((s) => s.openAuth);
 
   return (
     <section className="px-4 sm:px-6 lg:px-8 pt-32 pb-20">
       <div className="max-w-[var(--container-narrow)] mx-auto">
-        <PageHeader title="My Profile" />
+        <PageHeader title={t("account.title")} />
 
         {isLoading ? (
           <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-2xl p-10">
@@ -36,10 +38,10 @@ export default function AccountPage() {
             ) : (
               <EmptyState
                 icon={<UserCircle size={32} />}
-                title="Sign in to manage your account"
+                title={t("account.signInPrompt")}
                 action={
                   <button className="btn btn-primary" onClick={() => openAuth("login")}>
-                    Sign In
+                    {t("common.signIn")}
                   </button>
                 }
               />
@@ -52,6 +54,7 @@ export default function AccountPage() {
 }
 
 function AccountForm({ user }: { user: User }) {
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const router = useRouter();
   const showToast = useUiStore((s) => s.showToast);
@@ -70,39 +73,39 @@ function AccountForm({ user }: { user: User }) {
         body: { name, email, phone },
       });
       qc.setQueryData(["me"], updated);
-      showToast("Profile updated successfully!", "success");
+      showToast(t("account.updated"), "success");
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Update failed.", "error");
+      showToast(err instanceof ApiError ? err.message : t("account.updateFailed"), "error");
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDelete() {
-    if (!window.confirm("Are you sure you want to delete your account? This cannot be undone.")) {
+    if (!window.confirm(t("account.deleteConfirm"))) {
       return;
     }
     try {
       await apiFetch("/me", { method: "DELETE" });
       qc.setQueryData(["me"], null);
-      showToast("Account deleted.", "success");
+      showToast(t("account.deleted"), "success");
       router.push("/");
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Delete failed.", "error");
+      showToast(err instanceof ApiError ? err.message : t("account.deleteFailed"), "error");
     }
   }
 
   return (
     <form onSubmit={handleUpdate} className="flex flex-col gap-4">
       <p className="text-[var(--text-secondary)] mb-2">
-        Manage your personal information and preferences.
+        {t("account.manageBody")}
       </p>
       <div>
-        <label className="field-label">Full Name</label>
+        <label className="field-label">{t("account.fullName")}</label>
         <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div>
-        <label className="field-label">Email</label>
+        <label className="field-label">{t("account.email")}</label>
         <input
           className="input"
           type="email"
@@ -111,21 +114,21 @@ function AccountForm({ user }: { user: User }) {
         />
       </div>
       <div>
-        <label className="field-label">Phone</label>
+        <label className="field-label">{t("account.phone")}</label>
         <input
           className="input"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="+251 9X XXX XXXX"
         />
-        <p className="field-help">Used for order and delivery updates.</p>
+        <p className="field-help">{t("account.phoneHelp")}</p>
       </div>
       <button type="submit" className="btn btn-primary w-full" disabled={saving}>
-        {saving ? "Saving…" : "Update Profile"}
+        {saving ? t("account.saving") : t("account.updateProfile")}
       </button>
       <hr className="border-[var(--border-subtle)] my-2" />
       <button type="button" className="btn btn-danger w-full" onClick={handleDelete}>
-        Delete Account
+        {t("account.deleteAccount")}
       </button>
     </form>
   );

@@ -3,71 +3,50 @@ module Api
     class OrdersController < ApplicationController
       before_action :authenticate!
 
-      SHIPPING_CENTS = 500
-      TAX_RATE = 0.08
-
       def index
-        orders = current_user.orders.includes(order_items: [ :product, :vendor ]).order(created_at: :desc)
+        orders = current_user.orders
+                              .includes(:order_events, order_items: [ :product, :vendor ])
+                              .order(created_at: :desc)
         render json: orders.map { |o| OrderSerializer.render(o) }
       end
 
       def show
-        order = current_user.orders.includes(order_items: [ :product, :vendor ]).find(params[:id])
+        order = current_user.orders
+                             .includes(:order_events, order_items: [ :product, :vendor ])
+                             .find(params[:id])
         render json: OrderSerializer.render(order)
       end
 
+      # Prices a prospective cart without creating anything, so checkout can show
+      # shipping, VAT and the buyer's currency before they commit.
+      def quote
+        lines, error = resolve_lines(check_stock: false)
+        return render json: { message: error }, status: :unprocessable_entity if error
+
+        render json: Pricing.quote(lines: lines, country: params[:country]).to_h
+      end
+
       def create
-        items_param = Array(params[:items])
-        if items_param.blank?
-          return render json: { message: "Your cart is empty." }, status: :unprocessable_entity
-        end
+        lines, error = resolve_lines(check_stock: true)
+        return render json: { message: error }, status: :unprocessable_entity if error
 
-        product_ids = items_param.map { |i| i[:product_id] || i["product_id"] }
-        quantities_by_id = items_param.each_with_object({}) do |i, acc|
-          acc[(i[:product_id] || i["product_id"]).to_i] = (i[:quantity] || i["quantity"]).to_i
-        end
-
-        products = Product.active.where(id: product_ids).includes(:vendor)
-        if products.count != product_ids.uniq.count
-          return render json: { message: "One or more products are no longer available." }, status: :unprocessable_entity
-        end
-
-        products.each do |product|
-          qty = quantities_by_id[product.id]
-          if qty.to_i <= 0
-            return render json: { message: "Invalid quantity for #{product.name}." }, status: :unprocessable_entity
-          end
-          if product.stock < qty
-            return render json: { message: "Not enough stock for #{product.name}. Only #{product.stock} left." }, status: :unprocessable_entity
-          end
-        end
-
-        country = params[:country].to_s
-        currency = country == "ET" ? "ETB" : "USD"
-        fx_rate = country == "ET" ? ENV.fetch("ETB_PER_USD", 140).to_f : 1.0
-
+        quote = Pricing.quote(lines: lines, country: params[:country])
         order = nil
 
         ActiveRecord::Base.transaction do
-          subtotal_cents = products.sum { |p| p.price_cents * quantities_by_id[p.id] }
-          shipping_cents = subtotal_cents > 0 ? SHIPPING_CENTS : 0
-          tax_cents = (subtotal_cents * TAX_RATE).round
-          total_cents = subtotal_cents + shipping_cents + tax_cents
-
           order = Order.create!(
             buyer: current_user,
             status: :pending,
-            subtotal_cents: subtotal_cents,
-            shipping_cents: shipping_cents,
-            tax_cents: tax_cents,
-            total_cents: total_cents,
-            currency: currency,
-            fx_rate: fx_rate,
+            subtotal_cents: quote.subtotal_cents,
+            shipping_cents: quote.shipping_cents,
+            tax_cents: quote.tax_cents,
+            total_cents: quote.total_cents,
+            currency: quote.currency,
+            fx_rate: quote.fx_rate,
             shipping_address: shipping_address_params,
           )
 
-          products.each do |product|
-            qty = quantities_by_id[product.id]
+          lines.each do |product, qty|
             line_total = product.price_cents * qty
             commission = (line_total * product.vendor.commission_rate).round
 
@@ -84,6 +63,8 @@ module Api
 
             product.decrement!(:stock, qty)
           end
+
+          order.record_event!(:pending, actor: current_user, note: "Order placed")
         end
 
         render json: OrderSerializer.render(order), status: :created
@@ -91,7 +72,45 @@ module Api
         render json: { message: e.message }, status: :unprocessable_entity
       end
 
+      # A buyer may call off their own order until a vendor has shipped it.
+      def cancel
+        order = current_user.orders.find(params[:id])
+
+        if order.cancel!(actor: current_user, note: "Cancelled by buyer")
+          render json: OrderSerializer.render(order.reload)
+        else
+          render json: { message: order.transition_error }, status: :unprocessable_entity
+        end
+      end
+
       private
+
+      # Turns the posted cart into [product, quantity] pairs, rejecting anything
+      # that is missing, unavailable or out of stock. Returns [lines, error].
+      def resolve_lines(check_stock:)
+        items_param = Array(params[:items])
+        return [ nil, "Your cart is empty." ] if items_param.blank?
+
+        quantities_by_id = items_param.each_with_object({}) do |i, acc|
+          acc[(i[:product_id] || i["product_id"]).to_i] = (i[:quantity] || i["quantity"]).to_i
+        end
+
+        products = Product.active.where(id: quantities_by_id.keys).includes(:vendor)
+        if products.count != quantities_by_id.keys.uniq.count
+          return [ nil, "One or more products are no longer available." ]
+        end
+
+        lines = products.map { |product| [ product, quantities_by_id[product.id] ] }
+
+        lines.each do |product, qty|
+          return [ nil, "Invalid quantity for #{product.name}." ] if qty <= 0
+          if check_stock && product.stock < qty
+            return [ nil, "Not enough stock for #{product.name}. Only #{product.stock} left." ]
+          end
+        end
+
+        [ lines, nil ]
+      end
 
       def shipping_address_params
         params.fetch(:shipping_address, ActionController::Parameters.new).permit(

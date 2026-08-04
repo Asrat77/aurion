@@ -64,9 +64,13 @@
   --dur-press: 140ms;
   --dur-hover: 200ms;
   --dur-panel: 300ms;
-  --font-display: var(--font-cormorant), "Times New Roman", serif;
-  --font-body: var(--font-manrope), -apple-system, sans-serif;
-  --font-mono: var(--font-jetbrains), monospace;
+  /* Noto Sans Ethiopic sits after the Latin faces in every stack: Latin glyphs
+     still come from Cormorant/Manrope/JetBrains, and only Ethiopic characters
+     fall through to it. That way switching to Amharic changes the script
+     without changing the brand's Latin typography. */
+  --font-display: var(--font-cormorant), var(--font-ethiopic), "Times New Roman", serif;
+  --font-body: var(--font-manrope), var(--font-ethiopic), -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains), var(--font-ethiopic), monospace;
 }
 
 @theme inline {

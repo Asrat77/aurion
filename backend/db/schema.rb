@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_03_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_04_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,15 +22,63 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_090000) do
     t.index ["slug"], name: "index_categories_on_slug", unique: true
   end
 
+  create_table "conversations", force: :cascade do |t|
+    t.bigint "buyer_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "last_message_at", null: false
+    t.bigint "order_id"
+    t.bigint "product_id"
+    t.string "subject", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "vendor_id", null: false
+    t.index ["buyer_id", "vendor_id", "order_id", "product_id"], name: "index_conversations_on_participants_and_context", unique: true
+    t.index ["buyer_id"], name: "index_conversations_on_buyer_id"
+    t.index ["last_message_at"], name: "index_conversations_on_last_message_at"
+    t.index ["order_id"], name: "index_conversations_on_order_id"
+    t.index ["product_id"], name: "index_conversations_on_product_id"
+    t.index ["vendor_id"], name: "index_conversations_on_vendor_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "read_at"
+    t.bigint "sender_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["sender_id"], name: "index_messages_on_sender_id"
+  end
+
+  create_table "order_events", force: :cascade do |t|
+    t.bigint "actor_id"
+    t.datetime "created_at", null: false
+    t.string "label", null: false
+    t.string "note"
+    t.bigint "order_id", null: false
+    t.bigint "order_item_id"
+    t.datetime "updated_at", null: false
+    t.index ["actor_id"], name: "index_order_events_on_actor_id"
+    t.index ["order_id", "created_at"], name: "index_order_events_on_order_id_and_created_at"
+    t.index ["order_id"], name: "index_order_events_on_order_id"
+    t.index ["order_item_id"], name: "index_order_events_on_order_item_id"
+  end
+
   create_table "order_items", force: :cascade do |t|
+    t.string "carrier"
     t.integer "commission_cents", null: false
     t.datetime "created_at", null: false
+    t.datetime "delivered_at"
+    t.integer "fulfillment_status", default: 0, null: false
     t.integer "line_total_cents", null: false
     t.integer "net_cents", null: false
     t.bigint "order_id", null: false
     t.bigint "product_id", null: false
     t.string "product_name", null: false
     t.integer "quantity", null: false
+    t.datetime "shipped_at"
+    t.string "tracking_number"
     t.integer "unit_price_cents", null: false
     t.datetime "updated_at", null: false
     t.bigint "vendor_id", null: false
@@ -41,15 +89,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_090000) do
 
   create_table "orders", force: :cascade do |t|
     t.bigint "buyer_id", null: false
+    t.datetime "cancelled_at"
     t.datetime "created_at", null: false
     t.string "currency", default: "USD", null: false
+    t.datetime "delivered_at"
     t.decimal "fx_rate", precision: 10, scale: 4, default: "1.0", null: false
     t.datetime "paid_at"
     t.string "payment_method"
     t.string "payment_ref"
+    t.datetime "shipped_at"
     t.json "shipping_address"
     t.integer "shipping_cents", null: false
     t.integer "status", default: 0, null: false
+    t.boolean "stock_released", default: false, null: false
     t.integer "subtotal_cents", null: false
     t.integer "tax_cents", null: false
     t.integer "total_cents", null: false
@@ -68,25 +120,63 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_090000) do
     t.index ["vendor_id"], name: "index_payouts_on_vendor_id"
   end
 
+  create_table "price_tiers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "min_quantity", null: false
+    t.bigint "product_id", null: false
+    t.integer "unit_price_cents", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_id", "min_quantity"], name: "index_price_tiers_on_product_id_and_min_quantity", unique: true
+    t.index ["product_id"], name: "index_price_tiers_on_product_id"
+  end
+
   create_table "products", force: :cascade do |t|
     t.bigint "category_id", null: false
     t.datetime "created_at", null: false
     t.string "currency", default: "USD", null: false
     t.text "description"
     t.string "emoji"
+    t.boolean "free_shipping", default: false, null: false
+    t.integer "lead_time_days"
+    t.integer "moq"
     t.string "name", null: false
     t.string "origin"
+    t.string "packaging"
     t.integer "price_cents", default: 0, null: false
     t.decimal "rating", precision: 3, scale: 2
     t.integer "reviews_count", default: 0, null: false
+    t.boolean "sample_available", default: false, null: false
+    t.integer "sample_price_cents"
     t.string "slug", null: false
     t.integer "status", default: 0, null: false
     t.integer "stock", default: 0, null: false
+    t.string "unit_of_measure"
     t.datetime "updated_at", null: false
     t.bigint "vendor_id", null: false
     t.index ["category_id"], name: "index_products_on_category_id"
+    t.index ["moq"], name: "index_products_on_moq"
     t.index ["slug"], name: "index_products_on_slug", unique: true
     t.index ["vendor_id"], name: "index_products_on_vendor_id"
+  end
+
+  create_table "refund_requests", force: :cascade do |t|
+    t.integer "amount_cents", null: false
+    t.bigint "buyer_id", null: false
+    t.datetime "created_at", null: false
+    t.text "detail"
+    t.bigint "order_id", null: false
+    t.bigint "order_item_id", null: false
+    t.integer "reason", default: 0, null: false
+    t.string "resolution_note"
+    t.datetime "resolved_at"
+    t.bigint "resolved_by_id"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["buyer_id"], name: "index_refund_requests_on_buyer_id"
+    t.index ["order_id"], name: "index_refund_requests_on_order_id"
+    t.index ["order_item_id", "status"], name: "index_refund_requests_on_order_item_id_and_status"
+    t.index ["order_item_id"], name: "index_refund_requests_on_order_item_id"
+    t.index ["resolved_by_id"], name: "index_refund_requests_on_resolved_by_id"
   end
 
   create_table "request_for_quotes", force: :cascade do |t|
@@ -94,15 +184,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_090000) do
     t.string "contact_name"
     t.string "country"
     t.datetime "created_at", null: false
+    t.string "destination_port"
     t.string "email", null: false
     t.string "estimated_quantity"
+    t.string "incoterm"
+    t.bigint "product_id"
     t.string "product_interest", null: false
+    t.text "quote_note"
+    t.datetime "quoted_at"
+    t.integer "quoted_lead_time_days"
+    t.integer "quoted_unit_price_cents"
     t.string "reference", null: false
+    t.boolean "sample_requested", default: false, null: false
     t.text "specifications"
     t.string "status", default: "new", null: false
+    t.integer "target_price_cents"
     t.datetime "updated_at", null: false
+    t.index ["product_id"], name: "index_request_for_quotes_on_product_id"
     t.index ["reference"], name: "index_request_for_quotes_on_reference", unique: true
     t.index ["status", "created_at"], name: "index_request_for_quotes_on_status_and_created_at"
+  end
+
+  create_table "reviews", force: :cascade do |t|
+    t.text "body"
+    t.bigint "buyer_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "order_item_id", null: false
+    t.bigint "product_id", null: false
+    t.integer "rating", null: false
+    t.integer "status", default: 0, null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["buyer_id"], name: "index_reviews_on_buyer_id"
+    t.index ["order_item_id"], name: "index_reviews_on_order_item_id", unique: true
+    t.index ["product_id", "status"], name: "index_reviews_on_product_id_and_status"
+    t.index ["product_id"], name: "index_reviews_on_product_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -117,26 +233,58 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_03_090000) do
   end
 
   create_table "vendors", force: :cascade do |t|
+    t.datetime "applied_at"
     t.text "bio"
+    t.string "business_registration"
+    t.string "city"
     t.decimal "commission_rate", precision: 5, scale: 4, default: "0.15", null: false
+    t.string "contact_name"
+    t.string "contact_phone"
+    t.string "country"
     t.datetime "created_at", null: false
     t.string "payout_method"
+    t.string "product_focus"
+    t.string "review_note"
+    t.datetime "reviewed_at"
+    t.bigint "reviewed_by_id"
     t.string "slug", null: false
     t.integer "status", default: 0, null: false
     t.string "store_name", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.string "website"
+    t.index ["reviewed_by_id"], name: "index_vendors_on_reviewed_by_id"
     t.index ["slug"], name: "index_vendors_on_slug", unique: true
+    t.index ["status", "applied_at"], name: "index_vendors_on_status_and_applied_at"
     t.index ["user_id"], name: "index_vendors_on_user_id", unique: true
   end
 
+  add_foreign_key "conversations", "orders"
+  add_foreign_key "conversations", "products"
+  add_foreign_key "conversations", "users", column: "buyer_id"
+  add_foreign_key "conversations", "vendors"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "users", column: "sender_id"
+  add_foreign_key "order_events", "order_items"
+  add_foreign_key "order_events", "orders"
+  add_foreign_key "order_events", "users", column: "actor_id"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "products"
   add_foreign_key "order_items", "vendors"
   add_foreign_key "orders", "users", column: "buyer_id"
   add_foreign_key "payouts", "order_items"
   add_foreign_key "payouts", "vendors"
+  add_foreign_key "price_tiers", "products"
   add_foreign_key "products", "categories"
   add_foreign_key "products", "vendors"
+  add_foreign_key "refund_requests", "order_items"
+  add_foreign_key "refund_requests", "orders"
+  add_foreign_key "refund_requests", "users", column: "buyer_id"
+  add_foreign_key "refund_requests", "users", column: "resolved_by_id"
+  add_foreign_key "request_for_quotes", "products"
+  add_foreign_key "reviews", "order_items"
+  add_foreign_key "reviews", "products"
+  add_foreign_key "reviews", "users", column: "buyer_id"
   add_foreign_key "vendors", "users"
+  add_foreign_key "vendors", "users", column: "reviewed_by_id"
 end

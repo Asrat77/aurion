@@ -3,18 +3,24 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "react-i18next";
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Bag, User, List, X } from "@phosphor-icons/react";
 import { useMe, useLogout } from "@/lib/auth";
+import { useInbox } from "@/lib/messages";
 import { useCartStore, cartItemCount } from "@/store/cart";
 import { useUiStore } from "@/store/ui";
+import PreferenceSwitcher from "@/components/PreferenceSwitcher";
 
 export default function Navbar() {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const { data: user } = useMe();
   const logout = useLogout();
   const items = useCartStore((s) => s.items);
   const openCart = useCartStore((s) => s.open);
+  const { data: inbox } = useInbox(!!user);
+  const unreadMessages = inbox?.unreadTotal ?? 0;
   const openAuth = useUiStore((s) => s.openAuth);
   const showToast = useUiStore((s) => s.showToast);
 
@@ -36,17 +42,17 @@ export default function Navbar() {
   }
 
   const links = [
-    { href: "/", label: "Home" },
-    { href: "/store", label: "Marketplace" },
-    { href: "/source", label: "Source at Scale" },
-    { href: "/#story", label: "Our Story" },
-    ...(user?.role === "vendor" ? [{ href: "/vendor", label: "Vendor" }] : []),
-    ...(user?.role === "admin" ? [{ href: "/admin", label: "Admin" }] : []),
+    { href: "/", label: t("nav.home") },
+    { href: "/store", label: t("nav.marketplace") },
+    { href: "/source", label: t("nav.sourceAtScale") },
+    { href: "/#story", label: t("nav.ourStory") },
+    ...(user?.role === "vendor" ? [{ href: "/vendor", label: t("nav.vendor") }] : []),
+    ...(user?.role === "admin" ? [{ href: "/admin", label: t("nav.admin") }] : []),
   ];
 
   return (
     <nav
-      aria-label="Primary navigation"
+      aria-label={t("nav.primaryNavigation")}
       className={`fixed top-3 left-3 right-3 z-[1000] transition-[background-color,border-color,box-shadow,transform] duration-300 ease-[var(--ease-out)] rounded-2xl border ${
         scrolled
           ? "bg-[rgba(5,7,13,0.94)] border-[var(--border-gold)] shadow-[0_18px_60px_rgba(0,0,0,0.42)]"
@@ -57,7 +63,7 @@ export default function Navbar() {
         <Link
           href="/"
           className="group flex items-center gap-2.5 shrink-0 min-h-11"
-          aria-label="AURION Markets home"
+          aria-label={t("nav.home")}
           onClick={closeNavigation}
         >
           <span className="relative w-11 h-11 shrink-0 transition-transform duration-300 ease-[var(--ease-out)] group-hover:rotate-[4deg]">
@@ -108,11 +114,11 @@ export default function Navbar() {
             onClick={closeNavigation}
             className="hidden xl:inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--border-gold-strong)] px-4 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--gold-light)] transition-colors hover:bg-[var(--gold)] hover:text-[var(--bg-deep)]"
           >
-            Request a quote <ArrowUpRight size={14} />
+            {t("nav.requestQuote")} <ArrowUpRight size={14} />
           </Link>
           <button
             className="relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-white/[0.05] hover:text-[var(--gold)]"
-            aria-label="Open cart"
+            aria-label={t("nav.openCart")}
             onClick={openCart}
           >
             <Bag size={22} />
@@ -127,7 +133,7 @@ export default function Navbar() {
             <button
               className="w-11 h-11 cursor-pointer rounded-full border border-[var(--border-gold)] bg-[rgba(214,180,94,0.08)] flex items-center justify-center text-sm font-semibold text-[var(--gold)] transition-colors hover:bg-[rgba(214,180,94,0.15)]"
               onClick={() => setDropdownOpen((o) => !o)}
-              aria-label="Account menu"
+              aria-label={t("nav.accountMenu")}
               aria-expanded={dropdownOpen}
             >
               {user?.name ? user.name.charAt(0).toUpperCase() : <User size={16} />}
@@ -143,6 +149,9 @@ export default function Navbar() {
                   : "opacity-0 scale-[0.97] pointer-events-none"
               }`}
             >
+              <div className="border-b border-[var(--border-subtle)] px-4 pb-2 pt-1">
+                <PreferenceSwitcher compact />
+              </div>
               {user ? (
                   <>
                     <Link
@@ -150,52 +159,82 @@ export default function Navbar() {
                       className="flex min-h-11 items-center px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
                       onClick={() => setDropdownOpen(false)}
                     >
-                      My Account
+                      {t("nav.myAccount")}
                     </Link>
                     <Link
                       href="/orders"
                       className="flex min-h-11 items-center px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
                       onClick={() => setDropdownOpen(false)}
                     >
-                      Orders
+                      {t("nav.orders")}
+                    </Link>
+                    <Link
+                      href="/messages"
+                      className="flex min-h-11 items-center justify-between gap-2 px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      {t("nav.messages")}
+                      {unreadMessages > 0 && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--gold)] px-1.5 font-[family-name:var(--font-mono)] text-[0.6rem] text-[var(--bg-deep)]">
+                          {unreadMessages}
+                        </span>
+                      )}
                     </Link>
                     <Link
                       href="/wishlist"
                       className="flex min-h-11 items-center px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
                       onClick={() => setDropdownOpen(false)}
                     >
-                      Wishlist
+                      {t("nav.wishlist")}
                     </Link>
+                    {user.role === "buyer" && (
+                      <Link
+                        href="/sell"
+                        className="flex min-h-11 items-center px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
+                        onClick={() => setDropdownOpen(false)}
+                      >
+                        {t("nav.sellOnAurion")}
+                      </Link>
+                    )}
                     <hr className="border-[var(--border-subtle)] my-1" />
                     <button
                       className="w-full min-h-11 cursor-pointer text-left px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
                       onClick={() => {
                         logout.mutate(undefined, {
-                          onSuccess: () => showToast("Logged out.", "success"),
+                          onSuccess: () => showToast(t("auth.loggedOut"), "success"),
                         });
                         setDropdownOpen(false);
                       }}
                     >
-                      Logout
+                      {t("common.signOut")}
                     </button>
                   </>
                 ) : (
-                  <button
-                    className="w-full min-h-11 cursor-pointer text-left px-5 text-sm text-[var(--gold)] hover:bg-[rgba(214,180,94,0.08)]"
-                    onClick={() => {
-                      openAuth("login");
-                      setDropdownOpen(false);
-                    }}
-                  >
-                    Sign In
-                  </button>
+                  <>
+                    <button
+                      className="w-full min-h-11 cursor-pointer text-left px-5 text-sm text-[var(--gold)] hover:bg-[rgba(214,180,94,0.08)]"
+                      onClick={() => {
+                        openAuth("login");
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      {t("common.signIn")}
+                    </button>
+                    <Link
+                      href="/sell"
+                      className="flex min-h-11 items-center px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      {t("nav.sellOnAurion")}
+                    </Link>
+                  </>
                 )}
             </div>
           </div>
 
           <button
             className="lg:hidden flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[var(--gold)] transition-colors hover:bg-white/[0.05]"
-            aria-label="Toggle menu"
+            aria-label={t("nav.toggleMenu")}
             onClick={() => setMobileOpen((o) => !o)}
             aria-expanded={mobileOpen}
           >

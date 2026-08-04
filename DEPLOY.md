@@ -82,9 +82,10 @@ container console lets you run `bin/rails db:seed` by hand.
 | `DATABASE_URL` | `postgres://user:pass@host/db?sslmode=require` |
 | `FRONTEND_ORIGIN` | The exact Appwrite frontend URL, e.g. `https://aurion.appwrite.network` — **no trailing slash**, must match exactly since CORS does a string match |
 
-Optional (leave unset — checkout runs in mock/demo mode without them):
-`STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY`,
-`CHAPA_SECRET_KEY`, `ETB_PER_USD`.
+Optional: `ETB_PER_USD` (defaults to 140) sets the birr rate used to price
+orders shipping to Ethiopia. `CHAPA_SECRET_KEY` is reserved for the live
+gateway, which is not implemented yet — checkout always runs in mock/demo mode
+regardless of whether it is set.
 
 ### Both platforms
 - **Health check**: `GET /up` (Rails' built-in health endpoint).

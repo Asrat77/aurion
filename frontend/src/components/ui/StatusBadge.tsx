@@ -1,8 +1,13 @@
+"use client";
+
+import { useTranslation } from "react-i18next";
+
 const STATUS_STYLES: Record<string, string> = {
   // order/payment states
   pending: "text-[var(--warning)] bg-[rgba(255,193,7,0.12)]",
   paid: "text-[var(--success)] bg-[rgba(92,184,141,0.12)]",
-  fulfilled: "text-[var(--success)] bg-[rgba(92,184,141,0.12)]",
+  awaiting: "text-[var(--warning)] bg-[rgba(255,193,7,0.12)]",
+  processing: "text-[#8ec5ff] bg-[rgba(67,145,220,0.12)]",
   shipped: "text-[var(--gold)] bg-[rgba(200,164,92,0.12)]",
   delivered: "text-[var(--success)] bg-[rgba(92,184,141,0.12)]",
   cancelled: "text-[var(--danger)] bg-[rgba(224,85,85,0.12)]",
@@ -18,11 +23,37 @@ const STATUS_STYLES: Record<string, string> = {
   closed: "text-[var(--text-secondary)] bg-[rgba(176,172,165,0.1)]",
 };
 
-function labelFor(status: string) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
+// A few statuses read better to a buyer than their internal name does.
+const LABEL_KEYS: Record<string, string> = {
+  pending: "status.pending",
+  paid: "status.confirmed",
+  awaiting: "status.awaiting",
+  processing: "status.processing",
+  shipped: "status.shipped",
+  delivered: "status.delivered",
+  cancelled: "status.cancelled",
+  refunded: "status.refunded",
+  active: "status.active",
+  draft: "status.draft",
+  suspended: "status.suspended",
+  new: "status.new",
+  reviewing: "status.reviewing",
+  quoted: "status.quoted",
+  closed: "status.closed",
+  published: "status.published",
+  hidden: "status.hidden",
+  open: "status.open",
+  approved: "status.approved",
+  rejected: "status.rejected",
+};
+
+function labelFor(status: string, t: (key: string) => string) {
+  const key = LABEL_KEYS[status.toLowerCase()];
+  return key ? t(key) : status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 export default function StatusBadge({ status }: { status: string }) {
+  const { t } = useTranslation();
   const style =
     STATUS_STYLES[status.toLowerCase()] ??
     "text-[var(--text-secondary)] bg-[rgba(176,172,165,0.1)]";
@@ -30,7 +61,7 @@ export default function StatusBadge({ status }: { status: string }) {
     <span
       className={`inline-flex items-center rounded-full border border-current/20 px-3 py-1 text-xs font-semibold tracking-wide ${style}`}
     >
-      {labelFor(status)}
+      {labelFor(status, t)}
     </span>
   );
 }

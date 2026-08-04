@@ -2,6 +2,8 @@ class Product < ApplicationRecord
   belongs_to :vendor
   belongs_to :category
   has_many :order_items, dependent: :restrict_with_error
+  has_many :reviews, dependent: :destroy
+  has_many :price_tiers, dependent: :destroy
 
   enum :status, { draft: 0, active: 1 }
 
@@ -13,9 +15,22 @@ class Product < ApplicationRecord
   before_validation :generate_slug, on: :create
 
   scope :in_stock, -> { where("stock > 0") }
+  # Available at commercial scale. A product with no MOQ is retail-only.
+  scope :wholesale, -> { where.not(moq: nil) }
 
   def price_dollars
     price_cents / 100.0
+  end
+
+  def wholesale?
+    moq.present?
+  end
+
+  # The unit price for a given order size: the best volume break the quantity
+  # qualifies for, falling back to the retail price.
+  def unit_price_for(quantity)
+    tier = price_tiers.by_quantity.select { |t| quantity >= t.min_quantity }.last
+    tier&.unit_price_cents || price_cents
   end
 
   private

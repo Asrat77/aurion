@@ -1,13 +1,17 @@
+"use client";
+
 import { MapPin, Phone, EnvelopeSimple } from "@phosphor-icons/react/ssr";
+import { useTranslation } from "react-i18next";
 import PageHeader from "@/components/ui/PageHeader";
 
 export default function ContactPage() {
+  const { t } = useTranslation();
   return (
     <section className="px-4 sm:px-6 lg:px-8 pt-32 pb-20">
       <div className="max-w-[var(--container-narrow)] mx-auto">
         <PageHeader
-          title="Submit an Inquiry"
-          description="Reach the AURION team directly for investor relations, partnerships, or general inquiries."
+          title={t("contact.title")}
+          description={t("contact.description")}
         />
         <div className="card flex flex-col gap-4">
           <span className="flex items-start gap-3 text-[var(--text-secondary)]">
@@ -23,7 +27,7 @@ export default function ContactPage() {
             info@aurionglobal.com
           </span>
           <a href="mailto:info@aurionglobal.com" className="btn btn-primary mt-4 text-center">
-            Email Us
+            {t("contact.emailUs")}
           </a>
         </div>
       </div>

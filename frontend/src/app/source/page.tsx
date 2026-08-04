@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslation } from "react-i18next";
 import type { Icon } from "@phosphor-icons/react";
 import {
   ArrowLeft,
@@ -14,9 +15,11 @@ import {
 import { ApiError } from "@/lib/api";
 import {
   useCreateRequestForQuote,
+  INCOTERMS,
   type RequestForQuoteInput,
 } from "@/lib/requestForQuotes";
-import type { RequestForQuote } from "@/types";
+import WholesaleCatalogue from "@/components/source/WholesaleCatalogue";
+import type { Incoterm, Product, RequestForQuote } from "@/types";
 
 const INITIAL_FORM: RequestForQuoteInput = {
   company_name: "",
@@ -26,26 +29,48 @@ const INITIAL_FORM: RequestForQuoteInput = {
   product_interest: "",
   estimated_quantity: "",
   specifications: "",
+  incoterm: "",
+  destination_port: "",
+  sample_requested: false,
 };
 
 const PRODUCT_OPTIONS = [
-  "Specialty coffee",
-  "Teff and grains",
-  "Oilseeds and pulses",
-  "Honey and spices",
-  "Textiles and cultural goods",
-  "Jewelry and gemstones",
-  "Other Ethiopian products",
+  { value: "Specialty coffee", key: "source.specialtyCoffee" },
+  { value: "Teff and grains", key: "source.teffGrains" },
+  { value: "Oilseeds and pulses", key: "source.oilseedsPulses" },
+  { value: "Honey and spices", key: "source.honeySpices" },
+  { value: "Textiles and cultural goods", key: "source.textilesCultural" },
+  { value: "Jewelry and gemstones", key: "source.jewelryGemstones" },
+  { value: "Other Ethiopian products", key: "source.otherProducts" },
 ];
 
 export default function SourcePage() {
+  const { t } = useTranslation();
   const createRequest = useCreateRequestForQuote();
   const [form, setForm] = useState(INITIAL_FORM);
   const [created, setCreated] = useState<RequestForQuote | null>(null);
   const [error, setError] = useState("");
 
-  function update(field: keyof RequestForQuoteInput, value: string) {
+  function update(field: keyof RequestForQuoteInput, value: string | boolean) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  // Picking a line from the catalogue pre-fills the request and scrolls the
+  // buyer to the form, so they never retype what the card already told us.
+  function requestQuoteFor(product: Product) {
+    setForm((current) => ({
+      ...current,
+      product_id: product.id,
+      product_interest: current.product_interest || product.category.name,
+      estimated_quantity:
+        current.estimated_quantity ||
+        (product.wholesale
+          ? `${product.wholesale.moq.toLocaleString()} ${product.wholesale.unitOfMeasure ?? "units"}`
+          : ""),
+      specifications:
+        current.specifications || `Interested in ${product.name} (${product.origin}).`,
+    }));
+    document.getElementById("source-form-title")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -66,7 +91,7 @@ export default function SourcePage() {
       setError(
         caught instanceof ApiError
           ? caught.message
-          : "We could not submit your request. Please try again.",
+          : t("source.couldNotSubmit"),
       );
     }
   }
@@ -83,49 +108,63 @@ export default function SourcePage() {
       <div className="relative mx-auto max-w-[var(--container-wide)]">
         <div className="grid gap-14 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
           <div className="lg:sticky lg:top-36 lg:self-start">
-            <p className="section-label">AURION sourcing desk</p>
+            <p className="section-label">{t("source.desk")}</p>
             <h1 className="display-title max-w-[620px]">
-              Source Ethiopia with a clearer first step.
+              {t("source.title")}
             </h1>
             <p className="mt-7 max-w-[570px] text-base leading-[1.9] text-[var(--text-secondary)] lg:text-lg">
-              Share the product, destination, quantity, and commercial context. Your request
-              is recorded with a reference for direct follow-up.
+              {t("source.intro")}
             </p>
 
             <div className="mt-10 divide-y divide-[var(--border-subtle)] border-y border-[var(--border-subtle)]">
               <SourcePromise
                 icon={Package}
-                title="Built for commercial quantities"
-                body="Describe bulk, container, or recurring requirements in your own terms."
+                title={t("source.commercialQuantities")}
+                body={t("source.commercialQuantitiesBody")}
               />
               <SourcePromise
                 icon={GlobeHemisphereWest}
-                title="Destination-aware"
-                body="Include the market and specifications that shape the request."
+                title={t("source.destinationAware")}
+                body={t("source.destinationAwareBody")}
               />
               <SourcePromise
                 icon={ShieldCheck}
-                title="Requirement-led sourcing"
-                body="Certifications, pricing, and documentation are discussed against the actual requirement."
+                title={t("source.requirementLed")}
+                body={t("source.requirementLedBody")}
               />
             </div>
 
             <Link href="/store" className="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--gold)] hover:text-white">
-              <ArrowLeft size={16} /> Looking for retail products?
+              <ArrowLeft size={16} /> {t("source.retailLink")}
             </Link>
+
+            <div className="mt-14">
+              <span className="font-[family-name:var(--font-mono)] text-[0.6rem] uppercase tracking-[0.2em] text-[var(--gold)]">
+                {t("source.availableScale")}
+              </span>
+              <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl text-white sm:text-4xl">
+                {t("source.commercialLines")}
+              </h2>
+              <p className="mt-3 max-w-[560px] text-sm leading-relaxed text-[var(--text-secondary)]">
+                {t("source.commercialLinesBody")}
+              </p>
+              <div className="mt-7">
+                <WholesaleCatalogue onRequestQuote={requestQuoteFor} />
+              </div>
+            </div>
           </div>
 
           <div className="source-form-shell rounded-[28px] border border-[var(--border-gold)] bg-[rgba(9,13,22,0.9)] p-6 shadow-[0_30px_100px_rgba(0,0,0,0.38)] backdrop-blur-xl sm:p-9 lg:p-12">
             <div className="mb-9 flex flex-col gap-3 border-b border-[var(--border-subtle)] pb-7 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <span className="font-[family-name:var(--font-mono)] text-[0.6rem] uppercase tracking-[0.2em] text-[var(--gold)]">
-                  Commercial inquiry
+                  {t("source.inquiry")}
                 </span>
                 <h2 id="source-form-title" className="mt-2 font-[family-name:var(--font-display)] text-3xl text-white sm:text-4xl">
-                  Tell us what you need.
+                  {t("source.formTitle")}
                 </h2>
               </div>
-              <span className="text-xs text-[var(--text-muted)]">Required fields marked *</span>
+              <span className="text-xs text-[var(--text-muted)]">{t("source.requiredFields")}</span>
             </div>
 
             {error ? (
@@ -135,7 +174,7 @@ export default function SourcePage() {
             ) : null}
 
             <form onSubmit={handleSubmit} aria-labelledby="source-form-title" className="grid gap-5 sm:grid-cols-2">
-              <Field label="Company name" htmlFor="company-name" required>
+              <Field label={t("source.companyName")} htmlFor="company-name" required>
                 <input
                   id="company-name"
                   className="input"
@@ -143,22 +182,22 @@ export default function SourcePage() {
                   required
                   value={form.company_name}
                   onChange={(event) => update("company_name", event.target.value)}
-                  placeholder="Your company"
+                  placeholder={t("source.companyPlaceholder")}
                 />
               </Field>
 
-              <Field label="Contact person" htmlFor="contact-name">
+              <Field label={t("source.contactPerson")} htmlFor="contact-name">
                 <input
                   id="contact-name"
                   className="input"
                   autoComplete="name"
                   value={form.contact_name}
                   onChange={(event) => update("contact_name", event.target.value)}
-                  placeholder="Full name"
+                  placeholder={t("source.fullNamePlaceholder")}
                 />
               </Field>
 
-              <Field label="Work email" htmlFor="work-email" required>
+              <Field label={t("source.workEmail")} htmlFor="work-email" required>
                 <input
                   id="work-email"
                   className="input"
@@ -172,19 +211,19 @@ export default function SourcePage() {
                 />
               </Field>
 
-              <Field label="Destination country" htmlFor="destination-country">
+              <Field label={t("source.destinationCountry")} htmlFor="destination-country">
                 <input
                   id="destination-country"
                   className="input"
                   autoComplete="country-name"
                   value={form.country}
                   onChange={(event) => update("country", event.target.value)}
-                  placeholder="Country or market"
+                  placeholder={t("source.countryPlaceholder")}
                 />
               </Field>
 
               <div className="sm:col-span-2">
-                <Field label="Product of interest" htmlFor="product-interest" required>
+                <Field label={t("source.productInterest")} htmlFor="product-interest" required>
                   <select
                     id="product-interest"
                     className="input"
@@ -192,49 +231,84 @@ export default function SourcePage() {
                     value={form.product_interest}
                     onChange={(event) => update("product_interest", event.target.value)}
                   >
-                    <option value="">Choose a product group</option>
+                    <option value="">{t("source.chooseProduct")}</option>
                     {PRODUCT_OPTIONS.map((option) => (
-                      <option key={option} value={option}>{option}</option>
+                      <option key={option.value} value={option.value}>{t(option.key)}</option>
                     ))}
                   </select>
                 </Field>
               </div>
 
               <div className="sm:col-span-2">
-                <Field label="Estimated quantity" htmlFor="estimated-quantity">
+                <Field label={t("source.estimatedQuantity")} htmlFor="estimated-quantity">
                   <input
                     id="estimated-quantity"
                     className="input"
                     value={form.estimated_quantity}
                     onChange={(event) => update("estimated_quantity", event.target.value)}
-                    placeholder="For example: 20 tons, one container, or a recurring monthly order"
+                    placeholder={t("source.quantityPlaceholder")}
                   />
                 </Field>
               </div>
 
+              <Field label={t("source.deliveryTerms")} htmlFor="incoterm">
+                <select
+                  id="incoterm"
+                  className="input"
+                  value={form.incoterm ?? ""}
+                  onChange={(event) => update("incoterm", event.target.value as Incoterm)}
+                >
+                  <option value="">{t("source.notSureYet")}</option>
+                  {INCOTERMS.map((option) => (
+                    <option key={option.value} value={option.value}>{t(`source.incoterm.${option.value}`)}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label={t("source.destinationPort")} htmlFor="destination-port">
+                <input
+                  id="destination-port"
+                  className="input"
+                  value={form.destination_port ?? ""}
+                  onChange={(event) => update("destination_port", event.target.value)}
+                  placeholder={t("source.destinationPlaceholder")}
+                />
+              </Field>
+
               <div className="sm:col-span-2">
-                <Field label="Specifications and context" htmlFor="specifications">
+                <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-[var(--text-secondary)]">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-[var(--gold)]"
+                    checked={form.sample_requested ?? false}
+                    onChange={(event) => update("sample_requested", event.target.checked)}
+                  />
+                  {t("source.sampleRequest")}
+                </label>
+              </div>
+
+              <div className="sm:col-span-2">
+                <Field label={t("source.specifications")} htmlFor="specifications">
                   <textarea
                     id="specifications"
                     className="input min-h-[150px] resize-y"
                     value={form.specifications}
                     onChange={(event) => update("specifications", event.target.value)}
-                    placeholder="Packaging, grade, target timeline, documentation needs, or other useful context"
+                    placeholder={t("source.specificationsPlaceholder")}
                   />
                 </Field>
               </div>
 
               <div className="sm:col-span-2 mt-2 flex flex-col gap-4 border-t border-[var(--border-subtle)] pt-7 sm:flex-row sm:items-center sm:justify-between">
                 <p className="max-w-[430px] text-xs leading-relaxed text-[var(--text-muted)]">
-                  Submitting creates an RFQ reference. It does not confirm price, stock,
-                  certification, or shipping terms.
+                  {t("source.disclaimer")}
                 </p>
                 <button
                   type="submit"
                   className="btn btn-primary inline-flex items-center justify-center gap-2"
                   disabled={createRequest.isPending}
                 >
-                  {createRequest.isPending ? "Submitting request…" : "Submit sourcing request"}
+                  {createRequest.isPending ? t("source.submitting") : t("source.submitRequest")}
                   {!createRequest.isPending ? <ArrowRight size={17} /> : null}
                 </button>
               </div>
@@ -296,6 +370,8 @@ function RequestConfirmation({
   requestForQuote: RequestForQuote;
   onReset: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <section className="relative flex min-h-[82svh] items-center overflow-hidden px-4 pb-24 pt-36 sm:px-6 lg:px-8">
       <div className="absolute inset-0 aurion-pattern opacity-[0.16]" />
@@ -304,26 +380,25 @@ function RequestConfirmation({
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[var(--border-gold-strong)] bg-[rgba(214,180,94,0.08)] text-[var(--gold-light)]">
           <CheckCircle size={38} weight="light" />
         </div>
-        <p className="section-label mt-7">Request received</p>
+        <p className="section-label mt-7">{t("source.requestReceived")}</p>
         <h1 className="font-[family-name:var(--font-display)] text-4xl leading-tight text-white sm:text-6xl">
-          The conversation has a starting point.
+          {t("source.confirmationTitle")}
         </h1>
         <p className="mx-auto mt-6 max-w-[590px] leading-[1.9] text-[var(--text-secondary)]">
-          Your sourcing request from {requestForQuote.companyName} is now in the AURION desk.
-          Keep the reference below for follow-up.
+          {t("source.confirmationBody", { company: requestForQuote.companyName })}
         </p>
         <div className="mx-auto mt-8 max-w-[440px] rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-deep)] p-5">
-          <span className="block font-[family-name:var(--font-mono)] text-[0.58rem] uppercase tracking-[0.22em] text-[var(--text-muted)]">RFQ reference</span>
+          <span className="block font-[family-name:var(--font-mono)] text-[0.58rem] uppercase tracking-[0.22em] text-[var(--text-muted)]">{t("source.rfqReference")}</span>
           <strong className="mt-2 block font-[family-name:var(--font-mono)] text-xl tracking-[0.08em] text-[var(--gold-light)] sm:text-2xl">
             {requestForQuote.reference}
           </strong>
         </div>
         <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
           <Link href="/store" className="btn btn-primary inline-flex items-center justify-center gap-2">
-            Explore the marketplace <ArrowRight size={17} />
+            {t("source.exploreMarketplace")} <ArrowRight size={17} />
           </Link>
           <button type="button" onClick={onReset} className="btn btn-outline">
-            Submit another request
+            {t("source.anotherRequest")}
           </button>
         </div>
       </div>

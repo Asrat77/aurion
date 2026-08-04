@@ -5,7 +5,7 @@ import type { CartLine, Product } from "@/types";
 interface CartState {
   items: CartLine[];
   isOpen: boolean;
-  addItem: (product: Product) => void;
+  addItem: (product: Product, qty?: number) => void;
   removeItem: (productId: number) => void;
   updateQty: (productId: number, delta: number) => void;
   clear: () => void;
@@ -18,13 +18,18 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
       isOpen: false,
-      addItem: (product) => {
+      // Quantity is clamped to what the vendor actually has, so the cart can
+      // never ask for more than checkout will accept.
+      addItem: (product, qty = 1) => {
         const items = get().items;
         const existing = items.find((i) => i.productId === product.id);
+        const wanted = Math.max(1, Math.floor(qty));
+
         if (existing) {
+          const capped = Math.min(existing.qty + wanted, product.stock);
           set({
             items: items.map((i) =>
-              i.productId === product.id ? { ...i, qty: i.qty + 1 } : i
+              i.productId === product.id ? { ...i, qty: Math.max(1, capped) } : i
             ),
           });
         } else {
@@ -37,7 +42,7 @@ export const useCartStore = create<CartState>()(
                 name: product.name,
                 emoji: product.emoji,
                 priceCents: product.priceCents,
-                qty: 1,
+                qty: Math.max(1, Math.min(wanted, product.stock)),
                 vendorName: product.vendor.storeName,
               },
             ],

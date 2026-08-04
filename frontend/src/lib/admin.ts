@@ -1,8 +1,16 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
-import type { Order, Product, RequestForQuote } from "@/types";
+import type {
+  Order,
+  Product,
+  RequestForQuote,
+  RequestForQuoteStatus,
+  RefundRequest,
+  Review,
+  VendorApplication,
+} from "@/types";
 
 export interface AdminOverview {
   totalProducts: number;
@@ -51,6 +59,16 @@ export function useAdminOrders() {
   });
 }
 
+/** Admin intervention when a buyer and vendor cannot resolve an order. */
+export function useAdminCancelOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, note }: { id: number; note?: string }) =>
+      apiFetch<Order>(`/admin/orders/${id}/cancel`, { method: "POST", body: { note } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
+  });
+}
+
 export function useAdminCustomers() {
   return useQuery<AdminCustomer[]>({
     queryKey: [ "admin", "customers" ],
@@ -83,5 +101,96 @@ export function useAdminRequestForQuotes() {
   return useQuery<RequestForQuote[]>({
     queryKey: [ "admin", "request-for-quotes" ],
     queryFn: () => apiFetch("/admin/request_for_quotes"),
+  });
+}
+
+export function useUpdateRequestForQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: RequestForQuoteStatus }) =>
+      apiFetch<RequestForQuote>(`/admin/request_for_quotes/${id}`, {
+        method: "PATCH",
+        body: { status },
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
+  });
+}
+
+/** Sends a price back to a commercial buyer and moves the request to quoted. */
+export function useQuoteRequestForQuote() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      quoted_unit_price_cents,
+      quoted_lead_time_days,
+      quote_note,
+    }: {
+      id: number;
+      quoted_unit_price_cents: number;
+      quoted_lead_time_days?: number;
+      quote_note?: string;
+    }) =>
+      apiFetch<RequestForQuote>(`/admin/request_for_quotes/${id}/quote`, {
+        method: "POST",
+        body: { quoted_unit_price_cents, quoted_lead_time_days, quote_note },
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
+  });
+}
+
+export function useAdminRefundRequests() {
+  return useQuery<RefundRequest[]>({
+    queryKey: [ "admin", "refund-requests" ],
+    queryFn: () => apiFetch("/admin/refund_requests"),
+  });
+}
+
+/** Upholds or declines a buyer protection claim. */
+export function useResolveRefundRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, decision, note }: { id: number; decision: "approve" | "reject"; note?: string }) =>
+      apiFetch<RefundRequest>(`/admin/refund_requests/${id}/${decision}`, {
+        method: "POST",
+        body: { note },
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
+  });
+}
+
+export function useAdminVendorApplications() {
+  return useQuery<VendorApplication[]>({
+    queryKey: [ "admin", "vendor-applications" ],
+    queryFn: () => apiFetch("/admin/vendor_applications"),
+  });
+}
+
+/** Approving grants the applicant the vendor role and opens their store. */
+export function useResolveVendorApplication() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, decision, note }: { id: number; decision: "approve" | "reject"; note?: string }) =>
+      apiFetch<VendorApplication>(`/admin/vendor_applications/${id}/${decision}`, {
+        method: "POST",
+        body: { note },
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
+  });
+}
+
+export function useAdminReviews() {
+  return useQuery<Review[]>({
+    queryKey: [ "admin", "reviews" ],
+    queryFn: () => apiFetch("/admin/reviews"),
+  });
+}
+
+export function useModerateReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: number; status: "published" | "hidden" }) =>
+      apiFetch<Review>(`/admin/reviews/${id}`, { method: "PATCH", body: { status } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [ "admin" ] }),
   });
 }

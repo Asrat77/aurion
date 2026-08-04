@@ -11,11 +11,19 @@ import {
 } from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import { useUiStore } from "@/store/ui";
-import { useCartStore, cartTotalCents } from "@/store/cart";
-import { useCreateOrder, useMockConfirmPayment, type ShippingAddress } from "@/lib/orders";
+import { useCartStore } from "@/store/cart";
+import {
+  useCreateOrder,
+  useMockConfirmPayment,
+  useOrderQuote,
+  type ShippingAddress,
+} from "@/lib/orders";
+import { formatMoney } from "@/lib/money";
+import { useTranslation } from "react-i18next";
 import { ApiError } from "@/lib/api";
 import { Skeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
+import type { OrderQuote } from "@/types";
 
 const COUNTRIES = [
   { value: "ET", label: "Ethiopia" },
@@ -29,14 +37,10 @@ const COUNTRIES = [
   { value: "ZA", label: "South Africa" },
 ];
 
-function formatUsd(cents: number) {
-  return `$${(cents / 100).toFixed(2)}`;
-}
-
-const STEPS = [
-  { n: 1, label: "Shipping" },
-  { n: 2, label: "Payment" },
-  { n: 3, label: "Confirm" },
+const STEP_KEYS = [
+  { n: 1, key: "checkout.steps.shipping" },
+  { n: 2, key: "checkout.steps.payment" },
+  { n: 3, key: "checkout.steps.confirm" },
 ];
 
 function Field({
@@ -60,6 +64,7 @@ function Field({
 }
 
 export default function CheckoutPage() {
+  const { t } = useTranslation();
   const { data: user, isLoading: userLoading } = useMe();
   const openAuth = useUiStore((s) => s.openAuth);
   const showToast = useUiStore((s) => s.showToast);
@@ -81,11 +86,10 @@ export default function CheckoutPage() {
     phone: "",
   });
 
-  const subtotal = cartTotalCents(items);
-  const shipping = subtotal > 0 ? 500 : 0;
-  const tax = Math.round(subtotal * 0.08);
-  const total = subtotal + shipping + tax;
-  const gateway = address.country === "ET" ? "Chapa (ETB)" : "Stripe (USD)";
+  // Shipping zone, VAT and the buyer's currency all follow the destination, so
+  // the server prices the cart and the client only renders the answer.
+  const quoteItems = items.map((i) => ({ product_id: i.productId, quantity: i.qty }));
+  const { data: quote, isFetching: quoting } = useOrderQuote(quoteItems, address.country);
 
   if (userLoading) {
     return (
@@ -106,10 +110,10 @@ export default function CheckoutPage() {
         <div className="max-w-[var(--container-narrow)] mx-auto">
           <EmptyState
             icon={<CreditCard size={32} />}
-            title="Sign in to check out"
+            title={t("checkout.signInToCheckout")}
             action={
               <button className="btn btn-primary" onClick={() => openAuth("login")}>
-                Sign In
+                {t("common.signIn")}
               </button>
             }
           />
@@ -124,10 +128,10 @@ export default function CheckoutPage() {
         <div className="max-w-[var(--container-narrow)] mx-auto">
           <EmptyState
             icon={<Package size={32} />}
-            title="Your cart is empty"
+            title={t("checkout.cartEmpty")}
             action={
               <Link href="/store" className="btn btn-primary">
-                Browse the Store
+                {t("cart.browseStore")}
               </Link>
             }
           />
@@ -141,19 +145,19 @@ export default function CheckoutPage() {
       <section className="px-4 sm:px-6 lg:px-8 pt-32 pb-20">
         <div className="max-w-[var(--container-narrow)] mx-auto text-center bg-[var(--bg-surface)] border border-[var(--border-gold)] rounded-2xl p-10">
           <CheckCircle size={56} weight="fill" className="text-[var(--success)] mx-auto mb-4" />
-          <h3 className="display-heading mb-2">Order Placed</h3>
+          <h3 className="display-heading mb-2">{t("checkout.orderPlaced")}</h3>
           <p className="text-[var(--text-secondary)] mb-1">
-            Thank you for your order. You will receive a confirmation email shortly.
+            {t("checkout.orderPlacedBody")}
           </p>
           <p className="text-sm text-[var(--text-muted)] font-mono mb-6">
-            Order #{placedOrder.reference}
+            {t("checkout.orderNumber", { reference: placedOrder.reference })}
           </p>
           <div className="flex gap-3 justify-center">
             <Link href="/orders" className="btn btn-outline">
-              View Orders
+              {t("checkout.viewOrders")}
             </Link>
             <Link href="/store" className="btn btn-primary">
-              Continue Shopping
+              {t("checkout.continueShopping")}
             </Link>
           </div>
         </div>
@@ -172,7 +176,7 @@ export default function CheckoutPage() {
       clearCart();
       setPlacedOrder({ id: order.id, reference: order.reference });
     } catch (err) {
-      showToast(err instanceof ApiError ? err.message : "Could not place order.", "error");
+      showToast(err instanceof ApiError ? err.message : t("checkout.couldNotPlace"), "error");
     }
   }
 
@@ -182,7 +186,7 @@ export default function CheckoutPage() {
     <section className="px-4 sm:px-6 lg:px-8 pt-32 pb-20">
       <div className="max-w-[var(--container-narrow)] mx-auto bg-[var(--bg-surface)] border border-[var(--border-gold)] rounded-2xl p-8">
         <div className="flex gap-2 justify-center mb-8">
-          {STEPS.map((s) => (
+          {STEP_KEYS.map((s) => (
             <div
               key={s.n}
               className={`flex items-center gap-2 text-xs uppercase tracking-wide ${
@@ -204,7 +208,7 @@ export default function CheckoutPage() {
               >
                 {s.n < step ? <CheckCircle size={14} weight="bold" /> : s.n}
               </span>
-              {s.label}
+              {t(s.key)}
               {s.n < 3 && <span className="w-6 h-px bg-[var(--border-subtle)]" />}
             </div>
           ))}
@@ -212,16 +216,16 @@ export default function CheckoutPage() {
 
         {step === 1 && (
           <div>
-            <h3 className="display-heading mb-6">Shipping Information</h3>
+            <h3 className="display-heading mb-6">{t("checkout.shippingInformation")}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="First name" required>
+              <Field label={t("checkout.firstName")} required>
                 <input
                   className="input"
                   value={address.first}
                   onChange={(e) => setAddress({ ...address, first: e.target.value })}
                 />
               </Field>
-              <Field label="Last name" required>
+              <Field label={t("checkout.lastName")} required>
                 <input
                   className="input"
                   value={address.last}
@@ -229,7 +233,7 @@ export default function CheckoutPage() {
                 />
               </Field>
               <div className="sm:col-span-2">
-                <Field label="Email" required>
+                <Field label={t("checkout.email")} required>
                   <input
                     className="input"
                     type="email"
@@ -239,7 +243,7 @@ export default function CheckoutPage() {
                 </Field>
               </div>
               <div className="sm:col-span-2">
-                <Field label="Address" required>
+                <Field label={t("checkout.address")} required>
                   <input
                     className="input"
                     value={address.address}
@@ -247,14 +251,14 @@ export default function CheckoutPage() {
                   />
                 </Field>
               </div>
-              <Field label="City" required>
+              <Field label={t("checkout.city")} required>
                 <input
                   className="input"
                   value={address.city}
                   onChange={(e) => setAddress({ ...address, city: e.target.value })}
                 />
               </Field>
-              <Field label="Country" required>
+              <Field label={t("checkout.country")} required>
                 <select
                   className="input"
                   value={address.country}
@@ -267,14 +271,14 @@ export default function CheckoutPage() {
                   ))}
                 </select>
               </Field>
-              <Field label="ZIP / Postal code">
+              <Field label={t("checkout.zip")}>
                 <input
                   className="input"
                   value={address.zip}
                   onChange={(e) => setAddress({ ...address, zip: e.target.value })}
                 />
               </Field>
-              <Field label="Phone">
+              <Field label={t("checkout.phone")}>
                 <input
                   className="input"
                   value={address.phone}
@@ -288,7 +292,7 @@ export default function CheckoutPage() {
                 disabled={!address.first || !address.last || !address.email || !address.address || !address.city}
                 onClick={() => setStep(2)}
               >
-                Continue to Payment <ArrowRight size={16} />
+                {t("checkout.continueToPayment")} <ArrowRight size={16} />
               </button>
             </div>
           </div>
@@ -296,24 +300,29 @@ export default function CheckoutPage() {
 
         {step === 2 && (
           <div>
-            <h3 className="display-heading mb-6">Payment Method</h3>
+            <h3 className="display-heading mb-6">{t("checkout.paymentMethod")}</h3>
             <div className="bg-[var(--bg-elevated)] rounded-lg p-6 mb-6">
               <p className="text-[var(--text-secondary)] mb-2">
-                Based on your shipping country, payment will be processed via
+                {t("checkout.pricedIn")}
               </p>
-              <p className="text-[var(--gold)] font-semibold text-lg">{gateway}</p>
+              <p className="text-[var(--gold)] font-semibold text-lg">
+                {quote?.currency === "ETB" ? t("checkout.birr") : t("checkout.dollars")}
+              </p>
               <p className="text-xs text-[var(--text-muted)] mt-3">
-                Demo mode: no payment provider is configured yet, so checkout completes
-                instantly via a simulated payment.
+                {t("checkout.demoNotice")}
               </p>
             </div>
-            <OrderSummary subtotal={subtotal} shipping={shipping} tax={tax} total={total} />
+            <OrderSummary quote={quote} loading={quoting} />
             <div className="flex justify-between mt-8">
               <button className="btn btn-outline flex items-center gap-2" onClick={() => setStep(1)}>
-                <ArrowLeft size={16} /> Back
+                <ArrowLeft size={16} /> {t("common.back")}
               </button>
-              <button className="btn btn-primary flex items-center gap-2" onClick={() => setStep(3)}>
-                Review Order <ArrowRight size={16} />
+              <button
+                className="btn btn-primary flex items-center gap-2"
+                onClick={() => setStep(3)}
+                disabled={!quote}
+              >
+                {t("checkout.reviewOrder")} <ArrowRight size={16} />
               </button>
             </div>
           </div>
@@ -321,16 +330,17 @@ export default function CheckoutPage() {
 
         {step === 3 && (
           <div>
-            <h3 className="display-heading mb-6">Confirm Order</h3>
-            <OrderSummary subtotal={subtotal} shipping={shipping} tax={tax} total={total} />
+            <h3 className="display-heading mb-6">{t("checkout.confirmOrder")}</h3>
+            <OrderSummary quote={quote} loading={quoting} />
             <div className="mt-4 p-4 bg-[var(--bg-deep)] rounded-lg text-sm text-[var(--text-secondary)] flex flex-col gap-2">
               <p className="flex items-start gap-2">
                 <Package size={16} className="text-[var(--gold)] mt-0.5 shrink-0" />
-                Shipping to: {address.first} {address.last}, {address.address}, {address.city},{" "}
+                {t("checkout.shippingTo")}: {address.first} {address.last}, {address.address}, {address.city},{" "}
                 {COUNTRIES.find((c) => c.value === address.country)?.label}
               </p>
               <p className="flex items-center gap-2">
-                <CreditCard size={16} className="text-[var(--gold)] shrink-0" /> Payment: {gateway}
+                <CreditCard size={16} className="text-[var(--gold)] shrink-0" />{" "}
+                {t("checkout.payment")}: {t("checkout.simulated")}
               </p>
             </div>
             <div className="flex justify-between mt-8">
@@ -339,10 +349,10 @@ export default function CheckoutPage() {
                 onClick={() => setStep(2)}
                 disabled={placing}
               >
-                <ArrowLeft size={16} /> Back
+                <ArrowLeft size={16} /> {t("common.back")}
               </button>
               <button className="btn btn-success" onClick={handlePlaceOrder} disabled={placing}>
-                {placing ? "Placing Order…" : "Place Order"}
+                {placing ? t("checkout.placing") : t("checkout.placeOrder")}
               </button>
             </div>
           </div>
@@ -352,26 +362,42 @@ export default function CheckoutPage() {
   );
 }
 
-function OrderSummary({
-  subtotal,
-  shipping,
-  tax,
-  total,
-}: {
-  subtotal: number;
-  shipping: number;
-  tax: number;
-  total: number;
-}) {
-  return (
-    <div className="bg-[var(--bg-elevated)] rounded-lg p-6">
-      <SummaryRow label="Subtotal" value={formatUsd(subtotal)} />
-      <SummaryRow label="Shipping" value={formatUsd(shipping)} />
-      <SummaryRow label="Tax (VAT)" value={formatUsd(tax)} />
-      <div className="flex justify-between pt-3 mt-2 border-t-2 border-[var(--gold)] font-bold text-white">
-        <span>Total</span>
-        <span>{formatUsd(total)}</span>
+function OrderSummary({ quote, loading }: { quote?: OrderQuote; loading: boolean }) {
+  const { t } = useTranslation();
+  if (!quote) {
+    return (
+      <div className="bg-[var(--bg-elevated)] rounded-lg p-6 flex flex-col gap-3">
+        <Skeleton className="w-full h-4" />
+        <Skeleton className="w-full h-4" />
+        <Skeleton className="w-full h-6" />
       </div>
+    );
+  }
+
+  const money = (cents: number) => formatMoney(cents, quote.currency, quote.fxRate);
+
+  return (
+    <div
+      className={`bg-[var(--bg-elevated)] rounded-lg p-6 transition-opacity ${
+        loading ? "opacity-60" : ""
+      }`}
+      aria-busy={loading}
+    >
+      <SummaryRow label={t("checkout.subtotal")} value={money(quote.subtotalCents)} />
+      <SummaryRow
+        label={t("checkout.shipping")}
+        value={quote.freeShippingApplied ? t("common.free") : money(quote.shippingCents)}
+      />
+      {quote.taxCents > 0 && <SummaryRow label={quote.taxLabel} value={money(quote.taxCents)} />}
+      <div className="flex justify-between pt-3 mt-2 border-t-2 border-[var(--gold)] font-bold text-white">
+        <span>{t("checkout.total")}</span>
+        <span>{money(quote.totalCents)}</span>
+      </div>
+      {quote.currency !== "USD" && (
+        <p className="mt-3 text-xs text-[var(--text-muted)]">
+          {t("checkout.convertedAt", { rate: quote.fxRate.toLocaleString("en-US") })}
+        </p>
+      )}
     </div>
   );
 }

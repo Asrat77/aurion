@@ -13,8 +13,13 @@ class OrderSerializer
       paymentMethod: order.payment_method,
       shippingAddress: order.shipping_address,
       paidAt: order.paid_at,
+      shippedAt: order.shipped_at,
+      deliveredAt: order.delivered_at,
+      cancelledAt: order.cancelled_at,
+      cancellable: order.cancellable?,
       createdAt: order.created_at,
       items: order.order_items.map { |i| OrderItemSerializer.render(i) },
+      events: order.order_events.chronologically.map { |e| OrderEventSerializer.render(e) },
     }
     hash[:buyerEmail] = order.buyer.email if include_buyer
     hash

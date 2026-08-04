@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
-import type { Order } from "@/types";
+import type { Order, OrderQuote } from "@/types";
 
 export interface ShippingAddress {
   first: string;
@@ -50,6 +50,36 @@ export function useMockConfirmPayment() {
   return useMutation({
     mutationFn: (orderId: number) =>
       apiFetch<Order>(`/payments/${orderId}/mock_confirm`, { method: "POST" }),
+    onSuccess: (order) => {
+      qc.setQueryData(["order", order.id], order);
+      qc.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
+}
+
+/**
+ * Server-priced cart total. Shipping zones, VAT and the buyer's currency all
+ * depend on the destination, so checkout asks the API rather than recomputing
+ * them here — the quote and the charge come from the same code path.
+ */
+export function useOrderQuote(
+  items: { product_id: number; quantity: number }[],
+  country: string,
+) {
+  return useQuery<OrderQuote>({
+    queryKey: ["order-quote", items, country],
+    queryFn: () =>
+      apiFetch("/orders/quote", { method: "POST", body: { items, country } }),
+    enabled: items.length > 0 && !!country,
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useCancelOrder() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: number) =>
+      apiFetch<Order>(`/orders/${orderId}/cancel`, { method: "POST" }),
     onSuccess: (order) => {
       qc.setQueryData(["order", order.id], order);
       qc.invalidateQueries({ queryKey: ["orders"] });
