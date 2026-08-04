@@ -12,6 +12,9 @@ import {
   Trash,
   Storefront,
   Plus,
+  TrendUp,
+  Stack,
+  Warning,
 } from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import { useUiStore } from "@/store/ui";
@@ -24,6 +27,7 @@ import {
   useUpdateVendorProduct,
   useDeleteVendorProduct,
   useAdvanceVendorOrderLine,
+  useVendorAnalytics,
   type VendorProductInput,
   type VendorOrderLine,
 } from "@/lib/vendor";
@@ -36,12 +40,15 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import ProductImage from "@/components/ui/ProductImage";
 import { TableSkeleton, StatRowSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
+import RevenueChart from "@/components/vendor/RevenueChart";
 
 const VIEWS: { key: string; label: string; icon: Icon }[] = [
   { key: "overview", label: "Overview", icon: SquaresFour },
   { key: "products", label: "Products", icon: Package },
+  { key: "inventory", label: "Inventory", icon: Stack },
   { key: "orders", label: "Orders", icon: Receipt },
   { key: "payouts", label: "Payouts", icon: Wallet },
+  { key: "analytics", label: "Analytics", icon: TrendUp },
   { key: "commission", label: "Commission", icon: Percent },
 ];
 
@@ -104,8 +111,10 @@ export default function VendorPage() {
           <div className="card p-8">
             {view === "overview" && <OverviewView />}
             {view === "products" && <ProductsView />}
+            {view === "inventory" && <InventoryView />}
             {view === "orders" && <OrdersView />}
             {view === "payouts" && <PayoutsView />}
+            {view === "analytics" && <AnalyticsView />}
             {view === "commission" && <CommissionView />}
           </div>
         </div>
@@ -600,6 +609,246 @@ function CommissionView() {
           Payouts are processed on the 15th of each month for the previous month&apos;s earnings.
         </p>
       </div>
+    </div>
+  );
+}
+
+const WINDOWS = [7, 30, 90];
+
+function AnalyticsView() {
+  const [days, setDays] = useState(30);
+  const { data, isLoading } = useVendorAnalytics(days);
+
+  if (isLoading && !data) return <StatRowSkeleton count={4} />;
+  if (!data) return null;
+
+  const outstanding =
+    data.fulfillment.awaiting + data.fulfillment.processing + data.fulfillment.shipped;
+
+  return (
+    <div>
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+        <h3 className="display-heading">Analytics</h3>
+        <div className="flex gap-1.5">
+          {WINDOWS.map((w) => (
+            <button
+              key={w}
+              className={`min-h-10 cursor-pointer rounded-full border px-4 text-xs font-semibold transition-colors ${
+                days === w
+                  ? "border-[var(--gold)] bg-[var(--gold)] text-[var(--bg-deep)]"
+                  : "border-[var(--border-subtle)] text-[var(--text-secondary)] hover:border-[var(--gold)] hover:text-[var(--gold)]"
+              }`}
+              onClick={() => setDays(w)}
+              aria-pressed={days === w}
+            >
+              {w}d
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+        <StatCard label="Revenue" value={formatBase(data.revenueCents)} />
+        <StatCard label="Net earnings" value={formatBase(data.netCents)} />
+        <StatCard label="Orders" value={String(data.orderCount)} />
+        <StatCard label="Avg order" value={formatBase(data.averageOrderCents)} />
+      </div>
+
+      <div className="mb-8">
+        <h4 className="mb-2 text-sm font-semibold text-white">Revenue by day</h4>
+        <RevenueChart data={data.daily} />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div>
+          <h4 className="mb-2 text-sm font-semibold text-white">Best sellers</h4>
+          {data.topProducts.length === 0 ? (
+            <EmptyState icon={<TrendUp size={22} />} title="No sales in this window" />
+          ) : (
+            <div className="divide-y divide-[var(--border-subtle)]">
+              {data.topProducts.map((p) => (
+                <div key={p.productId} className="flex items-center justify-between gap-3 py-2.5">
+                  <span className="flex min-w-0 items-center gap-2 text-sm">
+                    <span aria-hidden>{p.emoji}</span>
+                    <span className="truncate text-[var(--text-secondary)]">{p.name}</span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-3 text-sm">
+                    <span className="text-[var(--text-muted)]">{p.units} sold</span>
+                    <span className="font-mono text-[var(--gold)]">
+                      {formatBase(p.revenueCents)}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <h4 className="mb-2 text-sm font-semibold text-white">
+            Open fulfilment
+            {outstanding > 0 && (
+              <span className="ml-2 font-normal text-[var(--text-muted)]">
+                {outstanding} item{outstanding === 1 ? "" : "s"} still owed
+              </span>
+            )}
+          </h4>
+          <div className="divide-y divide-[var(--border-subtle)]">
+            {(["awaiting", "processing", "shipped", "delivered"] as FulfillmentStatus[]).map(
+              (status) => (
+                <div key={status} className="flex items-center justify-between py-2.5">
+                  <StatusBadge status={status} />
+                  <span className="font-mono text-sm text-[var(--gold)]">
+                    {data.fulfillment[status]}
+                  </span>
+                </div>
+              ),
+            )}
+          </div>
+
+          <h4 className="mb-2 mt-6 text-sm font-semibold text-white">Customer rating</h4>
+          <p className="text-sm text-[var(--text-secondary)]">
+            {data.rating.average != null ? (
+              <>
+                <span className="font-mono text-lg text-[var(--gold)]">
+                  {data.rating.average.toFixed(1)}
+                </span>{" "}
+                across {data.rating.reviewCount} review
+                {data.rating.reviewCount === 1 ? "" : "s"}
+              </>
+            ) : (
+              "No reviews yet."
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InventoryView() {
+  const { data: analytics } = useVendorAnalytics(30);
+  const { data: overview, isLoading } = useVendorOverview();
+  const updateProduct = useUpdateVendorProduct();
+  const showToast = useUiStore((s) => s.showToast);
+  const [drafts, setDrafts] = useState<Record<number, string>>({});
+
+  async function saveStock(product: Product) {
+    const raw = drafts[product.id];
+    if (raw === undefined) return;
+
+    const stock = Number(raw);
+    if (!Number.isFinite(stock) || stock < 0) {
+      showToast("Stock must be zero or more.", "error");
+      return;
+    }
+
+    try {
+      await updateProduct.mutateAsync({ id: product.id, stock });
+      setDrafts((d) => {
+        const next = { ...d };
+        delete next[product.id];
+        return next;
+      });
+      showToast(`${product.name} set to ${stock} in stock.`, "success");
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : "Could not update stock.", "error");
+    }
+  }
+
+  if (isLoading || !overview) return <TableSkeleton cols={4} />;
+
+  const lowStockIds = new Set((analytics?.lowStock ?? []).map((p) => p.id));
+
+  return (
+    <div>
+      <h3 className="display-heading mb-1">Inventory</h3>
+      <p className="mb-5 text-sm text-[var(--text-muted)]">
+        Stock is held the moment a buyer places an order and returned if it is cancelled or
+        refunded.
+      </p>
+
+      {lowStockIds.size > 0 && (
+        <div className="mb-5 flex items-start gap-3 rounded-xl border border-[var(--border-gold)] bg-[rgba(214,180,94,0.06)] p-4">
+          <Warning size={20} className="mt-0.5 shrink-0 text-[var(--warning)]" />
+          <p className="text-sm text-[var(--text-secondary)]">
+            <span className="font-semibold text-white">
+              {lowStockIds.size} product{lowStockIds.size === 1 ? "" : "s"} running low.
+            </span>{" "}
+            Restock before they sell out and drop off the marketplace.
+          </p>
+        </div>
+      )}
+
+      {overview.products.length === 0 ? (
+        <EmptyState icon={<Package size={24} />} title="No products yet" />
+      ) : (
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th className="text-right">Price</th>
+              <th>Stock</th>
+              <th>Update</th>
+            </tr>
+          </thead>
+          <tbody>
+            {overview.products.map((p) => {
+              const low = lowStockIds.has(p.id);
+              const draft = drafts[p.id];
+              const dirty = draft !== undefined && Number(draft) !== p.stock;
+
+              return (
+                <tr key={p.id}>
+                  <td>
+                    <span className="flex items-center gap-2">
+                      <span aria-hidden>{p.emoji}</span>
+                      {p.name}
+                    </span>
+                  </td>
+                  <td className="num">{formatBase(p.priceCents)}</td>
+                  <td>
+                    <span
+                      className={`inline-flex items-center rounded-full border border-current/20 px-3 py-1 text-xs font-semibold ${
+                        p.stock === 0
+                          ? "bg-[rgba(224,85,85,0.12)] text-[var(--danger)]"
+                          : low
+                          ? "bg-[rgba(255,193,7,0.12)] text-[var(--warning)]"
+                          : "bg-[rgba(92,184,141,0.12)] text-[var(--success)]"
+                      }`}
+                    >
+                      {p.stock === 0 ? "Out of stock" : `${p.stock} in stock`}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <input
+                        className="input"
+                        style={{ width: "5.5rem" }}
+                        type="number"
+                        min="0"
+                        aria-label={`Stock for ${p.name}`}
+                        value={draft ?? String(p.stock)}
+                        onChange={(e) =>
+                          setDrafts((d) => ({ ...d, [p.id]: e.target.value }))
+                        }
+                      />
+                      <button
+                        className="btn btn-outline"
+                        style={{ padding: "9px 14px", fontSize: "0.7rem" }}
+                        disabled={!dirty || updateProduct.isPending}
+                        onClick={() => saveStock(p)}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

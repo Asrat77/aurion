@@ -60,6 +60,35 @@ export function useVendorPayouts() {
   });
 }
 
+export interface VendorAnalytics {
+  windowDays: number;
+  revenueCents: number;
+  netCents: number;
+  unitsSold: number;
+  orderCount: number;
+  averageOrderCents: number;
+  daily: { date: string; revenueCents: number; units: number }[];
+  topProducts: {
+    productId: number;
+    name: string | null;
+    slug: string | null;
+    emoji: string | null;
+    units: number;
+    revenueCents: number;
+  }[];
+  fulfillment: Record<FulfillmentStatus, number>;
+  lowStock: Product[];
+  rating: { average: number | null; reviewCount: number };
+}
+
+export function useVendorAnalytics(days: number) {
+  return useQuery<VendorAnalytics>({
+    queryKey: [ "vendor", "analytics", days ],
+    queryFn: () => apiFetch(`/vendor/analytics?days=${days}`),
+    placeholderData: (previous) => previous,
+  });
+}
+
 export interface VendorProductInput {
   name: string;
   category_id: number;
