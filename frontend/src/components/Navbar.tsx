@@ -59,8 +59,8 @@ export default function Navbar({ channel = "express" }: { channel?: Channel }) {
           { href: "/store", label: t("nav.marketplace") },
           { href: channelUrl("business", "/"), label: "AURION Business" },
           { href: "/#story", label: t("nav.ourStory") },
-          ...(user?.role === "vendor" ? [{ href: "/vendor", label: t("nav.vendor") }] : []),
-          ...(user?.role === "admin" ? [{ href: "/admin", label: t("nav.admin") }] : []),
+          ...(user?.role === "vendor" ? [{ href: channelUrl("operations", "/vendor"), label: t("nav.vendor") }] : []),
+          ...(user?.role === "admin" ? [{ href: channelUrl("operations", "/admin"), label: t("nav.admin") }] : []),
         ];
 
   return (
