@@ -13,6 +13,7 @@ import {
   ShoppingBagOpen,
 } from "@phosphor-icons/react/ssr";
 import { DEPLOYMENT } from "@/lib/channel";
+import { MostLoved, TrustStrip } from "@/components/express/StorefrontRails";
 
 const ORIGINS = [
   {
@@ -246,6 +247,10 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <MostLoved />
+
+      <TrustStrip />
 
       <section className="relative overflow-hidden px-4 py-24 sm:px-6 lg:px-8 lg:py-32">
         <div className="absolute right-0 top-0 h-[500px] w-[500px] rounded-full bg-[var(--blue-glow)] blur-[150px]" />
