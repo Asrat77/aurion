@@ -15,6 +15,9 @@ Rails.application.routes.draw do
       delete "me", to: "me#destroy"
       get "security/csrf", to: "security#csrf"
 
+      get "assistant", to: "assistant#show"
+      post "assistant/messages", to: "assistant#create"
+
       resources :products, only: [ :index, :show ], param: :slug do
         get :facets, on: :collection
       end

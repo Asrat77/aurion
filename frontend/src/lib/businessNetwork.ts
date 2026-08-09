@@ -113,6 +113,25 @@ export interface SourcingMonitor {
   }[];
   pipeline: Record<string, number>;
   slowestResponses: { id: number; reference: string; vendorName: string; status: string; waitingHours: number }[];
+  assistant: {
+    config: { enabled: boolean; provider: string | null; model: string | null; reason: string | null };
+    last7Days: number;
+    answered: number;
+    failed: number;
+    byTask: Record<string, number>;
+    byChannel: Record<string, number>;
+    medianLatencyMs: number | null;
+    recent: {
+      id: number;
+      task: string;
+      channel: string;
+      status: string;
+      question: string;
+      groundedOn: Record<string, number>;
+      latencyMs: number | null;
+      createdAt: string;
+    }[];
+  };
 }
 
 export function useNetworkSnapshot() {

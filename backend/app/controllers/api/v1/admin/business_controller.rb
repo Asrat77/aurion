@@ -15,7 +15,8 @@ module Api
             exceptions: sourcing_exceptions,
             recentMatchRuns: recent_match_runs,
             pipeline: TradeOrder.group(:status).count,
-            slowestResponses: slowest_responses
+            slowestResponses: slowest_responses,
+            assistant: assistant_usage
           }
         end
 
@@ -149,6 +150,35 @@ module Api
               reference: event.request_for_quote&.reference, details: event.details,
               occurredAt: event.created_at.iso8601 }
           end
+        end
+
+        # Assistant activity, so Operations can see what it is being asked and
+        # whether the provider is actually answering.
+        def assistant_usage
+          recent = AssistantExchange.where(created_at: 7.days.ago..)
+          answered = recent.answered
+          {
+            config: AiAssistant::Configuration.status,
+            last7Days: recent.count,
+            answered: answered.count,
+            failed: recent.where(status: "failed").count,
+            byTask: recent.group(:task).count,
+            byChannel: recent.group(:channel).count,
+            medianLatencyMs: median(answered.where.not(latency_ms: nil).pluck(:latency_ms)),
+            recent: recent.recent.limit(10).map do |exchange|
+              { id: exchange.id, task: exchange.task, channel: exchange.channel, status: exchange.status,
+                question: exchange.question.truncate(140), groundedOn: exchange.grounding,
+                latencyMs: exchange.latency_ms, createdAt: exchange.created_at.iso8601 }
+            end
+          }
+        end
+
+        def median(values)
+          return nil if values.empty?
+
+          sorted = values.sort
+          middle = sorted.length / 2
+          sorted.length.odd? ? sorted[middle] : ((sorted[middle - 1] + sorted[middle]) / 2.0).round
         end
 
         def slowest_responses

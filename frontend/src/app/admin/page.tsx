@@ -14,6 +14,7 @@ import {
   XCircle,
   ShieldCheck,
   Star,
+  Broadcast,
 } from "@phosphor-icons/react";
 import { useMe } from "@/lib/auth";
 import {
@@ -40,6 +41,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import ProductImage from "@/components/ui/ProductImage";
 import { TableSkeleton, StatRowSkeleton } from "@/components/ui/Skeleton";
 import EmptyState from "@/components/ui/EmptyState";
+import SourcingMonitor from "@/components/admin/SourcingMonitor";
 import { formatBase } from "@/lib/money";
 import { ApiError } from "@/lib/api";
 import { useUiStore } from "@/store/ui";
@@ -57,6 +59,7 @@ const VIEWS: { key: string; labelKey: string; icon: Icon }[] = [
   { key: "products", labelKey: "admin.nav.products", icon: Package },
   { key: "orders", labelKey: "admin.nav.orders", icon: Receipt },
   { key: "rfqs", labelKey: "admin.nav.sourcing", icon: FileText },
+  { key: "matching", labelKey: "admin.nav.matching", icon: Broadcast },
   { key: "refunds", labelKey: "admin.nav.refunds", icon: ShieldCheck },
   { key: "reviews", labelKey: "admin.nav.reviews", icon: Star },
   { key: "customers", labelKey: "admin.nav.customers", icon: Users },
@@ -138,6 +141,7 @@ export default function AdminPage() {
             {view === "products" && <ProductsView />}
             {view === "orders" && <OrdersView />}
             {view === "rfqs" && <RequestForQuotesView />}
+            {view === "matching" && <SourcingMonitor />}
             {view === "refunds" && <RefundRequestsView />}
             {view === "reviews" && <ReviewsView />}
             {view === "customers" && <CustomersView />}

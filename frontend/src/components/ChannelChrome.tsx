@@ -9,6 +9,7 @@ import AuthModal from "@/components/auth/AuthModal";
 import SkipLink from "@/components/SkipLink";
 import BusinessNav from "@/components/business/BusinessNav";
 import BusinessFooter from "@/components/business/BusinessFooter";
+import AssistantWidget from "@/components/assistant/AssistantWidget";
 import { surfaceForPath } from "@/lib/channel";
 
 /**
@@ -30,6 +31,9 @@ export default function ChannelChrome({ children }: { children: React.ReactNode 
       </main>
       {business ? <BusinessFooter /> : <Footer channel={surface} />}
       {surface === "express" ? <CartDrawer /> : null}
+      {/* Operations staff have the data directly; the assistant is for
+          customers and buyers. */}
+      {surface === "operations" ? null : <AssistantWidget channel={surface} />}
       <AuthModal />
       <ToastHost />
     </div>
