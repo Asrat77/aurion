@@ -17,7 +17,7 @@ module Api
             grossCents: gross_cents,
             commissionCents: commission_cents,
             netCents: net_cents,
-            payouts: payouts.map { |p| PayoutSerializer.render(p) },
+            payouts: payouts.map { |p| PayoutSerializer.render(p) }
           }
         end
       end

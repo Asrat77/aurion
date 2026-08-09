@@ -57,6 +57,9 @@ export function useLogout() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => apiFetch<void>("/auth/logout", { method: "DELETE" }),
-    onSuccess: () => qc.setQueryData(["me"], null),
+    onSuccess: () => {
+      qc.clear();
+      qc.setQueryData(["me"], null);
+    },
   });
 }

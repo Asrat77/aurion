@@ -8,7 +8,7 @@ class VendorSerializer
       slug: vendor.slug,
       commissionRate: vendor.commission_rate.to_f,
       status: vendor.status,
-      bio: vendor.bio,
+      bio: vendor.bio
     }
 
     if include_application

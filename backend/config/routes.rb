@@ -8,8 +8,12 @@ Rails.application.routes.draw do
       post "auth/login", to: "auth#login"
       delete "auth/logout", to: "auth#logout"
       get "me", to: "me#show"
+      resources :notifications, only: [ :index ] do
+        post :read, on: :member
+      end
       patch "me", to: "me#update"
       delete "me", to: "me#destroy"
+      get "security/csrf", to: "security#csrf"
 
       resources :products, only: [ :index, :show ], param: :slug do
         get :facets, on: :collection
@@ -48,6 +52,41 @@ Rails.application.routes.draw do
         resources :payouts, only: [ :index ]
       end
 
+      namespace :business do
+        resources :organizations, only: [ :index, :show, :create ] do
+          resources :request_for_quotes, only: [ :create ], controller: "request_for_quotes"
+          resources :memberships, only: [ :index, :create, :update, :destroy ], controller: "memberships"
+        end
+        resources :request_for_quotes, only: [ :index, :show, :create ] do
+          post :publication, on: :member, to: "request_for_quotes#publish"
+        end
+        resources :opportunities, only: [ :index, :show ]
+        resources :quotations, only: [ :index, :update ] do
+          post :submission, on: :member, to: "quotations#submit"
+          post :withdrawal, on: :member, to: "quotations#withdraw"
+          post :acceptance, on: :member, to: "quotations#accept"
+        end
+        resources :opportunities, only: [] do
+          resources :quotations, only: [ :create ], controller: "quotations"
+        end
+        resources :trade_orders, only: [ :index, :show ] do
+          get :contract, on: :member, to: "trade_orders#contract"
+          post :acceptance, on: :member, to: "trade_orders#acceptance"
+          post :protected_payment, on: :member, to: "trade_orders#protected_payment"
+          post :sandbox_funding, on: :member, to: "trade_orders#sandbox_funding"
+          post :inspection_report, on: :member, to: "trade_orders#inspection_report"
+          post :shipment, on: :member, to: "trade_orders#shipment"
+          post :delivery_acceptance, on: :member, to: "trade_orders#delivery_acceptance"
+          post :dispute, on: :member, to: "trade_orders#dispute"
+          post :dispute_evidence, on: :member, to: "trade_orders#dispute_evidence"
+          post :cancellation, on: :member, to: "trade_orders#cancellation"
+        end
+      end
+
+      namespace :webhooks do
+        post "payments/:provider", to: "payments#create"
+      end
+
       namespace :admin do
         get "overview", to: "overview#show"
         resources :orders, only: [ :index ] do
@@ -69,6 +108,17 @@ Rails.application.routes.draw do
           post :reject, on: :member
         end
         get "analytics", to: "analytics#show"
+        resources :organizations, only: [ :index ] do
+          post :verification, on: :member, to: "organizations#verify"
+        end
+        get "business/inspections", to: "business#inspections"
+        post "business/inspections/:id/review", to: "business#review_inspection"
+        post "business/shipments/:id/delivery_verification", to: "business#verify_delivery"
+        get "business/disputes", to: "business#disputes"
+        get "business/provider_events", to: "business#provider_events"
+        post "business/provider_events/:id/retry", to: "business#retry_provider_event"
+        post "business/disputes/:id/resolution", to: "business#resolve_dispute"
+        post "business/trade_orders/:id/release", to: "business#release"
       end
     end
   end

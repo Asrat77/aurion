@@ -18,7 +18,7 @@ module Api
         {
           store_name: "Kaffa Highlands", contact_name: "Selam T.", contact_phone: "+251911000000",
           country: "ET", city: "Jimma", product_focus: "Specialty coffee",
-          business_registration: "ET-0099", bio: "Third-generation growers.",
+          business_registration: "ET-0099", bio: "Third-generation growers."
         }
       end
 

@@ -27,7 +27,7 @@ module Api
             avgOrderCents: avg_order_cents,
             totalOrders: total_orders,
             topProductName: top_product_name,
-            topProductQty: top_product_qty,
+            topProductQty: top_product_qty
           }
         end
       end

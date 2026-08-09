@@ -1,0 +1,55 @@
+name: AURION CI
+
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Rails tests and security
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+          working-directory: backend
+      - name: Prepare test database
+        run: bin/rails db:test:prepare
+      - name: Rails tests
+        run: bin/rails test
+      - name: Zeitwerk check
+        run: bin/rails zeitwerk:check
+      - name: RuboCop
+        run: bin/rubocop -f github
+      - name: Brakeman
+        run: bin/brakeman --no-pager
+      - name: Bundler audit
+        run: bin/bundler-audit check --update
+
+  frontend:
+    name: Next.js checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - run: npm run build

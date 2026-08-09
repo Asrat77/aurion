@@ -19,7 +19,7 @@ class OrderSerializer
       cancellable: order.cancellable?,
       createdAt: order.created_at,
       items: order.order_items.map { |i| OrderItemSerializer.render(i) },
-      events: order.order_events.chronologically.map { |e| OrderEventSerializer.render(e) },
+      events: order.order_events.chronologically.map { |e| OrderEventSerializer.render(e) }
     }
     hash[:buyerEmail] = order.buyer.email if include_buyer
     hash

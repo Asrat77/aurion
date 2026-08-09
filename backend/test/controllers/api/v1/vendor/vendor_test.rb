@@ -60,7 +60,7 @@ module Api
         test "vendor can create a product scoped to themselves" do
           login_as(@user_a)
           post "/api/v1/vendor/products", params: {
-            name: "New Product", category_id: @category.id, price_cents: 500, stock: 20, emoji: "☕",
+            name: "New Product", category_id: @category.id, price_cents: 500, stock: 20, emoji: "☕"
           }, as: :json
           assert_response :created
           product = Product.find_by(name: "New Product")
@@ -120,7 +120,7 @@ module Api
           login_as(@user_a)
           patch "/api/v1/vendor/orders/#{item.id}", params: { fulfillment_status: "processing" }, as: :json
           patch "/api/v1/vendor/orders/#{item.id}", params: {
-            fulfillment_status: "shipped", carrier: "DHL", tracking_number: "ET-99",
+            fulfillment_status: "shipped", carrier: "DHL", tracking_number: "ET-99"
           }, as: :json
 
           assert_response :success

@@ -1,5 +1,10 @@
-# Idempotent seed data ported from the AURION marketplace prototype.
-# Safe to run multiple times: find_or_create_by! everywhere.
+# Idempotent demo data for development and staging. Production must never
+# create public demo credentials or mock-money accounts during container boot.
+if Rails.env.production?
+  puts "Skipping demo seeds in production."
+else
+
+demo_password = ENV["STAGING_DEMO_PASSWORD"].presence || SecureRandom.base58(24)
 
 puts "Seeding categories..."
 CATEGORIES = %w[coffee teff spices honey textiles jewelry superfoods].map do |slug|
@@ -17,34 +22,49 @@ VENDOR_DEFS = [
   { store: "Bee Natural ET", email: "bee.natural@vendors.aurion.et" },
   { store: "Sheba Textiles", email: "sheba.textiles@vendors.aurion.et" },
   { store: "Aurion Jewels", email: "aurion.jewels@vendors.aurion.et" },
-  { store: "Green Valley ET", email: "green.valley@vendors.aurion.et" },
+  { store: "Green Valley ET", email: "green.valley@vendors.aurion.et" }
 ]
 
 vendors_by_store = VENDOR_DEFS.each_with_object({}) do |v, acc|
   user = User.find_or_create_by!(email: v[:email]) do |u|
     u.name = v[:store]
-    u.password = "aurion123"
+    u.password = demo_password
     u.role = :vendor
   end
   vendor = Vendor.find_or_create_by!(user: user) do |ven|
     ven.store_name = v[:store]
     ven.status = :active
   end
+  organization = Organization.find_or_create_by!(name: v[:store], kind: "supplier") do |org|
+    org.status = :active
+    org.verification_status = :verified
+    org.country = "Ethiopia"
+  end
+  organization.update!(status: :active, verification_status: :verified)
+  organization.memberships.find_or_create_by!(user: user) { |membership| membership.role = :owner }
+  vendor.update!(organization: organization)
   acc[v[:store]] = vendor
 end
 
 puts "Seeding demo admin & buyer..."
 User.find_or_create_by!(email: "admin@aurion.et") do |u|
   u.name = "Aurion Admin"
-  u.password = "aurion123"
+  u.password = demo_password
   u.role = :admin
 end
 
-User.find_or_create_by!(email: "buyer@aurion.et") do |u|
+demo_buyer = User.find_or_create_by!(email: "buyer@aurion.et") do |u|
   u.name = "Demo Buyer"
-  u.password = "aurion123"
+  u.password = demo_password
   u.role = :buyer
 end
+demo_buyer_org = Organization.find_or_create_by!(name: "Demo Buyer Organization", kind: "buyer") do |org|
+  org.status = :active
+  org.verification_status = :verified
+  org.country = "Ethiopia"
+end
+demo_buyer_org.update!(status: :active, verification_status: :verified)
+demo_buyer_org.memberships.find_or_create_by!(user: demo_buyer) { |membership| membership.role = :owner }
 
 puts "Seeding products..."
 PRODUCT_DEFS = [
@@ -95,7 +115,7 @@ PRODUCT_DEFS = [
     description: "Ethiopian korarima (false cardamom). 50g, aromatic and earthy flavor." },
   { name: "Black Cumin — Whole", category: "spices", price: 11.00, emoji: "🖤",
     origin: "Oromia, Ethiopia", vendor: "Spice Route ET", rating: 4.4, reviews: 61,
-    description: "Whole black cumin seeds. 100g, earthy and slightly bitter flavor." },
+    description: "Whole black cumin seeds. 100g, earthy and slightly bitter flavor." }
 ]
 
 PRODUCT_DEFS.each_with_index do |p, index|
@@ -141,7 +161,7 @@ WHOLESALE_DEFS = {
                                tiers: [ [ 200, 1900 ], [ 1_000, 1700 ] ] },
   "Handwoven Cotton Scarf" => { moq: 100, uom: "pieces", lead: 30, packaging: "Individually wrapped, 50 per carton",
                                  sample: true, sample_price: 5500,
-                                 tiers: [ [ 100, 3800 ], [ 500, 3300 ] ] },
+                                 tiers: [ [ 100, 3800 ], [ 500, 3300 ] ] }
 }.freeze
 
 WHOLESALE_DEFS.each do |name, terms|
@@ -155,11 +175,25 @@ WHOLESALE_DEFS.each do |name, terms|
     packaging: terms[:packaging],
     sample_available: terms[:sample],
     sample_price_cents: terms[:sample_price],
+    business_enabled: true,
   )
 
   terms[:tiers].each do |min_quantity, unit_price_cents|
     tier = product.price_tiers.find_or_initialize_by(min_quantity: min_quantity)
     tier.update!(unit_price_cents: unit_price_cents)
+  end
+end
+
+puts "Seeding supplier capabilities..."
+WHOLESALE_DEFS.each do |name, terms|
+  product = Product.find_by(name: name)
+  next unless product
+
+  product.vendor.supplier_capabilities.find_or_create_by!(category: product.category) do |capability|
+    capability.destinations = [ "Ethiopia", "United States", "United Arab Emirates", "Germany" ]
+    capability.min_quantity = terms[:moq]
+    capability.max_lead_time_days = terms[:lead]
+    capability.verified = true
   end
 end
 
@@ -171,7 +205,7 @@ REVIEWER_DEFS = [
   { email: "meron@buyers.aurion.et", name: "Meron Alemu" },
   { email: "daniel@buyers.aurion.et", name: "Daniel Bekele" },
   { email: "sara@buyers.aurion.et", name: "Sara Haile" },
-  { email: "yonas@buyers.aurion.et", name: "Yonas Girma" },
+  { email: "yonas@buyers.aurion.et", name: "Yonas Girma" }
 ]
 
 REVIEW_TEXTS = [
@@ -179,13 +213,13 @@ REVIEW_TEXTS = [
   [ 5, "Will order again", "Second time buying this. Consistent every time." ],
   [ 4, "Very good", "Happy with it overall. Shipping took a little longer than I expected." ],
   [ 4, "Good quality", "Does what it says. Packaging could be sturdier." ],
-  [ 5, "Worth it", "You can taste the difference against supermarket equivalents." ],
+  [ 5, "Worth it", "You can taste the difference against supermarket equivalents." ]
 ]
 
 reviewers = REVIEWER_DEFS.map do |r|
   User.find_or_create_by!(email: r[:email]) do |u|
     u.name = r[:name]
-    u.password = "aurion123"
+    u.password = demo_password
     u.role = :buyer
   end
 end
@@ -256,3 +290,4 @@ end
 
 puts "Done. #{Category.count} categories, #{Vendor.count} vendors, #{Product.count} products, " \
      "#{User.count} users, #{Review.count} reviews."
+end

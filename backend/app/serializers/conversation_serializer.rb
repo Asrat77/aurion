@@ -15,7 +15,7 @@ class ConversationSerializer
       unreadCount: conversation.unread_count_for(viewer),
       lastMessagePreview: last&.body&.truncate(120),
       lastMessageAt: conversation.last_message_at,
-      createdAt: conversation.created_at,
+      createdAt: conversation.created_at
     }
 
     if include_messages

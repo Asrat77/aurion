@@ -27,7 +27,10 @@ module Api
       end
 
       def create
-        lines, error = resolve_lines(check_stock: true)
+        # Stock is re-read under row locks below. The preflight lookup is only
+        # for catalogue validation; it must never be the authority for a
+        # concurrent last-unit checkout.
+        lines, error = resolve_lines(check_stock: false)
         return render json: { message: error }, status: :unprocessable_entity if error
 
         quote = Pricing.quote(lines: lines, country: params[:country])
@@ -45,6 +48,14 @@ module Api
             fx_rate: quote.fx_rate,
             shipping_address: shipping_address_params,
           )
+
+          lines = lines.map do |product, qty|
+            locked_product = Product.lock.includes(:vendor).find(product.id)
+            raise StockUnavailable, "Not enough stock for #{locked_product.name}. Only #{locked_product.stock} left." if locked_product.stock < qty
+            raise StockUnavailable, "#{locked_product.name} is no longer available." unless locked_product.active?
+
+            [ locked_product, qty ]
+          end
 
           lines.each do |product, qty|
             line_total = product.price_cents * qty
@@ -68,6 +79,8 @@ module Api
         end
 
         render json: OrderSerializer.render(order), status: :created
+      rescue StockUnavailable => e
+        render json: { message: e.message }, status: :unprocessable_entity
       rescue ActiveRecord::RecordInvalid => e
         render json: { message: e.message }, status: :unprocessable_entity
       end

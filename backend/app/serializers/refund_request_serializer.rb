@@ -16,7 +16,7 @@ class RefundRequestSerializer
       fxRate: claim.order.fx_rate.to_f,
       resolutionNote: claim.resolution_note,
       resolvedAt: claim.resolved_at,
-      createdAt: claim.created_at.iso8601,
+      createdAt: claim.created_at.iso8601
     }
     hash[:buyerEmail] = claim.buyer.email if include_buyer
     hash

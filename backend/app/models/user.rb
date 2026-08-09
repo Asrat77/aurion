@@ -3,6 +3,9 @@ class User < ApplicationRecord
 
   has_one :vendor, dependent: :destroy
   has_many :orders, foreign_key: :buyer_id, inverse_of: :buyer, dependent: :restrict_with_error
+  has_many :organization_memberships, dependent: :destroy
+  has_many :organizations, through: :organization_memberships
+  has_many :notifications, dependent: :destroy
 
   enum :role, { buyer: 0, vendor: 1, admin: 2 }
 

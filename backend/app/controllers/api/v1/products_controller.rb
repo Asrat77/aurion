@@ -35,7 +35,7 @@ module Api
       # hardcoded, so a new origin appears in the filter the moment a vendor
       # lists something from there.
       def facets
-        active = Product.active
+        active = channel_scope(Product.active)
 
         render json: {
           origins: active.where.not(origin: [ nil, "" ]).distinct.order(:origin).pluck(:origin),
@@ -49,14 +49,14 @@ module Api
       end
 
       def show
-        product = Product.active.eager_load(:vendor, :category).find_by!(slug: params[:slug])
+        product = channel_scope(Product.active).eager_load(:vendor, :category).find_by!(slug: params[:slug])
         render json: ProductSerializer.render(product)
       end
 
       private
 
       def filtered_scope
-        scope = Product.active.eager_load(:vendor, :category)
+        scope = channel_scope(Product.active.eager_load(:vendor, :category))
 
         scope = scope.where(categories: { slug: params[:category] }) if params[:category].present?
 
@@ -77,6 +77,10 @@ module Api
         scope = scope.where(vendors: { slug: params[:vendor] }) if params[:vendor].present?
 
         scope
+      end
+
+      def channel_scope(scope)
+        params[:channel].to_s == "business" ? scope.for_business : scope.for_express
       end
 
       # Rating sorts last with NULLS LAST so unrated products do not lead the

@@ -1,7 +1,10 @@
 #!/bin/bash -e
 
-# If running the rails server then create or migrate existing database
-if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
+# Database changes are a release concern in production. Set RUN_DB_PREPARE=true
+# for an explicitly approved migration release; local/dev containers retain the
+# convenient prepare-on-boot behavior.
+if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ] && \
+   { [ "${RUN_DB_PREPARE:-false}" == "true" ] || [ "${RAILS_ENV:-development}" != "production" ]; }; then
   ./bin/rails db:prepare
 fi
 

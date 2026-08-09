@@ -16,7 +16,7 @@ module Api
               status: v.status,
               commissionRate: v.commission_rate.to_f,
               productCount: v.products.size,
-              revenueCents: revenue_cents,
+              revenueCents: revenue_cents
             }
           }
         end

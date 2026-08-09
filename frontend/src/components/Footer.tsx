@@ -4,9 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight } from "@phosphor-icons/react/ssr";
 import { useTranslation } from "react-i18next";
+import type { Channel } from "@/lib/channel";
+import { channelUrl } from "@/lib/channel";
 
-export default function Footer() {
+export default function Footer({ channel = "express" }: { channel?: Channel }) {
   const { t } = useTranslation();
+  const sourcingHref = channel === "business" ? "/workspace" : channel === "operations" ? channelUrl("business", "/workspace") : "/source";
+  const catalogueHref = channel === "business" ? "/catalogue" : channelUrl("business", "/catalogue");
 
   return (
     <footer className="relative overflow-hidden border-t border-[var(--border-subtle)] px-4 md:px-8 pt-16 pb-8 bg-[var(--bg-surface)]">
@@ -29,7 +33,7 @@ export default function Footer() {
           <p className="mt-5 text-[var(--text-secondary)] leading-loose">
             {t("footer.tagline")}
           </p>
-          <Link href="/source" className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--gold-light)] hover:text-white">
+          <Link href={sourcingHref} className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--gold-light)] hover:text-white">
             {t("footer.startSourcing")} <ArrowUpRight size={16} />
           </Link>
         </div>
@@ -38,18 +42,14 @@ export default function Footer() {
             {t("footer.explore")}
           </div>
           <FooterLink href="/">{t("nav.home")}</FooterLink>
-          <FooterLink href="/store">{t("nav.marketplace")}</FooterLink>
-          <FooterLink href="/source">{t("nav.sourceAtScale")}</FooterLink>
+          {channel === "express" ? <FooterLink href="/store">{t("nav.marketplace")}</FooterLink> : <FooterLink href={sourcingHref}>Start an RFQ</FooterLink>}
+          {channel === "business" ? <FooterLink href={channelUrl("express", "/store")}>AURION Express</FooterLink> : <FooterLink href={channelUrl("business", "/")}>AURION Business</FooterLink>}
           <FooterLink href="/#story">{t("nav.ourStory")}</FooterLink>
-          <FooterLink href="/sell">{t("nav.sellOnAurion")}</FooterLink>
-          <FooterLink href="/buyer-protection">{t("footer.buyerProtection")}</FooterLink>
+          {channel === "express" ? <><FooterLink href="/sell">{t("nav.sellOnAurion")}</FooterLink><FooterLink href="/buyer-protection">{t("footer.buyerProtection")}</FooterLink></> : <FooterLink href="/messages">{t("nav.messages")}</FooterLink>}
         </div>
         <div>
           <div className="section-label mb-4">{t("footer.origins")}</div>
-          <FooterLink href="/store?category=coffee">{t("home.coffee")}</FooterLink>
-          <FooterLink href="/store?category=teff">{t("home.grains")}</FooterLink>
-          <FooterLink href="/store?category=jewelry">{t("home.jewelry")}</FooterLink>
-          <FooterLink href="/store?category=spices">{t("home.spices")}</FooterLink>
+          {channel === "express" ? <><FooterLink href="/store?category=coffee">{t("home.coffee")}</FooterLink><FooterLink href="/store?category=teff">{t("home.grains")}</FooterLink><FooterLink href="/store?category=jewelry">{t("home.jewelry")}</FooterLink><FooterLink href="/store?category=spices">{t("home.spices")}</FooterLink></> : <><FooterLink href={catalogueHref}>Wholesale catalogue</FooterLink><FooterLink href={channel === "operations" ? channelUrl("business", "/messages") : "/messages"}>Trade messages</FooterLink></>}
         </div>
       </div>
       <div className="relative max-w-[var(--container-wide)] mx-auto mt-12 pt-6 border-t border-[var(--border-subtle)] flex flex-col sm:flex-row gap-2 justify-between text-[var(--text-muted)] text-xs">

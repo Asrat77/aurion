@@ -35,6 +35,9 @@ gem "jwt"
 # Payment gateways
 gem "stripe"
 gem "faraday"
+gem "solid_queue"
+gem "prawn"
+gem "matrix"
 
 group :development, :test do
   gem "dotenv-rails"

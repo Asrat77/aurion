@@ -12,7 +12,7 @@ module Api
             grossCents: sold_items.sum(:line_total_cents),
             netCents: sold_items.sum(:net_cents),
             commissionRate: current_vendor.commission_rate.to_f,
-            products: current_vendor.products.order(:name).map { |p| ProductSerializer.render(p) },
+            products: current_vendor.products.order(:name).map { |p| ProductSerializer.render(p) }
           }
         end
       end

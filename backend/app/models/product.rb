@@ -17,6 +17,8 @@ class Product < ApplicationRecord
   scope :in_stock, -> { where("stock > 0") }
   # Available at commercial scale. A product with no MOQ is retail-only.
   scope :wholesale, -> { where.not(moq: nil) }
+  scope :for_express, -> { where(express_enabled: true) }
+  scope :for_business, -> { where(business_enabled: true).where.not(moq: nil) }
 
   def price_dollars
     price_cents / 100.0

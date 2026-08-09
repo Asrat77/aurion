@@ -15,7 +15,7 @@ class VendorOrderItemSerializer
       shippedAt: item.shipped_at,
       deliveredAt: item.delivered_at,
       buyerEmail: item.order.buyer.email,
-      createdAt: item.order.created_at,
+      createdAt: item.order.created_at
     }
   end
 end

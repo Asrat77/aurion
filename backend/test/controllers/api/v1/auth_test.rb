@@ -5,7 +5,7 @@ module Api
     class AuthTest < ActionDispatch::IntegrationTest
       test "register creates a buyer and signs them in" do
         post "/api/v1/auth/register", params: {
-          email: "new@example.com", password: "password123", name: "New Buyer",
+          email: "new@example.com", password: "password123", name: "New Buyer"
         }, as: :json
 
         assert_response :created
@@ -19,7 +19,7 @@ module Api
         User.create!(email: "dup@example.com", password: "password123", name: "First")
 
         post "/api/v1/auth/register", params: {
-          email: "dup@example.com", password: "password123", name: "Second",
+          email: "dup@example.com", password: "password123", name: "Second"
         }, as: :json
 
         assert_response :unprocessable_entity

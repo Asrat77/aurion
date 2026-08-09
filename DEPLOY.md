@@ -68,11 +68,11 @@ redeploys). Get a connection string from Neon (or whichever Postgres you
 prefer) with `?sslmode=require`.
 
 The container's entrypoint ([bin/docker-entrypoint](backend/bin/docker-entrypoint))
-runs `rails db:prepare` on boot, which creates the schema **and runs
-`db:seed` automatically the first time it creates the database** — so the
-demo products/vendors/accounts populate themselves on first deploy. No
-manual seed step needed. If for some reason they don't show up, Dokploy's
-container console lets you run `bin/rails db:seed` by hand.
+does not migrate production automatically. Run migrations as an explicit
+release step (`RUN_DB_PREPARE=true ./bin/rails db:prepare`), verify them, and
+then start the web process. Production seeds intentionally skip demo users and
+fixed passwords; seed only an isolated staging database with a secret
+`STAGING_DEMO_PASSWORD`.
 
 ### Required environment variables
 
@@ -80,12 +80,22 @@ container console lets you run `bin/rails db:seed` by hand.
 |---|---|
 | `RAILS_MASTER_KEY` | Contents of `backend/config/master.key` (don't commit this file — it isn't tracked in git; copy it into Dokploy's secret env var UI) |
 | `DATABASE_URL` | `postgres://user:pass@host/db?sslmode=require` |
-| `FRONTEND_ORIGIN` | The exact Appwrite frontend URL, e.g. `https://aurion.appwrite.network` — **no trailing slash**, must match exactly since CORS does a string match |
+| `FRONTEND_ORIGINS` | Comma-separated exact origins for Express, Business, and Operations; no trailing slash |
+| `COOKIE_SAME_SITE` | `none` in production, with HTTPS and secure cookies |
+| `ALLOW_MOCK_PAYMENTS` | Legacy staging flag; production code always fails closed regardless of its value |
+| `PROTECTED_PAYMENT_PROVIDER` | `disabled` until an approved provider account and settlement agreement exist; `sandbox` only outside production |
+| `ALLOW_SANDBOX_PAYMENTS` | Legacy flag; sandbox is code-gated to non-production environments |
+| `SANDBOX_WEBHOOK_SECRET` | Staging-only HMAC secret for the signed provider simulator |
+| `ACTIVE_STORAGE_SERVICE` | `azure` after Azure Blob is provisioned; `local` is for development only |
+| `AZURE_STORAGE_ACCOUNT_NAME` / `AZURE_STORAGE_ACCESS_KEY` | Azure Blob credentials from the platform secret store |
+| `AZURE_STORAGE_CONTAINER` | Durable private container for contracts and evidence |
+| `STAGING_DEMO_PASSWORD` | Staging-only secret used when deliberately seeding demo accounts |
+| `RUN_DB_PREPARE` | `false` by default; enable only on the migration release process |
 
 Optional: `ETB_PER_USD` (defaults to 140) sets the birr rate used to price
-orders shipping to Ethiopia. `CHAPA_SECRET_KEY` is reserved for the live
-gateway, which is not implemented yet — checkout always runs in mock/demo mode
-regardless of whether it is set.
+orders shipping to Ethiopia. `CHAPA_SECRET_KEY` is reserved for the later
+ordinary retail gateway milestone; it does not activate Business protected
+funds.
 
 ### Both platforms
 - **Health check**: `GET /up` (Rails' built-in health endpoint).
@@ -101,27 +111,43 @@ regardless of whether it is set.
 - Install command: `npm install`
 - Root directory: `frontend/`
 
+Create three independently rollbackable Sites from the same accepted commit.
+Only the build-time channel differs:
+
+| Site | `NEXT_PUBLIC_CHANNEL` | Scope |
+|---|---|---|
+| Express | `express` | Retail catalogue, cart, checkout, orders, returns |
+| Business | `business` | Organizations, RFQs, supplier offers, protected trades |
+| Operations | `operations` | Admin and supplier operations dashboards |
+
 ### Required environment variable
 
 | Variable | Value |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | `https://<your-backend-domain>/api/v1` |
+| `NEXT_PUBLIC_API_URL` | `https://<your-api-domain>/api/v1` |
+| `NEXT_PUBLIC_SITE_URL` | Exact preview or production site URL |
+| `NEXT_PUBLIC_EXPRESS_ORIGIN` | Express site origin |
+| `NEXT_PUBLIC_BUSINESS_ORIGIN` | Business site origin |
+| `NEXT_PUBLIC_OPERATIONS_ORIGIN` | Operations site origin |
 
-This is the only env var the frontend reads (checked — nothing else touches
-`process.env`).
+See `frontend/.env.example` for the complete channel configuration.
 
 ## 3. Deploy order
 
 The two URLs are circular (backend needs to know the frontend's origin,
 frontend needs to know the backend's URL), so:
 
-1. Deploy the backend first with a placeholder `FRONTEND_ORIGIN` (or your
-   best guess at the Appwrite domain if you're picking a fixed subdomain).
-2. Deploy the frontend with `NEXT_PUBLIC_API_URL` pointing at the backend's
-   real public URL.
-3. Update the backend's `FRONTEND_ORIGIN` to the frontend's actual final
-   URL and redeploy the backend (cookie auth will silently fail — requests
-   will 401 — until this matches exactly).
+1. Create isolated staging API/database/object-storage/jobs resources and list
+   all three Appwrite preview origins in `FRONTEND_ORIGINS`.
+2. Run migrations as a release, then deploy the backend with
+   `PROTECTED_PAYMENT_PROVIDER=sandbox` only in staging.
+3. Deploy all three Sites from the same frontend commit and verify channel
+   route allowlists and absolute cross-channel links.
+4. Replace `FRONTEND_ORIGINS` with final controlled origins only after DNS is
+   confirmed. The base domain is a client prerequisite; do not assume
+   `aurion.com` is controlled.
+5. Start the Solid Queue worker separately with `backend/bin/jobs` and monitor
+   failed provider-event jobs.
 
 ## What was fixed for this
 
@@ -136,9 +162,10 @@ would appear to succeed but nothing after it would work. Fixed to use
 `SameSite=None` (paired with `Secure`, already conditional on
 `Rails.env.production?`) in production, keeping `Lax` for local dev.
 
-## Demo accounts
+## Staging demo accounts
 
-All seeded with password `aurion123`:
+Created only when explicitly seeding an isolated staging database; never run
+the seed task against production:
 
 | Role | Email |
 |---|---|

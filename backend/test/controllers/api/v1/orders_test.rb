@@ -29,7 +29,7 @@ module Api
         post "/api/v1/orders", params: {
           items: [ { product_id: @product.id, quantity: 2 } ],
           country: "US",
-          shipping_address: { first: "A", last: "B", email: "a@b.com", address: "St", city: "C", country: "US" },
+          shipping_address: { first: "A", last: "B", email: "a@b.com", address: "St", city: "C", country: "US" }
         }, as: :json
 
         assert_response :created
@@ -50,7 +50,7 @@ module Api
 
       test "create ignores client-supplied price and uses DB price" do
         post "/api/v1/orders", params: {
-          items: [ { product_id: @product.id, quantity: 1, price_cents: 1 } ],
+          items: [ { product_id: @product.id, quantity: 1, price_cents: 1 } ]
         }, as: :json
 
         assert_response :created
@@ -93,7 +93,7 @@ module Api
       test "quote prices a cart without creating an order" do
         assert_no_difference -> { Order.count } do
           post "/api/v1/orders/quote", params: {
-            items: [ { product_id: @product.id, quantity: 1 } ], country: "ET",
+            items: [ { product_id: @product.id, quantity: 1 } ], country: "ET"
           }, as: :json
         end
 
@@ -109,12 +109,12 @@ module Api
 
       test "quote matches what create then charges" do
         post "/api/v1/orders/quote", params: {
-          items: [ { product_id: @product.id, quantity: 2 } ], country: "KE",
+          items: [ { product_id: @product.id, quantity: 2 } ], country: "KE"
         }, as: :json
         quoted = JSON.parse(response.body)
 
         post "/api/v1/orders", params: {
-          items: [ { product_id: @product.id, quantity: 2 } ], country: "KE",
+          items: [ { product_id: @product.id, quantity: 2 } ], country: "KE"
         }, as: :json
         created = JSON.parse(response.body)
 
@@ -146,7 +146,7 @@ module Api
 
       test "free shipping applies above the threshold" do
         post "/api/v1/orders/quote", params: {
-          items: [ { product_id: @product.id, quantity: 200 } ], country: "US",
+          items: [ { product_id: @product.id, quantity: 200 } ], country: "US"
         }, as: :json
 
         body = JSON.parse(response.body)

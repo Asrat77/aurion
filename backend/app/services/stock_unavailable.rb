@@ -1,0 +1,1 @@
+class StockUnavailable < StandardError; end

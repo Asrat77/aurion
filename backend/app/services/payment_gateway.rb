@@ -12,6 +12,8 @@ class PaymentGateway
   # here for ETB orders. Its webhook must verify the HMAC-SHA256 signature and
   # then call Order#mark_paid!, which is already idempotent.
   def self.for(order)
+    return PaymentGateways::DisabledGateway.new(order) if Rails.env.production?
+
     PaymentGateways::MockGateway.new(order)
   end
 end
