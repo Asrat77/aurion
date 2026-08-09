@@ -20,6 +20,7 @@ import {
 } from "@/lib/requestForQuotes";
 import WholesaleCatalogue from "@/components/source/WholesaleCatalogue";
 import type { Incoterm, Product, RequestForQuote } from "@/types";
+import { channelUrl } from "@/lib/channel";
 
 const INITIAL_FORM: RequestForQuoteInput = {
   company_name: "",
@@ -134,7 +135,7 @@ export default function SourcePage() {
               />
             </div>
 
-            <Link href="/store" className="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--gold)] hover:text-white">
+            <Link href={channelUrl("express", "/store")} className="mt-8 inline-flex min-h-11 items-center gap-2 text-sm font-semibold uppercase tracking-[0.12em] text-[var(--gold)] hover:text-white">
               <ArrowLeft size={16} /> {t("source.retailLink")}
             </Link>
 
@@ -394,7 +395,7 @@ function RequestConfirmation({
           </strong>
         </div>
         <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-          <Link href="/store" className="btn btn-primary inline-flex items-center justify-center gap-2">
+          <Link href={channelUrl("express", "/store")} className="btn btn-primary inline-flex items-center justify-center gap-2">
             {t("source.exploreMarketplace")} <ArrowRight size={17} />
           </Link>
           <button type="button" onClick={onReset} className="btn btn-outline">

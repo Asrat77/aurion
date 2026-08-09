@@ -12,6 +12,8 @@ import {
   Package,
   ShoppingBagOpen,
 } from "@phosphor-icons/react/ssr";
+import { CHANNEL } from "@/lib/channel";
+import BusinessHome from "@/components/BusinessHome";
 
 const ORIGINS = [
   {
@@ -63,6 +65,8 @@ const SOURCE_STEPS = [
 
 export default function Home() {
   const { t } = useTranslation();
+  if (CHANNEL === "business") return <BusinessHome />;
+  if (CHANNEL === "operations") return <OperationsHome />;
   return (
     <>
       <section className="aurion-hero relative min-h-[100svh] overflow-hidden px-4 pb-20 pt-32 sm:px-6 lg:px-8 lg:pt-36">
@@ -298,5 +302,19 @@ export default function Home() {
         </div>
       </section>
     </>
+  );
+}
+
+function OperationsHome() {
+  return (
+    <section className="relative min-h-[75svh] overflow-hidden px-4 pb-24 pt-40 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 aurion-pattern opacity-[0.15]" />
+      <div className="relative mx-auto max-w-[var(--container-wide)]">
+        <p className="section-label">AURION OPERATIONS</p>
+        <h1 className="display-title mt-4 max-w-[760px]">The control room for sourcing, fulfilment, and protection.</h1>
+        <p className="mt-6 max-w-[620px] text-lg leading-relaxed text-[var(--text-secondary)]">Operations access is role-protected by the Rails API. Use the appropriate workspace below.</p>
+        <div className="mt-10 flex flex-wrap gap-3"><Link href="/admin" className="btn btn-primary">Admin workspace</Link><Link href="/vendor" className="btn btn-outline">Supplier workspace</Link></div>
+      </div>
+    </section>
   );
 }

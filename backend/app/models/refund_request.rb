@@ -51,7 +51,7 @@ class RefundRequest < ApplicationRecord
               resolution_note: note)
       # Reverse the vendor's earnings on this line, then restock it: an approved
       # refund means the sale did not stand.
-      order_item.payout&.destroy
+      order_item.payout&.reverse!(note: "Buyer protection refund approved")
       order_item.update!(fulfillment_status: :cancelled)
       order_item.product&.increment!(:stock, order_item.quantity)
       order.record_event!("Refund approved", actor: admin, order_item: order_item,

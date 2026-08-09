@@ -27,7 +27,7 @@ module Api
             productSlug: item.product&.slug,
             productName: item.product_name,
             emoji: item.product&.emoji,
-            deliveredAt: item.delivered_at,
+            deliveredAt: item.delivered_at
           }
         }
       end

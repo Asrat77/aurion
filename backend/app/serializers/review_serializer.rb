@@ -11,7 +11,7 @@ class ReviewSerializer
       authorName: review.buyer.name.to_s.split(" ").first,
       productName: review.product.name,
       productSlug: review.product.slug,
-      createdAt: review.created_at.iso8601,
+      createdAt: review.created_at.iso8601
     }
   end
 end

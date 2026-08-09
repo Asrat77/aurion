@@ -294,10 +294,138 @@ export interface RequestForQuote {
   destinationPort: string | null;
   targetPriceCents: number | null;
   sampleRequested: boolean;
+  inspectionRequired: boolean;
   quotedUnitPriceCents: number | null;
   quotedLeadTimeDays: number | null;
   quoteNote: string | null;
   quotedAt: string | null;
   status: RequestForQuoteStatus;
   createdAt: string;
+}
+
+export type OrganizationKind = "buyer" | "supplier";
+export type OrganizationRole = "owner" | "buyer" | "finance" | "operations";
+
+export interface OrganizationMembership {
+  id: number;
+  userId: number;
+  name: string;
+  email: string;
+  role: OrganizationRole;
+  status: "active" | "suspended";
+}
+
+export interface BusinessOrganization {
+  id: number;
+  name: string;
+  legalName: string | null;
+  kind: OrganizationKind;
+  status: "pending" | "active" | "suspended";
+  verificationStatus: "unverified" | "pending" | "verified" | "rejected";
+  country: string | null;
+  registrationNumber: string | null;
+  verifiedAt: string | null;
+  memberships?: OrganizationMembership[];
+}
+
+export interface SupplierInvitation {
+  id: number;
+  requestForQuoteId: number;
+  reference: string;
+  vendorId: number;
+  vendorName: string;
+  score: number;
+  reasons: string[];
+  status: "invited" | "viewed" | "declined" | "quoted" | "awarded";
+  invitedAt: string | null;
+}
+
+export interface QuotationItem {
+  id: number;
+  productId: number | null;
+  description: string;
+  quantity: number;
+  unitPriceCents: number;
+  lineTotalCents: number;
+  currency: string;
+}
+
+export interface BusinessQuotation {
+  id: number;
+  requestForQuoteId: number;
+  vendorId: number;
+  vendorName: string;
+  revision: number;
+  status: "draft" | "submitted" | "withdrawn" | "accepted" | "rejected" | "expired";
+  currency: string;
+  incoterm: Incoterm | null;
+  leadTimeDays: number | null;
+  shippingCents: number;
+  totalCents: number;
+  validUntil: string | null;
+  note: string | null;
+  submittedAt: string | null;
+  acceptedAt: string | null;
+  items: QuotationItem[];
+}
+
+export interface BusinessRFQ extends RequestForQuote {
+  organizationId: number;
+  buyerId: number;
+  currency: string;
+  items: {
+    id: number;
+    productId: number | null;
+    description: string;
+    quantity: number;
+    unitOfMeasure: string | null;
+    specifications: string | null;
+  }[];
+  invitations: SupplierInvitation[];
+  quotations: BusinessQuotation[];
+}
+
+export interface BusinessTradeOrder {
+  id: number;
+  reference: string;
+  requestForQuoteId: number;
+  quotationId: number;
+  buyerOrganizationId: number;
+  supplierOrganizationId: number;
+  supplierName: string;
+  status: string;
+  currency: string;
+  subtotalCents: number;
+  shippingCents: number;
+  totalCents: number;
+  incoterm: Incoterm | null;
+  destinationPort: string | null;
+  terms: Record<string, unknown>;
+  termsSha256: string;
+  contractAvailable: boolean;
+  inspectionRequired: boolean;
+  fundedAt: string | null;
+  deliveredAt: string | null;
+  completedAt: string | null;
+  acceptances: {
+    organizationId: number;
+    organizationName: string;
+    userId: number;
+    userName: string;
+    role: string;
+    termsSha256: string;
+    acceptedAt: string;
+  }[];
+  protectedPayment: {
+    provider: string;
+    status: string;
+    amountCents: number;
+    currency: string;
+    fundedAt: string | null;
+    releasedAt: string | null;
+  } | null;
+  inspection: { id: number; status: string; outcome: string | null; notes: string | null } | null;
+  shipment: { id: number; carrier: string | null; trackingNumber: string | null; status: string; shippedAt: string | null; deliveredAt: string | null; deliveryVerifiedAt: string | null } | null;
+  disputes: { id: number; reason: string; status: string; amountCents: number; detail: string; createdAt: string; resolvedAt: string | null }[];
+  events?: { type: string; details: Record<string, unknown>; actorId: number | null; createdAt: string }[];
 }

@@ -17,6 +17,7 @@ class RequestForQuoteSerializer
       destinationPort: request_for_quote.destination_port,
       targetPriceCents: request_for_quote.target_price_cents,
       sampleRequested: request_for_quote.sample_requested,
+      inspectionRequired: request_for_quote.inspection_required,
       quotedUnitPriceCents: request_for_quote.quoted_unit_price_cents,
       quotedLeadTimeDays: request_for_quote.quoted_lead_time_days,
       quoteNote: request_for_quote.quote_note,

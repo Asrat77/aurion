@@ -8,7 +8,7 @@ class UserSerializer
       name: user.name,
       phone: user.phone,
       role: user.role,
-      vendor: user.vendor ? VendorSerializer.render(user.vendor) : nil,
+      vendor: user.vendor ? VendorSerializer.render(user.vendor) : nil
     }
   end
 end

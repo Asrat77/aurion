@@ -1,7 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import I18nProvider from "@/i18n/Provider";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -12,11 +12,20 @@ export default function Providers({ children }: { children: React.ReactNode }) {
           queries: {
             retry: 1,
             staleTime: 30_000,
-            refetchOnWindowFocus: false,
+            refetchOnWindowFocus: true,
           },
         },
       })
   );
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      client.clear();
+      client.setQueryData(["me"], null);
+    };
+    window.addEventListener("aurion:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("aurion:unauthorized", handleUnauthorized);
+  }, [client]);
 
   return (
     <QueryClientProvider client={client}>

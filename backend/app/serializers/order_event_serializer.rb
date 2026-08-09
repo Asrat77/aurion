@@ -5,7 +5,7 @@ class OrderEventSerializer
       label: event.label,
       note: event.note,
       orderItemId: event.order_item_id,
-      createdAt: event.created_at,
+      createdAt: event.created_at
     }
   end
 end

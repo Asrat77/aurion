@@ -5,12 +5,16 @@ module Api
       before_action :set_order
 
       def create
-        render json: PaymentGateway.for(@order).create_intent
+        gateway = PaymentGateway.for(@order)
+        return render json: { message: "A live retail payment provider is not configured." }, status: :service_unavailable unless gateway.available?
+
+        render json: gateway.create_intent
       end
 
       def mock_confirm
-        unless PaymentGateway.for(@order).is_a?(PaymentGateways::MockGateway)
-          return render json: { message: "A real payment gateway is configured for this order." }, status: :unprocessable_entity
+        gateway = PaymentGateway.for(@order)
+        unless gateway.is_a?(PaymentGateways::MockGateway) && gateway.available?
+          return render json: { message: "Mock payment confirmation is disabled outside staging." }, status: :service_unavailable
         end
 
         @order.mark_paid!(payment_method: "mock")

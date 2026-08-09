@@ -1,5 +1,8 @@
 # AURION Marketplace
 
+The channel architecture, Business workflow, provider boundary, and acceptance
+gates are documented in [`docs/AURION_PRODUCT_SPEC.md`](docs/AURION_PRODUCT_SPEC.md).
+
 Multi-vendor marketplace for Ethiopian goods, at retail and at commercial scale.
 
 - `backend/` — Rails 8 API-only app, Postgres (Neon)
@@ -40,7 +43,11 @@ npm install
 npm run dev            # http://localhost:3000
 ```
 
-## Demo accounts (seeded, password: `aurion123`)
+## Isolated staging seed accounts
+
+`db:seed` creates demo users only outside production. Set
+`STAGING_DEMO_PASSWORD` through the staging secret store before seeding; the
+repository does not publish or assume a demo password.
 
 | Role | Email |
 |---|---|

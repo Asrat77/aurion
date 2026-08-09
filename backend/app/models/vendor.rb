@@ -4,11 +4,16 @@ class Vendor < ApplicationRecord
   enum :status, { pending: 0, active: 1, suspended: 2, rejected: 3 }
 
   belongs_to :user
+  belongs_to :organization, optional: true
   belongs_to :reviewed_by, class_name: "User", optional: true
   has_many :products, dependent: :destroy
   has_many :order_items, dependent: :restrict_with_error
   has_many :payouts, dependent: :restrict_with_error
   has_many :conversations, dependent: :destroy
+  has_many :supplier_capabilities, dependent: :destroy
+  has_many :supplier_invitations, dependent: :destroy
+  has_many :quotations, dependent: :restrict_with_error
+  has_many :trade_orders, dependent: :restrict_with_error
 
   validates :store_name, presence: true
   validates :slug, presence: true, uniqueness: true
@@ -24,6 +29,10 @@ class Vendor < ApplicationRecord
 
   def application?
     applied_at.present?
+  end
+
+  def business_ready?
+    active? && organization&.verified?
   end
 
   # Approving flips the owner's role too, which is what actually unlocks the

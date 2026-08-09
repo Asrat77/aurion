@@ -5,6 +5,7 @@ import { apiFetch } from "@/lib/api";
 import type { Category, Product, ProductFacets } from "@/types";
 
 export interface ProductsQuery {
+  channel?: "express" | "business";
   category?: string;
   q?: string;
   sort?: string;
@@ -25,6 +26,7 @@ export interface ProductsPage {
 function toSearchParams(query: ProductsQuery) {
   const params = new URLSearchParams();
 
+  if (query.channel) params.set("channel", query.channel);
   if (query.category && query.category !== "all") params.set("category", query.category);
   if (query.q) params.set("q", query.q);
   if (query.sort && query.sort !== "popular") params.set("sort", query.sort);

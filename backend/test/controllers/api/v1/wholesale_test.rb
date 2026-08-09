@@ -67,8 +67,8 @@ module Api
             company_name: "Nordic Roasters", email: "buyer@nordic.example",
             product_interest: "Green coffee", product_id: @wholesale.id,
             estimated_quantity: "2000 kg", incoterm: "FOB", destination_port: "Djibouti",
-            target_price_cents: 2_100, sample_requested: true,
-          },
+            target_price_cents: 2_100, sample_requested: true
+          }
         }, as: :json
 
         assert_response :created
@@ -85,8 +85,8 @@ module Api
         post "/api/v1/request_for_quotes", params: {
           request_for_quote: {
             company_name: "Nordic Roasters", email: "buyer@nordic.example",
-            product_interest: "Green coffee", incoterm: "NOPE",
-          },
+            product_interest: "Green coffee", incoterm: "NOPE"
+          }
         }, as: :json
 
         assert_response :unprocessable_entity
@@ -99,7 +99,7 @@ module Api
         login_as(@admin)
         post "/api/v1/admin/request_for_quotes/#{rfq.id}/quote", params: {
           quoted_unit_price_cents: 2_250, quoted_lead_time_days: 28,
-          quote_note: "FOB Djibouti, 2026 harvest.",
+          quote_note: "FOB Djibouti, 2026 harvest."
         }, as: :json
 
         assert_response :success
@@ -142,8 +142,8 @@ module Api
           moq: 250, unit_of_measure: "kg", lead_time_days: 14, sample_available: true,
           price_tiers: [
             { min_quantity: 250, unit_price_cents: 2_600 },
-            { min_quantity: 1_000, unit_price_cents: 2_400 },
-          ],
+            { min_quantity: 1_000, unit_price_cents: 2_400 }
+          ]
         }, as: :json
 
         assert_response :success
@@ -156,7 +156,7 @@ module Api
         login_as(@vendor_user)
 
         patch "/api/v1/vendor/products/#{@wholesale.id}", params: {
-          price_tiers: [ { min_quantity: 750, unit_price_cents: 2_300 } ],
+          price_tiers: [ { min_quantity: 750, unit_price_cents: 2_300 } ]
         }, as: :json
 
         assert_response :success

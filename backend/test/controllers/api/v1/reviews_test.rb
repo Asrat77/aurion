@@ -43,7 +43,7 @@ module Api
         login_as(@buyer)
 
         post "/api/v1/reviews", params: {
-          order_item_id: @item.id, rating: 4, title: "Good", body: "Rich and floral.",
+          order_item_id: @item.id, rating: 4, title: "Good", body: "Rich and floral."
         }, as: :json
 
         assert_response :created

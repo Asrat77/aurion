@@ -137,7 +137,9 @@ class Order < ApplicationRecord
       order_items.each { |i| i.update!(fulfillment_status: :cancelled) }
       update!(status: :cancelled, cancelled_at: Time.current)
       release_stock!
-      Payout.where(order_item: order_items).destroy_all
+      Payout.where(order_item: order_items).find_each do |payout|
+        payout.reverse!(note: "Order cancelled before payout settlement")
+      end
       record_event!("Cancelled", actor: actor, note: note || "Cancelled after payment")
     end
     true
@@ -176,13 +178,16 @@ class Order < ApplicationRecord
   # while one of them is paying. Anything that ends the order without a sale has
   # to give it back — guarded by a flag so it can only ever happen once.
   def release_stock!
-    return false if stock_released?
+    with_lock do
+      return false if stock_released?
 
-    order_items.includes(:product).each do |item|
-      item.product&.increment!(:stock, item.quantity)
+      order_items.includes(:product).each do |item|
+        product = item.product
+        product&.with_lock { product.increment!(:stock, item.quantity) }
+      end
+      update_column(:stock_released, true)
+      true
     end
-    update_column(:stock_released, true)
-    true
   end
 
   private

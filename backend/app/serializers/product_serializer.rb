@@ -20,9 +20,9 @@ class ProductSerializer
       vendor: {
         id: product.vendor.id,
         storeName: product.vendor.store_name,
-        slug: product.vendor.slug,
+        slug: product.vendor.slug
       },
-      wholesale: wholesale_terms(product),
+      wholesale: wholesale_terms(product)
     }
   end
 

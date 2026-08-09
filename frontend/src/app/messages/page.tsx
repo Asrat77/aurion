@@ -12,6 +12,7 @@ import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { Conversation } from "@/types";
+import { channelUrl } from "@/lib/channel";
 
 export default function MessagesPage() {
   const { t } = useTranslation();
@@ -62,7 +63,7 @@ export default function MessagesPage() {
           title={t("messages.noneTitle")}
           body={t("messages.noneBody")}
           action={
-            <Link href="/store" className="btn btn-primary">
+            <Link href={channelUrl("express", "/store")} className="btn btn-primary">
               {t("messages.browseStore")}
             </Link>
           }

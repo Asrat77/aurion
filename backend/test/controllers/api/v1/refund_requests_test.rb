@@ -36,7 +36,7 @@ module Api
         login_as(@buyer)
 
         post "/api/v1/refund_requests", params: {
-          order_item_id: @item.id, reason: "not_received", detail: "Never showed up.",
+          order_item_id: @item.id, reason: "not_received", detail: "Never showed up."
         }, as: :json
 
         assert_response :created
