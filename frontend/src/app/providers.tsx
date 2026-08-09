@@ -19,9 +19,12 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
+    // Reset rather than clear. `clear()` also drops queries that are still in
+    // flight, which leaves their components stuck on a loading state forever;
+    // `resetQueries()` discards the cached data and refetches what is on screen.
     const handleUnauthorized = () => {
-      client.clear();
       client.setQueryData(["me"], null);
+      void client.resetQueries();
     };
     window.addEventListener("aurion:unauthorized", handleUnauthorized);
     return () => window.removeEventListener("aurion:unauthorized", handleUnauthorized);

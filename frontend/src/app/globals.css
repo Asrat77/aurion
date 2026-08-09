@@ -664,3 +664,260 @@ textarea.input {
     background: var(--bg-elevated);
   }
 }
+
+/* ==========================================================================
+   AURION BUSINESS — the sourcing product's own surface.
+
+   Express is a dark, serif, gold consumer marketplace. Business is a light,
+   sans-serif, navy trade desk: denser, squarer, and built around tables and
+   evidence rather than editorial imagery. The two share components, so the
+   split is done by re-pointing the same design tokens inside this scope —
+   every shared input, button, badge and table re-skins with no per-component
+   branching, while the primitives below add the B2B-only furniture.
+   ========================================================================== */
+[data-surface="business"] {
+  --bg-deep: #f4f6f9;
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: #0b1524;
+  --text-secondary: #48586e;
+  --text-muted: #71809a;
+  --border-subtle: #e2e7ee;
+  --border-gold: #d3dae4;
+  --border-gold-strong: #0b2545;
+  /* Business has no gold structure. Re-pointing the accent tokens turns every
+     shared `var(--gold)` usage navy instead of forcing a component rewrite. */
+  --gold: #0b2545;
+  --gold-light: #16386b;
+  --gold-dark: #061529;
+  --gold-pale: #0b2545;
+  --success: #12734d;
+  --danger: #b3261e;
+  --danger-bg: #b3261e;
+  --warning: #8a5a00;
+  --radius-lg: 10px;
+  --radius-md: 6px;
+  --shadow-gold: 0 8px 26px rgba(11, 37, 69, 0.08);
+  --shadow-elevated: 0 10px 34px rgba(11, 37, 69, 0.1);
+  /* B2B-only tokens. */
+  --b-navy: #0b2545;
+  --b-navy-ink: #f3f6fb;
+  --b-tint: #eef2f8;
+  --b-line: #e2e7ee;
+  --b-verified: #12734d;
+  --b-verified-tint: #e7f3ed;
+  --b-pending: #8a5a00;
+  --b-pending-tint: #fdf3e0;
+  --b-brand: #9c7a26;
+
+  color: var(--text-primary);
+  background: var(--bg-deep);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+/* Keep overscroll and the browser chrome matching the light product. */
+body:has([data-surface="business"]) {
+  background: #f4f6f9;
+}
+
+/* Business speaks in sans-serif. Dropping the serif display face is the single
+   clearest signal that this is not the consumer storefront. */
+[data-surface="business"] .display-hero,
+[data-surface="business"] .display-title,
+[data-surface="business"] .display-heading,
+[data-surface="business"] .section-title {
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+[data-surface="business"] .display-hero {
+  font-size: clamp(2.1rem, 4.4vw, 3.35rem);
+  line-height: 1.08;
+}
+[data-surface="business"] .display-title {
+  font-size: clamp(1.65rem, 3vw, 2.3rem);
+  line-height: 1.15;
+}
+[data-surface="business"] .display-heading {
+  font-size: 1.05rem;
+  font-weight: 650;
+}
+[data-surface="business"] .section-label {
+  color: var(--text-muted);
+  letter-spacing: 0.18em;
+  font-size: 0.64rem;
+}
+
+[data-surface="business"] .btn {
+  border-radius: var(--radius-md);
+  min-height: 42px;
+  padding: 10px 20px;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  font-weight: 650;
+}
+[data-surface="business"] .btn-primary {
+  background: var(--b-navy);
+  color: #fff;
+  box-shadow: none;
+}
+[data-surface="business"] .btn-outline {
+  background: #fff;
+  border: 1px solid var(--border-gold);
+  color: var(--text-primary);
+}
+[data-surface="business"] .btn-danger,
+[data-surface="business"] .btn-success {
+  color: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  [data-surface="business"] .btn-primary:hover {
+    background: #123a6b;
+    box-shadow: none;
+    transform: none;
+  }
+  [data-surface="business"] .btn-outline:hover {
+    background: var(--b-tint);
+    border-color: var(--border-gold-strong);
+  }
+  [data-surface="business"] .card:hover {
+    transform: none;
+    box-shadow: var(--shadow-gold);
+  }
+}
+
+[data-surface="business"] .card {
+  background: #fff;
+  border: 1px solid var(--border-subtle);
+}
+[data-surface="business"] .input,
+[data-surface="business"] select.input,
+[data-surface="business"] textarea.input {
+  background: #fff;
+  border-color: #cdd6e1;
+  color: var(--text-primary);
+  min-height: 42px;
+  padding: 10px 12px;
+}
+[data-surface="business"] .input:focus {
+  border-color: var(--b-navy);
+  box-shadow: 0 0 0 3px rgba(11, 37, 69, 0.1);
+}
+[data-surface="business"] .field-label {
+  color: var(--text-secondary);
+}
+[data-surface="business"] .skeleton {
+  background: linear-gradient(90deg, #e9edf3, #f4f6f9, #e9edf3);
+}
+/* The gold guilloche belongs to Express. */
+[data-surface="business"] .aurion-pattern {
+  display: none;
+}
+[data-surface="business"] .data-table thead th {
+  color: var(--text-muted);
+  border-bottom-color: var(--border-subtle);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-surface="business"] .data-table tbody tr:hover {
+    background: var(--b-tint);
+  }
+}
+
+/* --- Business primitives ------------------------------------------------- */
+
+.b-panel {
+  background: #fff;
+  border: 1px solid var(--b-line);
+  border-radius: var(--radius-lg);
+}
+.b-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--b-line);
+}
+.b-panel-title {
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* Uppercase micro-label used for table headers and metric captions. */
+.b-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.b-figure {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.b-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--b-line);
+  background: #fff;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.b-chip-verified {
+  border-color: rgba(18, 115, 77, 0.28);
+  background: var(--b-verified-tint);
+  color: var(--b-verified);
+}
+.b-chip-pending {
+  border-color: rgba(138, 90, 0, 0.28);
+  background: var(--b-pending-tint);
+  color: var(--b-pending);
+}
+.b-chip-navy {
+  border-color: rgba(11, 37, 69, 0.2);
+  background: var(--b-tint);
+  color: var(--b-navy);
+}
+
+/* Score meter used by the supplier match console. */
+.b-meter {
+  height: 5px;
+  border-radius: 999px;
+  background: #e6ebf2;
+  overflow: hidden;
+}
+.b-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--b-navy);
+}
+
+.b-link {
+  color: var(--b-navy);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(11, 37, 69, 0.3);
+}
+.b-link:hover {
+  text-decoration-color: var(--b-navy);
+}

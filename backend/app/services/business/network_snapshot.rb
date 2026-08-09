@@ -6,7 +6,13 @@ module Business
   # or invented, so the storefront can say "not measured yet" instead of
   # publishing a number nobody can defend.
   class NetworkSnapshot
-    def self.call = new.call
+    # Public, unauthenticated and identical for every visitor, so a short cache
+    # keeps the landing page fast without letting the figures go stale. The
+    # payload carries its own `measuredAt`, so a cached read still says exactly
+    # when it was measured.
+    CACHE_TTL = 60.seconds
+
+    def self.call = Rails.cache.fetch("business/network_snapshot", expires_in: CACHE_TTL) { new.call }
 
     def call
       {
@@ -31,9 +37,10 @@ module Business
     end
 
     def suppliers
+      by_verification = business_vendors.group("organizations.verification_status").count
       {
-        total: business_vendors.count,
-        verified: verified_vendors.count,
+        total: by_verification.values.sum,
+        verified: by_verification.fetch("verified", 0),
         countries: business_vendors.where.not(country: [ nil, "" ]).distinct.count(:country),
         regions: SupplierCapability.where(verified: true, vendor_id: verified_vendors.select(:id))
                                    .where.not(region: [ nil, "" ])
@@ -43,19 +50,22 @@ module Business
       }
     end
 
+    # Counted with two grouped aggregates rather than a query per category: the
+    # landing page renders this on every visit.
     def catalogue
       scope = Product.where(vendor_id: business_vendors.select(:id)).where(business_enabled: true)
+      products_by_category = scope.group(:category_id).count
+      suppliers_by_category = scope.distinct.group(:category_id).count(:vendor_id)
+
       {
-        products: scope.count,
-        categories: Category.where(id: scope.select(:category_id)).order(:name).map do |category|
-          products = scope.where(category_id: category.id)
+        products: products_by_category.values.sum,
+        categories: Category.where(id: products_by_category.keys).order(:name).map do |category|
           {
             id: category.id,
             name: category.name,
             slug: category.slug,
-            emoji: category.try(:emoji),
-            products: products.count,
-            suppliers: products.distinct.count(:vendor_id)
+            products: products_by_category.fetch(category.id, 0),
+            suppliers: suppliers_by_category.fetch(category.id, 0)
           }
         end
       }
@@ -63,8 +73,9 @@ module Business
 
     def sourcing
       published = RequestForQuote.where(status: %w[open reviewing awarded closed])
+      by_status = RequestForQuote.group(:status).count
       {
-        openRequests: RequestForQuote.where(status: "open").count,
+        openRequests: by_status.fetch("open", 0),
         invitationsSent: SupplierInvitation.count,
         quotationsSubmitted: Quotation.where.not(submitted_at: nil).count,
         requestsMatched: published.joins(:supplier_invitations).distinct.count,
@@ -86,13 +97,18 @@ module Business
     end
 
     def trades
-      active = TradeOrder.where.not(status: %w[cancelled settled])
-      funded = ProtectedPayment.where(status: %w[funded released partially_released])
+      by_status = TradeOrder.group(:status).count
+      # Grouped by currency so the total and its label come from one query and
+      # can never disagree.
+      held = ProtectedPayment.where(status: %w[funded released partially_released])
+                             .group(:currency).sum(:amount_cents)
+      largest = held.max_by { |_, cents| cents }
+
       {
-        active: active.count,
-        completed: TradeOrder.where(status: "settled").count,
-        protectedCents: funded.sum(:amount_cents),
-        currency: funded.first&.currency || TradeOrder.first&.currency || "USD"
+        active: by_status.except("cancelled", "settled").values.sum,
+        completed: by_status.fetch("settled", 0),
+        protectedCents: largest&.last.to_i,
+        currency: largest&.first || "USD"
       }
     end
 

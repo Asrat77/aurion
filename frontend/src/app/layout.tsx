@@ -3,7 +3,7 @@ import { Cormorant_Garamond, JetBrains_Mono, Manrope, Noto_Sans_Ethiopic } from 
 import "./globals.css";
 import Providers from "./providers";
 import ChannelChrome from "@/components/ChannelChrome";
-import { CHANNEL } from "@/lib/channel";
+import { DEPLOYMENT } from "@/lib/channel";
 
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
@@ -37,14 +37,14 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   alternates: { canonical: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000" },
   title: {
-    default: CHANNEL === "business" ? "AURION Business | Source at Scale" : CHANNEL === "operations" ? "AURION Operations" : "AURION Express | Ethiopian Origin, Global Reach",
-    template: CHANNEL === "business" ? "%s | AURION Business" : CHANNEL === "operations" ? "%s | AURION Operations" : "%s | AURION Express",
+    default: DEPLOYMENT === "business" ? "AURION Business | Source at Scale" : DEPLOYMENT === "operations" ? "AURION Operations" : "AURION Express | Ethiopian Origin, Global Reach",
+    template: DEPLOYMENT === "business" ? "%s | AURION Business" : DEPLOYMENT === "operations" ? "%s | AURION Operations" : "%s | AURION Express",
   },
   description:
-    CHANNEL === "business" ? "Source Ethiopian products at scale with structured RFQs, supplier offers, and protected trade records." : "Discover Ethiopian products at retail through AURION Express.",
+    DEPLOYMENT === "business" ? "Source Ethiopian products at scale with structured RFQs, supplier offers, and protected trade records." : "Discover Ethiopian products at retail through AURION Express.",
   openGraph: {
-    title: CHANNEL === "business" ? "AURION Business | Source at Scale" : "AURION Express | Ethiopian Origin, Global Reach",
-    description: CHANNEL === "business" ? "Commercial sourcing from requirement to accountable trade." : "Shop Ethiopian-origin products with AURION Express.",
+    title: DEPLOYMENT === "business" ? "AURION Business | Source at Scale" : "AURION Express | Ethiopian Origin, Global Reach",
+    description: DEPLOYMENT === "business" ? "Commercial sourcing from requirement to accountable trade." : "Shop Ethiopian-origin products with AURION Express.",
     images: ["/brand/aurion-emblem.png"],
   },
 };
@@ -61,7 +61,7 @@ export default function RootLayout({
     >
       <body className="min-h-dvh flex flex-col overflow-x-hidden">
         <Providers>
-          <ChannelChrome channel={CHANNEL}>{children}</ChannelChrome>
+          <ChannelChrome>{children}</ChannelChrome>
         </Providers>
       </body>
     </html>

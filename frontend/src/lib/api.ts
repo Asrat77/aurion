@@ -16,6 +16,12 @@ type RequestOptions = {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
   idempotencyKey?: string;
+  /**
+   * Skip the global session-expiry signal. Set it on probes where a 401 is a
+   * normal answer rather than a sign the session died, so a signed-out visitor
+   * does not trigger a cache reset on every page.
+   */
+  expectUnauthorized?: boolean;
 };
 
 function newIdempotencyKey() {
@@ -57,7 +63,9 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   const data = isJson ? await res.json().catch(() => null) : null;
 
   if (!res.ok) {
-    if (res.status === 401 && typeof window !== "undefined") window.dispatchEvent(new Event("aurion:unauthorized"));
+    if (res.status === 401 && !options.expectUnauthorized && typeof window !== "undefined") {
+      window.dispatchEvent(new Event("aurion:unauthorized"));
+    }
     const message = (data && (data.message || data.error)) || res.statusText || "Request failed";
     throw new ApiError(res.status, message, data?.errors);
   }

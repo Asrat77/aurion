@@ -30,9 +30,23 @@ module Business
     end
 
     def suppliers
-      base.to_a.filter_map { |vendor| render(vendor) if matches_filters?(vendor) }
-          .sort_by { |row| [ row[:verified] ? 0 : 1, -row[:businessProducts], row[:name] ] }
-          .first(@limit)
+      matching = base.to_a.select { |vendor| matches_filters?(vendor) }
+      load_track_records(matching)
+
+      matching.map { |vendor| render(vendor) }
+              .sort_by { |row| [ row[:verified] ? 0 : 1, -row[:businessProducts], row[:name] ] }
+              .first(@limit)
+    end
+
+    # Three grouped queries for the whole page instead of three per supplier.
+    def load_track_records(vendors)
+      vendor_ids = vendors.map(&:id)
+      organization_ids = vendors.filter_map(&:organization_id)
+
+      @invitation_counts = SupplierInvitation.where(vendor_id: vendor_ids).group(:vendor_id).count
+      @quotation_counts = Quotation.where(vendor_id: vendor_ids).where.not(submitted_at: nil).group(:vendor_id).count
+      @settled_counts = TradeOrder.where(supplier_organization_id: organization_ids, status: "settled")
+                                  .group(:supplier_organization_id).count
     end
 
     def matches_filters?(vendor)
@@ -75,9 +89,9 @@ module Business
         maxLeadTimeDays: capabilities.filter_map(&:max_lead_time_days).max,
         destinations: capabilities.flat_map { |item| Array(item.destinations).map(&:to_s) }.uniq,
         # Track record, straight from the trade tables.
-        invitations: SupplierInvitation.where(vendor_id: vendor.id).count,
-        quotationsSubmitted: Quotation.where(vendor_id: vendor.id).where.not(submitted_at: nil).count,
-        tradesCompleted: TradeOrder.where(supplier_organization_id: vendor.organization_id, status: "settled").count
+        invitations: @invitation_counts.fetch(vendor.id, 0),
+        quotationsSubmitted: @quotation_counts.fetch(vendor.id, 0),
+        tradesCompleted: @settled_counts.fetch(vendor.organization_id, 0)
       }
     end
 

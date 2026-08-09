@@ -12,8 +12,7 @@ import {
   Package,
   ShoppingBagOpen,
 } from "@phosphor-icons/react/ssr";
-import { CHANNEL } from "@/lib/channel";
-import BusinessHome from "@/components/BusinessHome";
+import { DEPLOYMENT } from "@/lib/channel";
 
 const ORIGINS = [
   {
@@ -65,8 +64,9 @@ const SOURCE_STEPS = [
 
 export default function Home() {
   const { t } = useTranslation();
-  if (CHANNEL === "business") return <BusinessHome />;
-  if (CHANNEL === "operations") return <OperationsHome />;
+  // A dedicated Business site rewrites "/" into the /business tree, so the
+  // only non-Express root left to handle here is Operations.
+  if (DEPLOYMENT === "operations") return <OperationsHome />;
   return (
     <>
       <section className="aurion-hero relative min-h-[100svh] overflow-hidden px-4 pb-20 pt-32 sm:px-6 lg:px-8 lg:pt-36">
