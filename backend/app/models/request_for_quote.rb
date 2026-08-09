@@ -32,6 +32,10 @@ class RequestForQuote < ApplicationRecord
 
   scope :reverse_chronologically, -> { order(created_at: :desc) }
   scope :open_requests, -> { where(status: %w[new reviewing]) }
+  # Append-only audit trail. Restricted rather than cascaded so a request can
+  # never be deleted out from under its own matching history.
+  has_many :trade_events, dependent: :restrict_with_error
+
   scope :business_requests, -> { where.not(organization_id: nil) }
 
   def business_request?

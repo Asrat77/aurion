@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_09_101000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_09_110000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -620,16 +620,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_101000) do
 
   create_table "supplier_capabilities", force: :cascade do |t|
     t.integer "category_id"
+    t.json "certifications", default: [], null: false
     t.datetime "created_at", null: false
     t.json "destinations", default: [], null: false
     t.integer "max_lead_time_days"
     t.integer "max_quantity"
     t.integer "min_quantity"
     t.text "notes"
+    t.string "region"
     t.datetime "updated_at", null: false
     t.integer "vendor_id", null: false
     t.boolean "verified", default: false, null: false
     t.index ["category_id"], name: "index_supplier_capabilities_on_category_id"
+    t.index ["region"], name: "index_supplier_capabilities_on_region"
     t.index ["vendor_id"], name: "index_supplier_capabilities_on_vendor_id"
   end
 

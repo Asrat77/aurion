@@ -47,6 +47,15 @@ module Api
           })
         end
 
+        # The match console. Shows the buyer exactly how the shortlist was
+        # produced, re-running the same deterministic scorer that invited them.
+        def matching
+          rfq = RequestForQuote.includes(:product, :supplier_invitations, :quotations, :trade_events).find(params[:id])
+          return render json: { message: "Not found" }, status: :not_found unless buyer_can_access?(rfq)
+
+          render json: MatchingReportSerializer.render(rfq, RequestForQuote::Matching.new(rfq).report)
+        end
+
         private
 
         def rfq_params
