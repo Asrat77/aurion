@@ -82,7 +82,10 @@ class ApplicationController < ActionController::API
       return render json: { message: "Request origin is not allowed." }, status: :forbidden
     end
 
-    return if Rails.env.test? && request.headers["X-CSRF-Token"].blank?
+    # An exact browser Origin is sufficient CSRF proof and keeps staggered
+    # frontend/API deployments working when third-party cookies are blocked.
+    return if origin.present?
+
     submitted_token = request.headers["X-CSRF-Token"].to_s
     issued_token = csrf_token.to_s
     return if submitted_token.present? && issued_token.present? &&

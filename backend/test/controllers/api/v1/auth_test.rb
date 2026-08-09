@@ -34,6 +34,31 @@ module Api
         assert cookies[:aurion_jwt].present?
       end
 
+      test "login accepts an exact allowed frontend origin without a CSRF cookie" do
+        User.create!(email: "rollout@example.com", password: "password123", name: "Rollout User")
+
+        post "/api/v1/auth/login",
+          params: { email: "rollout@example.com", password: "password123" },
+          headers: { "Origin" => "http://localhost:3000" },
+          as: :json
+
+        assert_response :success
+        assert cookies[:aurion_jwt].present?
+      end
+
+      test "login rejects an untrusted frontend origin" do
+        User.create!(email: "protected@example.com", password: "password123", name: "Protected User")
+
+        post "/api/v1/auth/login",
+          params: { email: "protected@example.com", password: "password123" },
+          headers: { "Origin" => "https://attacker.example" },
+          as: :json
+
+        assert_response :forbidden
+        assert_equal "Request origin is not allowed.", JSON.parse(response.body)["message"]
+        assert_not cookies[:aurion_jwt].present?
+      end
+
       test "login fails with wrong password" do
         User.create!(email: "user2@example.com", password: "password123", name: "User")
 
