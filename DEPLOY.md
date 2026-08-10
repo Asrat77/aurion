@@ -111,6 +111,26 @@ funds.
 - Install command: `npm install`
 - Root directory: `frontend/`
 
+There are two supported shapes. Both run the same commit; only environment
+differs, so moving between them is a configuration change, not a rebuild of
+the product.
+
+### Option A — one Site (what ships before subdomains exist)
+
+Leave `NEXT_PUBLIC_CHANNEL` unset and leave the channel origins blank. One
+deployment then serves all three products from a single host:
+
+| Path | Product |
+|---|---|
+| `/` and `/store`, `/checkout`, `/orders`, … | AURION Express |
+| `/business` and everything beneath it | AURION Business |
+| `/admin`, `/vendor` | AURION Operations |
+
+This is the fastest way to put both products in front of a reviewer, and it
+needs no DNS work.
+
+### Option B — three Sites (one per product)
+
 Create three independently rollbackable Sites from the same accepted commit.
 Only the build-time channel differs:
 
@@ -120,17 +140,39 @@ Only the build-time channel differs:
 | Business | `business` | Organizations, RFQs, supplier offers, protected trades |
 | Operations | `operations` | Admin and supplier operations dashboards |
 
+On the Business Site, `proxy.ts` rewrites every path into the `/business`
+tree, so `business.<domain>/rfqs` serves the workspace with no visible prefix.
+Each Site redirects paths belonging to another channel to that channel's
+origin, which is why the origin variables below must be set in Option B.
+
+Setting `NEXT_PUBLIC_CHANNEL=express` only takes effect once
+`NEXT_PUBLIC_BUSINESS_ORIGIN` is also set; until then the deployment stays
+unified, so a half-finished cutover cannot strand the Business product.
+
 ### Required environment variable
 
 | Variable | Value |
 |---|---|
 | `NEXT_PUBLIC_API_URL` | `https://<your-api-domain>/api/v1` |
 | `NEXT_PUBLIC_SITE_URL` | Exact preview or production site URL |
-| `NEXT_PUBLIC_EXPRESS_ORIGIN` | Express site origin |
-| `NEXT_PUBLIC_BUSINESS_ORIGIN` | Business site origin |
-| `NEXT_PUBLIC_OPERATIONS_ORIGIN` | Operations site origin |
+| `NEXT_PUBLIC_EXPRESS_ORIGIN` | Express site origin (Option B only) |
+| `NEXT_PUBLIC_BUSINESS_ORIGIN` | Business site origin (Option B only) |
+| `NEXT_PUBLIC_OPERATIONS_ORIGIN` | Operations site origin (Option B only) |
 
 See `frontend/.env.example` for the complete channel configuration.
+
+## 2b. AI assistant (optional)
+
+The assistant is off unless a provider is configured, and says so in the UI.
+Set `AI_ASSISTANT_PROVIDER` on the **API** to one of `openai`, `anthropic`,
+`gemini`, `mistral`, `deepseek`, `perplexity`, `xai`, `openrouter`, `ollama`,
+plus that provider's key (`OLLAMA_API_BASE` for self-hosted). Optionally pin
+`AI_ASSISTANT_MODEL`; otherwise a small, cheap model is chosen per provider.
+
+`AI_ASSISTANT_HOURLY_LIMIT` caps messages per user per hour, since every turn
+costs money at the provider. Answers are grounded on AURION's own records, and
+every turn is recorded in `assistant_exchanges` and visible under Operations →
+Matching. See `backend/.env.example`.
 
 ## 3. Deploy order
 
