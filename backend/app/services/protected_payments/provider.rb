@@ -12,6 +12,32 @@ module ProtectedPayments
     def self.sandbox_allowed?
       !Rails.env.production?
     end
+
+    # Adapters for licensed providers register here. It is deliberately empty:
+    # until a provider account exists, nothing in the product may report itself
+    # as holding real money.
+    LIVE_ADAPTERS = {}.freeze
+
+    def self.mode
+      configured = ENV.fetch("PROTECTED_PAYMENT_PROVIDER", "disabled")
+      return "sandbox" if configured == "sandbox" && sandbox_allowed?
+      return "live" if LIVE_ADAPTERS.key?(configured)
+
+      "disabled"
+    end
+
+    # Copy shown wherever protection is mentioned, so the storefront claim and
+    # the deployment's actual capability can never drift apart.
+    def self.status_label
+      case mode
+      when "live"
+        "Protected Trade is active. Funds are held by the connected payment provider until release."
+      when "sandbox"
+        "Protected Trade is running against a provider sandbox. No real funds move."
+      else
+        "Protected Trade is not activated yet. A licensed payment provider must be connected first."
+      end
+    end
   end
 
   class DisabledProvider

@@ -12,6 +12,11 @@ jobs:
   backend:
     name: Rails tests and security
     runs-on: ubuntu-latest
+    # The default environment is PostgreSQL, which the runner has no server
+    # for. The suite runs against the local SQLite test database, so pin the
+    # environment for every step rather than only for `rails test`.
+    env:
+      RAILS_ENV: test
     defaults:
       run:
         working-directory: backend

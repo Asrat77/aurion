@@ -16,14 +16,22 @@ categories_by_slug = CATEGORIES.index_by(&:slug)
 
 puts "Seeding vendors..."
 VENDOR_DEFS = [
-  { store: "Aurion Coffee Co.", email: "vendor@aurion.et" },
-  { store: "Ethio Grains", email: "ethio.grains@vendors.aurion.et" },
-  { store: "Spice Route ET", email: "spice.route@vendors.aurion.et" },
-  { store: "Bee Natural ET", email: "bee.natural@vendors.aurion.et" },
-  { store: "Sheba Textiles", email: "sheba.textiles@vendors.aurion.et" },
-  { store: "Aurion Jewels", email: "aurion.jewels@vendors.aurion.et" },
-  { store: "Green Valley ET", email: "green.valley@vendors.aurion.et" }
+  { store: "Aurion Coffee Co.", email: "vendor@aurion.et", city: "Addis Ababa", region: "Addis Ababa",
+    certifications: [ "Organic", "Fairtrade" ] },
+  { store: "Ethio Grains", email: "ethio.grains@vendors.aurion.et", city: "Bahir Dar", region: "Amhara",
+    certifications: [ "ISO 22000" ] },
+  { store: "Spice Route ET", email: "spice.route@vendors.aurion.et", city: "Hawassa", region: "Sidama",
+    certifications: [ "Organic" ] },
+  { store: "Bee Natural ET", email: "bee.natural@vendors.aurion.et", city: "Jimma", region: "Oromia",
+    certifications: [ "Organic", "HACCP" ] },
+  { store: "Sheba Textiles", email: "sheba.textiles@vendors.aurion.et", city: "Addis Ababa", region: "Addis Ababa",
+    certifications: [ "OEKO-TEX" ] },
+  { store: "Aurion Jewels", email: "aurion.jewels@vendors.aurion.et", city: "Addis Ababa", region: "Addis Ababa",
+    certifications: [] },
+  { store: "Green Valley ET", email: "green.valley@vendors.aurion.et", city: "Sodo", region: "SNNPR",
+    certifications: [ "Fairtrade" ] }
 ]
+VENDOR_PROFILES = VENDOR_DEFS.index_by { |definition| definition[:store] }
 
 vendors_by_store = VENDOR_DEFS.each_with_object({}) do |v, acc|
   user = User.find_or_create_by!(email: v[:email]) do |u|
@@ -42,7 +50,7 @@ vendors_by_store = VENDOR_DEFS.each_with_object({}) do |v, acc|
   end
   organization.update!(status: :active, verification_status: :verified)
   organization.memberships.find_or_create_by!(user: user) { |membership| membership.role = :owner }
-  vendor.update!(organization: organization)
+  vendor.update!(organization: organization, country: "Ethiopia", city: v[:city])
   acc[v[:store]] = vendor
 end
 
@@ -189,12 +197,16 @@ WHOLESALE_DEFS.each do |name, terms|
   product = Product.find_by(name: name)
   next unless product
 
-  product.vendor.supplier_capabilities.find_or_create_by!(category: product.category) do |capability|
-    capability.destinations = [ "Ethiopia", "United States", "United Arab Emirates", "Germany" ]
-    capability.min_quantity = terms[:moq]
-    capability.max_lead_time_days = terms[:lead]
-    capability.verified = true
-  end
+  profile = VENDOR_PROFILES[product.vendor.store_name] || {}
+  capability = product.vendor.supplier_capabilities.find_or_initialize_by(category: product.category)
+  capability.update!(
+    destinations: [ "Ethiopia", "United States", "United Arab Emirates", "Germany" ],
+    min_quantity: terms[:moq],
+    max_lead_time_days: terms[:lead],
+    region: profile[:region],
+    certifications: profile[:certifications] || [],
+    verified: true
+  )
 end
 
 # Reviews are only meaningful when a real buyer received real goods, so the

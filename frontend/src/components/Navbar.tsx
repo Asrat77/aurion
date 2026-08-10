@@ -12,7 +12,7 @@ import { useCartStore, cartItemCount } from "@/store/cart";
 import { useUiStore } from "@/store/ui";
 import PreferenceSwitcher from "@/components/PreferenceSwitcher";
 import type { Channel } from "@/lib/channel";
-import { channelLabel, channelUrl } from "@/lib/channel";
+import { businessHref, channelLabel, operationsHref } from "@/lib/channel";
 
 export default function Navbar({ channel = "express" }: { channel?: Channel }) {
   const { t } = useTranslation();
@@ -43,25 +43,22 @@ export default function Navbar({ channel = "express" }: { channel?: Channel }) {
     setDropdownOpen(false);
   }
 
-  const links = channel === "business"
+  // Business renders its own header, so this nav only covers Express and the
+  // Operations back office.
+  const links = channel === "operations"
     ? [
-        { href: "/", label: "Business home" },
-        { href: "/catalogue", label: "Wholesale catalogue" },
-        { href: "/workspace", label: "Start an RFQ" },
-        ...(user?.role === "vendor" ? [{ href: "/opportunities", label: "Supplier opportunities" }] : []),
-        { href: "/messages", label: t("nav.messages") },
-        { href: channelUrl("express", "/store"), label: "AURION Express" },
+        { href: "/admin", label: t("nav.admin") },
+        { href: "/vendor", label: t("nav.vendor") },
+        { href: businessHref("/"), label: "AURION Business" },
       ]
-    : channel === "operations"
-      ? [ { href: "/admin", label: t("nav.admin") }, { href: "/vendor", label: t("nav.vendor") }, { href: channelUrl("business", "/"), label: "Business" }, { href: channelUrl("express", "/"), label: "Express" } ]
-      : [
-          { href: "/", label: t("nav.home") },
-          { href: "/store", label: t("nav.marketplace") },
-          { href: channelUrl("business", "/"), label: "AURION Business" },
-          { href: "/#story", label: t("nav.ourStory") },
-          ...(user?.role === "vendor" ? [{ href: "/vendor", label: t("nav.vendor") }] : []),
-          ...(user?.role === "admin" ? [{ href: "/admin", label: t("nav.admin") }] : []),
-        ];
+    : [
+        { href: "/", label: t("nav.home") },
+        { href: "/store", label: t("nav.marketplace") },
+        { href: businessHref("/"), label: "AURION Business" },
+        { href: "/#story", label: t("nav.ourStory") },
+        ...(user?.role === "vendor" ? [{ href: operationsHref("/vendor"), label: t("nav.vendor") }] : []),
+        ...(user?.role === "admin" ? [{ href: operationsHref("/admin"), label: t("nav.admin") }] : []),
+      ];
 
   return (
     <nav
@@ -123,11 +120,11 @@ export default function Navbar({ channel = "express" }: { channel?: Channel }) {
 
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {channel !== "operations" ? <Link
-            href={channel === "business" ? "/workspace" : "/source"}
+            href="/source"
             onClick={closeNavigation}
             className="hidden xl:inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--border-gold-strong)] px-4 text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--gold-light)] transition-colors hover:bg-[var(--gold)] hover:text-[var(--bg-deep)]"
           >
-            {channel === "business" ? "Open workspace" : t("nav.requestQuote")} <ArrowUpRight size={14} />
+            {t("nav.requestQuote")} <ArrowUpRight size={14} />
           </Link> : null}
           <button
             className={`${channel === "express" ? "" : "hidden "}relative flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-[var(--text-secondary)] transition-colors hover:bg-white/[0.05] hover:text-[var(--gold)]`}
@@ -174,13 +171,6 @@ export default function Navbar({ channel = "express" }: { channel?: Channel }) {
                     >
                       {t("nav.myAccount")}
                     </Link>
-                    {channel === "business" ? <Link
-                      href="/workspace"
-                      className="flex min-h-11 items-center px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      Sourcing workspace
-                    </Link> : null}
                     {channel === "express" ? <Link
                       href="/orders"
                       className="flex min-h-11 items-center px-5 text-sm text-[var(--text-secondary)] hover:bg-[rgba(214,180,94,0.08)] hover:text-[var(--gold)]"

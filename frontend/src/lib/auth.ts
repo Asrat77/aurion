@@ -21,7 +21,9 @@ export function useMe() {
     queryKey: ["me"],
     queryFn: async () => {
       try {
-        return await apiFetch<User>("/me");
+        // A 401 here just means "signed out", which is the normal state on
+        // every public page. It must not be reported as a session expiry.
+        return await apiFetch<User>("/me", { expectUnauthorized: true });
       } catch {
         return null;
       }
@@ -58,8 +60,10 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => apiFetch<void>("/auth/logout", { method: "DELETE" }),
     onSuccess: () => {
-      qc.clear();
       qc.setQueryData(["me"], null);
+      // Same reason as the unauthorized handler: resetting drops the signed-in
+      // data without stranding requests that are still in flight.
+      void qc.resetQueries();
     },
   });
 }

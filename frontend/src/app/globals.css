@@ -664,3 +664,131 @@ textarea.input {
     background: var(--bg-elevated);
   }
 }
+
+/* ==========================================================================
+   AURION BUSINESS — the sourcing product's own surface.
+
+   Business shares the house theme: same near-black ground, same gold accent,
+   same serif display face. What separates it from Express is structure, not
+   skin — its own header, utility strip and footer, and a denser, table-led
+   layout built from the primitives below.
+
+   The `--b-*` tokens exist so those B2B primitives can be re-pointed in one
+   place. They map onto the default palette rather than replacing it.
+   ========================================================================== */
+[data-surface="business"] {
+  --b-line: var(--border-subtle);
+  --b-tint: rgba(255, 255, 255, 0.035);
+  --b-accent: var(--gold);
+  --b-accent-ink: var(--bg-deep);
+  --b-brand: var(--gold);
+  --b-verified: #8de1aa;
+  --b-verified-tint: rgba(92, 184, 141, 0.12);
+  --b-pending: var(--warning);
+  --b-pending-tint: rgba(255, 193, 7, 0.1);
+}
+
+/* Business leads with data, so its headings sit closer to the body copy than
+   the storefront's editorial scale. Same face, tighter scale. */
+[data-surface="business"] .display-hero {
+  font-size: clamp(2.6rem, 5vw, 4.2rem);
+  line-height: 1.02;
+}
+[data-surface="business"] .display-title {
+  font-size: clamp(2rem, 3.4vw, 2.9rem);
+}
+
+/* --- Business primitives ------------------------------------------------- */
+
+.b-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--b-line);
+  border-radius: var(--radius-lg);
+}
+.b-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--b-line);
+}
+.b-panel-title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: #fff;
+  letter-spacing: 0.01em;
+}
+
+/* Uppercase micro-label used for table headers and metric captions. */
+.b-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.b-figure {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.b-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.b-chip-verified {
+  border-color: rgba(92, 184, 141, 0.35);
+  background: var(--b-verified-tint);
+  color: var(--b-verified);
+}
+.b-chip-pending {
+  border-color: rgba(255, 193, 7, 0.32);
+  background: var(--b-pending-tint);
+  color: var(--warning);
+}
+.b-chip-accent {
+  border-color: var(--border-gold);
+  background: rgba(214, 180, 94, 0.1);
+  color: var(--gold-light);
+}
+
+/* Score meter used by the supplier match console. */
+.b-meter {
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.b-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+}
+
+.b-link {
+  color: var(--gold);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(214, 180, 94, 0.4);
+}
+.b-link:hover {
+  color: var(--gold-light);
+  text-decoration-color: var(--gold);
+}

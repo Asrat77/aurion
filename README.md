@@ -8,6 +8,19 @@ Multi-vendor marketplace for Ethiopian goods, at retail and at commercial scale.
 - `backend/` — Rails 8 API-only app, Postgres (Neon)
 - `frontend/` — Next.js (App Router) + TypeScript
 
+Two products, one codebase and one database:
+
+| Product | Where it lives | What it is |
+|---|---|---|
+| **AURION Express** | `/` (or `express.<domain>`) | Dark, consumer retail storefront |
+| **AURION Business** | `/business` (or `business.<domain>`) | Light, navy B2B sourcing desk |
+| **AURION Operations** | `/admin`, `/vendor` | Back office for both |
+
+They share identity, catalogue, messaging and payments, but not their shells:
+each surface has its own header, footer and design tokens. Binding the
+subdomains later is an environment change, not a rewrite — see
+[`DEPLOY.md`](DEPLOY.md).
+
 **Retail:** faceted discovery → cart → server-priced checkout → per-vendor
 fulfilment with tracking → delivery → verified review, with buyer protection
 covering the whole path.

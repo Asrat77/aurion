@@ -15,6 +15,9 @@ Rails.application.routes.draw do
       delete "me", to: "me#destroy"
       get "security/csrf", to: "security#csrf"
 
+      get "assistant", to: "assistant#show"
+      post "assistant/messages", to: "assistant#create"
+
       resources :products, only: [ :index, :show ], param: :slug do
         get :facets, on: :collection
       end
@@ -53,12 +56,16 @@ Rails.application.routes.draw do
       end
 
       namespace :business do
+        # Public storefront reads: no session required to evaluate the network.
+        get "network", to: "network#show"
+        get "suppliers", to: "network#suppliers"
         resources :organizations, only: [ :index, :show, :create ] do
           resources :request_for_quotes, only: [ :create ], controller: "request_for_quotes"
           resources :memberships, only: [ :index, :create, :update, :destroy ], controller: "memberships"
         end
         resources :request_for_quotes, only: [ :index, :show, :create ] do
           post :publication, on: :member, to: "request_for_quotes#publish"
+          get :matching, on: :member, to: "request_for_quotes#matching"
         end
         resources :opportunities, only: [ :index, :show ]
         resources :quotations, only: [ :index, :update ] do
@@ -111,6 +118,7 @@ Rails.application.routes.draw do
         resources :organizations, only: [ :index ] do
           post :verification, on: :member, to: "organizations#verify"
         end
+        get "business/sourcing", to: "business#sourcing"
         get "business/inspections", to: "business#inspections"
         post "business/inspections/:id/review", to: "business#review_inspection"
         post "business/shipments/:id/delivery_verification", to: "business#verify_delivery"

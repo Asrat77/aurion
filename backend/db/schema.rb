@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_09_101000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_09_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -36,6 +36,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_101000) do
     t.integer "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "idx_on_blob_id_variation_digest_f36bede0d9", unique: true
+  end
+
+  create_table "assistant_exchanges", force: :cascade do |t|
+    t.text "answer"
+    t.string "channel", null: false
+    t.string "conversation_key", null: false
+    t.datetime "created_at", null: false
+    t.text "error"
+    t.json "grounding", default: {}, null: false
+    t.integer "input_tokens"
+    t.integer "latency_ms"
+    t.string "model", null: false
+    t.integer "output_tokens"
+    t.string "provider", null: false
+    t.text "question", null: false
+    t.string "status", default: "pending", null: false
+    t.string "task", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["conversation_key"], name: "index_assistant_exchanges_on_conversation_key"
+    t.index ["created_at", "status"], name: "index_assistant_exchanges_on_created_at_and_status"
+    t.index ["user_id", "created_at"], name: "index_assistant_exchanges_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_assistant_exchanges_on_user_id"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -620,16 +643,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_101000) do
 
   create_table "supplier_capabilities", force: :cascade do |t|
     t.integer "category_id"
+    t.json "certifications", default: [], null: false
     t.datetime "created_at", null: false
     t.json "destinations", default: [], null: false
     t.integer "max_lead_time_days"
     t.integer "max_quantity"
     t.integer "min_quantity"
     t.text "notes"
+    t.string "region"
     t.datetime "updated_at", null: false
     t.integer "vendor_id", null: false
     t.boolean "verified", default: false, null: false
     t.index ["category_id"], name: "index_supplier_capabilities_on_category_id"
+    t.index ["region"], name: "index_supplier_capabilities_on_region"
     t.index ["vendor_id"], name: "index_supplier_capabilities_on_vendor_id"
   end
 
@@ -808,6 +834,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_101000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "assistant_exchanges", "users"
   add_foreign_key "conversations", "orders"
   add_foreign_key "conversations", "products"
   add_foreign_key "conversations", "users", column: "buyer_id"
