@@ -66,7 +66,7 @@ export default function OpportunitiesPage() {
     return (
       <section className="mx-auto max-w-[var(--container-narrow)] px-4 py-20 text-center sm:px-6">
         <div className="b-panel p-10">
-          <ClipboardText size={32} className="mx-auto text-[var(--b-navy)]" />
+          <ClipboardText size={32} className="mx-auto text-[var(--b-accent)]" />
           <h1 className="display-title mt-4">Supplier opportunities</h1>
           <p className="mx-auto mt-3 max-w-[420px] text-[0.88rem] leading-relaxed text-[var(--text-secondary)]">
             Sign in with an approved supplier account to see the requirements you have been matched to.
@@ -113,14 +113,14 @@ export default function OpportunitiesPage() {
                 onClick={() => setSelectedId(opportunity.id)}
                 aria-pressed={selectedId === opportunity.id}
                 className={`b-panel w-full p-4 text-left transition-colors ${
-                  selectedId === opportunity.id ? "border-[var(--b-navy)] bg-[var(--b-tint)]" : "hover:bg-[var(--b-tint)]"
+                  selectedId === opportunity.id ? "border-[var(--b-accent)] bg-[var(--b-tint)]" : "hover:bg-[var(--b-tint)]"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-[family-name:var(--font-mono)] text-[0.82rem] text-[var(--text-primary)]">
                     {opportunity.reference}
                   </span>
-                  <span className="b-chip b-chip-navy">Match score {opportunity.score}</span>
+                  <span className="b-chip b-chip-accent">Match score {opportunity.score}</span>
                 </div>
                 {opportunity.reasons.length ? (
                   <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -155,7 +155,7 @@ export default function OpportunitiesPage() {
                     {selected.reference}
                   </p>
                 </div>
-                <span className="b-chip b-chip-navy">Score {selected.score}</span>
+                <span className="b-chip b-chip-accent">Score {selected.score}</span>
               </div>
               <form onSubmit={submit} className="grid gap-4 p-5 sm:grid-cols-2">
                 <div className="sm:col-span-2">
@@ -226,7 +226,7 @@ export default function OpportunitiesPage() {
             </>
           ) : (
             <div className="flex min-h-[300px] flex-col items-center justify-center p-8 text-center">
-              <ClipboardText size={32} className="text-[var(--b-navy)]" />
+              <ClipboardText size={32} className="text-[var(--b-accent)]" />
               <h2 className="mt-4 text-[1.05rem] font-semibold text-[var(--text-primary)]">Select an opportunity</h2>
               <p className="mt-2 max-w-[320px] text-[0.85rem] leading-relaxed text-[var(--text-secondary)]">
                 Your match score and the reason codes that earned the invitation stay visible while you prepare the

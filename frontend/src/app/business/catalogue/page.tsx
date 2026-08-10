@@ -44,8 +44,8 @@ function Catalogue() {
 
       {category || supplier ? (
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          {category ? <span className="b-chip b-chip-navy">Category: {category}</span> : null}
-          {supplier ? <span className="b-chip b-chip-navy">Supplier: {supplier}</span> : null}
+          {category ? <span className="b-chip b-chip-accent">Category: {category}</span> : null}
+          {supplier ? <span className="b-chip b-chip-accent">Supplier: {supplier}</span> : null}
           <Link href={businessHref("/catalogue")} className="b-link text-[0.8rem]">
             Clear
           </Link>

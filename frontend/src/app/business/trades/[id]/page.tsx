@@ -87,7 +87,7 @@ export default function TradePage({ params }: { params: Promise<{ id: string }> 
 
   return (
     <section className="mx-auto max-w-[var(--container-content)] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
-      <Link href={businessHref("/rfqs")} className="inline-flex items-center gap-1.5 text-[0.82rem] text-[var(--b-navy)]">
+      <Link href={businessHref("/rfqs")} className="inline-flex items-center gap-1.5 text-[0.82rem] text-[var(--b-accent)]">
         <ArrowLeft size={14} /> Sourcing workspace
       </Link>
 
@@ -99,7 +99,7 @@ export default function TradePage({ params }: { params: Promise<{ id: string }> 
             {current.supplierName} · {formatMoney(current.totalCents, current.currency)}
           </p>
         </div>
-        <span className="b-chip b-chip-navy">{current.status.replaceAll("_", " ")}</span>
+        <span className="b-chip b-chip-accent">{current.status.replaceAll("_", " ")}</span>
       </div>
 
       {error ? (
@@ -117,7 +117,7 @@ export default function TradePage({ params }: { params: Promise<{ id: string }> 
           <div className="b-panel">
             <div className="b-panel-head">
               <span className="b-panel-title">Trade progress</span>
-              <Truck size={16} className="text-[var(--b-navy)]" />
+              <Truck size={16} className="text-[var(--b-accent)]" />
             </div>
             <ol className="p-5">
               {stages.map((stage) => (
@@ -143,13 +143,13 @@ export default function TradePage({ params }: { params: Promise<{ id: string }> 
           <div className="b-panel">
             <div className="b-panel-head">
               <span className="b-panel-title">Contract record</span>
-              <FileText size={16} className="text-[var(--b-navy)]" />
+              <FileText size={16} className="text-[var(--b-accent)]" />
             </div>
             <div className="p-5">
               <p className="text-[0.85rem] leading-relaxed text-[var(--text-secondary)]">
                 The accepted terms are immutable. Both parties accept the exact digest below before funding.
               </p>
-              <p className="mt-3 break-all rounded-[var(--radius-md)] bg-[var(--b-tint)] p-3 font-[family-name:var(--font-mono)] text-[0.7rem] text-[var(--b-navy)]">
+              <p className="mt-3 break-all rounded-[var(--radius-md)] bg-[var(--b-tint)] p-3 font-[family-name:var(--font-mono)] text-[0.7rem] text-[var(--b-accent)]">
                 {current.termsSha256}
               </p>
               {current.contractAvailable ? (
@@ -189,7 +189,7 @@ export default function TradePage({ params }: { params: Promise<{ id: string }> 
           <div className="b-panel">
             <div className="b-panel-head">
               <span className="b-panel-title">Buyer actions</span>
-              <ShieldCheck size={16} className="text-[var(--b-navy)]" />
+              <ShieldCheck size={16} className="text-[var(--b-accent)]" />
             </div>
             <div className="space-y-2.5 p-5">
               <button
@@ -227,7 +227,7 @@ export default function TradePage({ params }: { params: Promise<{ id: string }> 
           <div className="b-panel">
             <div className="b-panel-head">
               <span className="b-panel-title">Open a dispute</span>
-              <Gavel size={16} className="text-[var(--b-navy)]" />
+              <Gavel size={16} className="text-[var(--b-accent)]" />
             </div>
             <div className="p-5">
               <label className="sr-only" htmlFor="dispute-detail">

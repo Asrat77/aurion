@@ -54,7 +54,7 @@ export default function AssurancePage() {
         <ol className="mt-5 space-y-3">
           {MILESTONES.map((milestone, index) => (
             <li key={milestone.title} className="b-panel flex gap-4 p-5">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--b-navy)] font-[family-name:var(--font-mono)] text-[0.72rem] text-white">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--gold)] font-[family-name:var(--font-mono)] text-[0.72rem] text-[var(--bg-deep)]">
                 {index + 1}
               </span>
               <div>
@@ -106,7 +106,7 @@ export default function AssurancePage() {
           </table>
         </div>
         <p className="mt-3 flex items-start gap-2 text-[0.82rem] leading-relaxed text-[var(--text-secondary)]">
-          <MagnifyingGlass size={15} className="mt-0.5 shrink-0 text-[var(--b-navy)]" />
+          <MagnifyingGlass size={15} className="mt-0.5 shrink-0 text-[var(--b-accent)]" />
           Every buyer can open the match console on their own requirement and see each supplier&apos;s points criterion
           by criterion, including who was ruled out and why. Fewer than three eligible matches escalates to Operations.
         </p>
@@ -139,7 +139,7 @@ export default function AssurancePage() {
             "The allocation can never exceed the funded amount, and a resolution cannot be applied twice.",
           ].map((line) => (
             <li key={line} className="flex items-start gap-2.5 text-[0.85rem] leading-relaxed text-[var(--text-secondary)]">
-              <Gavel size={15} className="mt-0.5 shrink-0 text-[var(--b-navy)]" />
+              <Gavel size={15} className="mt-0.5 shrink-0 text-[var(--b-accent)]" />
               {line}
             </li>
           ))}
@@ -148,7 +148,7 @@ export default function AssurancePage() {
 
       <div className="b-panel mt-10 p-6">
         <h2 className="flex items-center gap-2 text-[1.02rem] font-semibold text-[var(--text-primary)]">
-          <ShieldCheck size={18} className="text-[var(--b-navy)]" /> What we do not claim
+          <ShieldCheck size={18} className="text-[var(--b-accent)]" /> What we do not claim
         </h2>
         <ul className="mt-3.5 space-y-2">
           {[

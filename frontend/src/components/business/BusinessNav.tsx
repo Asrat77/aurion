@@ -45,7 +45,7 @@ export default function BusinessNav() {
 
   return (
     <header className="sticky top-0 z-[900]">
-      <div className="bg-[var(--b-navy)] text-[var(--b-navy-ink)]">
+      <div className="border-b border-[var(--border-gold)] bg-[var(--bg-elevated)] text-[var(--gold-light)]">
         <div className="mx-auto flex h-9 max-w-[var(--container-wide)] items-center justify-between gap-4 px-4 text-[0.68rem] sm:px-6 lg:px-8">
           <p className="flex items-center gap-2 truncate">
             <ShieldCheck size={13} weight="fill" className="shrink-0 opacity-80" />
@@ -66,7 +66,7 @@ export default function BusinessNav() {
         </div>
       </div>
 
-      <div className="border-b border-[var(--b-line)] bg-white">
+      <div className="border-b border-[var(--b-line)] bg-[rgba(5,7,13,0.94)] backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-[var(--container-wide)] items-center gap-4 px-4 sm:px-6 lg:px-8">
           <Link
             href={businessHref("/")}
@@ -77,7 +77,7 @@ export default function BusinessNav() {
               <Image src="/brand/aurion-emblem.png" alt="" fill sizes="32px" className="object-contain" priority />
             </span>
             <span className="leading-none">
-              <span className="block text-[1.02rem] font-bold tracking-[0.14em] text-[var(--b-navy)]">AURION</span>
+              <span className="block text-[1.02rem] font-bold tracking-[0.14em] text-[var(--b-accent)]">AURION</span>
               <span className="mt-[3px] block font-[family-name:var(--font-mono)] text-[0.55rem] tracking-[0.3em] text-[var(--b-brand)]">
                 BUSINESS
               </span>
@@ -92,8 +92,8 @@ export default function BusinessNav() {
                 aria-current={isCurrent(link.href) ? "page" : undefined}
                 className={`flex min-h-9 items-center rounded-[6px] px-3 text-[0.8rem] font-semibold transition-colors ${
                   isCurrent(link.href)
-                    ? "bg-[var(--b-tint)] text-[var(--b-navy)]"
-                    : "text-[var(--text-secondary)] hover:bg-[var(--b-tint)] hover:text-[var(--b-navy)]"
+                    ? "bg-[var(--b-tint)] text-[var(--b-accent)]"
+                    : "text-[var(--text-secondary)] hover:bg-[var(--b-tint)] hover:text-[var(--b-accent)]"
                 }`}
               >
                 {link.label}
@@ -110,7 +110,7 @@ export default function BusinessNav() {
               >
                 <Bell size={18} />
                 {unread > 0 ? (
-                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--b-navy)] px-1 font-[family-name:var(--font-mono)] text-[0.55rem] text-white">
+                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--gold)] px-1 font-[family-name:var(--font-mono)] text-[0.55rem] text-[var(--bg-deep)]">
                     {unread}
                   </span>
                 ) : null}
@@ -129,7 +129,7 @@ export default function BusinessNav() {
               <div
                 aria-hidden={!accountOpen}
                 inert={!accountOpen}
-                className={`absolute right-0 top-11 min-w-[190px] origin-top-right rounded-[8px] border border-[var(--b-line)] bg-white py-1.5 shadow-[0_12px_34px_rgba(11,37,69,0.14)] transition-[opacity,transform] duration-150 ${
+                className={`absolute right-0 top-11 min-w-[190px] origin-top-right rounded-[8px] border border-[var(--border-gold)] bg-[rgba(10,15,26,0.98)] py-1.5 shadow-2xl backdrop-blur-xl transition-[opacity,transform] duration-150 ${
                   accountOpen ? "scale-100 opacity-100" : "pointer-events-none scale-[0.97] opacity-0"
                 }`}
               >
@@ -157,7 +157,7 @@ export default function BusinessNav() {
                   </>
                 ) : (
                   <button
-                    className="w-full cursor-pointer px-4 py-2 text-left text-[0.82rem] font-semibold text-[var(--b-navy)] hover:bg-[var(--b-tint)]"
+                    className="w-full cursor-pointer px-4 py-2 text-left text-[0.82rem] font-semibold text-[var(--b-accent)] hover:bg-[var(--b-tint)]"
                     onClick={() => {
                       openAuth("login");
                       setAccountOpen(false);
@@ -174,7 +174,7 @@ export default function BusinessNav() {
             </Link>
 
             <button
-              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-[6px] text-[var(--b-navy)] hover:bg-[var(--b-tint)] lg:hidden"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-[6px] text-[var(--b-accent)] hover:bg-[var(--b-tint)] lg:hidden"
               aria-label="Toggle navigation"
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen((open) => !open)}
@@ -185,7 +185,7 @@ export default function BusinessNav() {
         </div>
 
         {mobileOpen ? (
-          <nav aria-label="Business sections" className="border-t border-[var(--b-line)] bg-white px-4 py-2 lg:hidden">
+          <nav aria-label="Business sections" className="border-t border-[var(--b-line)] bg-[rgba(5,7,13,0.98)] px-4 py-2 lg:hidden">
             {links.map((link) => (
               <Link
                 key={link.href}
@@ -214,7 +214,7 @@ function MenuLink({ href, onClick, children }: { href: string; onClick: () => vo
     <Link
       href={href}
       onClick={onClick}
-      className="block px-4 py-2 text-[0.82rem] text-[var(--text-secondary)] hover:bg-[var(--b-tint)] hover:text-[var(--b-navy)]"
+      className="block px-4 py-2 text-[0.82rem] text-[var(--text-secondary)] hover:bg-[var(--b-tint)] hover:text-[var(--b-accent)]"
     >
       {children}
     </Link>

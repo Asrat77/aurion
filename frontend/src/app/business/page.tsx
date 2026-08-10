@@ -52,10 +52,10 @@ export default function BusinessHome() {
 
   return (
     <>
-      <section className="border-b border-[var(--b-line)] bg-white">
+      <section className="border-b border-[var(--b-line)] bg-[var(--bg-surface)]">
         <div className="mx-auto grid max-w-[var(--container-wide)] gap-12 px-4 py-14 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:py-20 lg:px-8">
           <div>
-            <span className="b-chip b-chip-navy">
+            <span className="b-chip b-chip-accent">
               <Buildings size={13} weight="fill" /> B2B sourcing platform
             </span>
             <h1 className="display-hero mt-5 max-w-[620px]">
@@ -186,7 +186,7 @@ export default function BusinessHome() {
                           {category.products} {category.products === 1 ? "product" : "products"}
                         </p>
                       </div>
-                      <ArrowRight size={16} className="shrink-0 text-[var(--b-navy)]" />
+                      <ArrowRight size={16} className="shrink-0 text-[var(--b-accent)]" />
                     </Link>
                   ))
                 : (
@@ -198,16 +198,16 @@ export default function BusinessHome() {
         </div>
       </section>
 
-      <section className="border-b border-[var(--b-line)] bg-white">
+      <section className="border-b border-[var(--b-line)] bg-[var(--bg-surface)]">
         <div className="mx-auto max-w-[var(--container-wide)] px-4 py-14 sm:px-6 lg:px-8">
           <p className="b-eyebrow">How a trade runs</p>
           <h2 className="display-title mt-2 max-w-[540px]">Four stages, each leaving evidence behind.</h2>
 
           <ol className="mt-9 grid gap-px overflow-hidden rounded-[var(--radius-lg)] border border-[var(--b-line)] bg-[var(--b-line)] lg:grid-cols-4">
             {FLOW.map(({ icon: Icon, step, title, body }) => (
-              <li key={step} className="bg-white p-6">
+              <li key={step} className="bg-[var(--bg-card)] p-6">
                 <div className="flex items-center justify-between">
-                  <Icon size={22} className="text-[var(--b-navy)]" />
+                  <Icon size={22} className="text-[var(--b-accent)]" />
                   <span className="b-eyebrow">{step}</span>
                 </div>
                 <h3 className="mt-6 text-[0.98rem] font-semibold text-[var(--text-primary)]">{title}</h3>
@@ -296,7 +296,7 @@ function PipelineRow({ icon, label, value }: { icon: React.ReactNode; label: str
   return (
     <div className="flex items-center justify-between gap-3 px-5 py-3.5">
       <span className="flex items-center gap-2.5 text-[0.85rem] text-[var(--text-secondary)]">
-        <span className="text-[var(--b-navy)]">{icon}</span>
+        <span className="text-[var(--b-accent)]">{icon}</span>
         {label}
       </span>
       {value === null ? (

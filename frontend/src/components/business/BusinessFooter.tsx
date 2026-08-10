@@ -33,10 +33,10 @@ const COLUMNS = [
 
 export default function BusinessFooter() {
   return (
-    <footer className="border-t border-[var(--b-line)] bg-white">
+    <footer className="border-t border-[var(--b-line)] bg-[var(--bg-surface)]">
       <div className="mx-auto grid max-w-[var(--container-wide)] gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.4fr_repeat(3,1fr)] lg:px-8">
         <div className="max-w-[340px]">
-          <p className="text-[1.02rem] font-bold tracking-[0.14em] text-[var(--b-navy)]">AURION</p>
+          <p className="text-[1.02rem] font-bold tracking-[0.14em] text-[var(--b-accent)]">AURION</p>
           <p className="mt-1 font-[family-name:var(--font-mono)] text-[0.55rem] tracking-[0.3em] text-[var(--b-brand)]">
             BUSINESS
           </p>
@@ -46,7 +46,7 @@ export default function BusinessFooter() {
           </p>
           <Link
             href={expressHref("/")}
-            className="mt-5 inline-flex text-[0.8rem] font-semibold text-[var(--b-navy)] underline underline-offset-4"
+            className="mt-5 inline-flex text-[0.8rem] font-semibold text-[var(--b-accent)] underline underline-offset-4"
           >
             Looking to buy retail? Visit AURION Express
           </Link>
@@ -60,7 +60,7 @@ export default function BusinessFooter() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-[0.85rem] text-[var(--text-secondary)] hover:text-[var(--b-navy)]"
+                    className="text-[0.85rem] text-[var(--text-secondary)] hover:text-[var(--b-accent)]"
                   >
                     {link.label}
                   </Link>

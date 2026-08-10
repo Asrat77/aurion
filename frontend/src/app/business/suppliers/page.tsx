@@ -62,7 +62,7 @@ export default function SuppliersPage() {
           <label className="flex cursor-pointer items-center gap-2.5 text-[0.85rem] font-semibold text-[var(--text-primary)]">
             <input
               type="checkbox"
-              className="accent-[var(--b-navy)]"
+              className="accent-[var(--b-accent)]"
               checked={!!filters.verified}
               onChange={(event) => setFilters((current) => ({ ...current, verified: event.target.checked || undefined }))}
             />
@@ -158,7 +158,7 @@ function FacetGroup({
               aria-pressed={active === option.value}
               className={`flex w-full items-center justify-between gap-2 rounded-[6px] px-2 py-1.5 text-left text-[0.83rem] transition-colors ${
                 active === option.value
-                  ? "bg-[var(--b-tint)] font-semibold text-[var(--b-navy)]"
+                  ? "bg-[var(--b-tint)] font-semibold text-[var(--b-accent)]"
                   : "text-[var(--text-secondary)] hover:bg-[var(--b-tint)]"
               }`}
             >

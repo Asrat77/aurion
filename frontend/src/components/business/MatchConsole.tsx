@@ -164,7 +164,7 @@ function CandidateRow({
                 <SealCheck size={11} weight="fill" /> Verified
               </span>
             ) : null}
-            {shortlisted ? <span className="b-chip b-chip-navy">Shortlisted</span> : null}
+            {shortlisted ? <span className="b-chip b-chip-accent">Shortlisted</span> : null}
             {candidate.invitationStatus ? (
               <span className="b-chip">{candidate.invitationStatus}</span>
             ) : null}
@@ -236,7 +236,7 @@ function CandidateRow({
 
 function FunnelCell({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-white px-4 py-3">
+    <div className="bg-[var(--bg-card)] px-4 py-3">
       <p className="b-eyebrow">{label}</p>
       <p className="mt-1 font-[family-name:var(--font-mono)] text-[1.15rem] text-[var(--text-primary)]">{value}</p>
     </div>

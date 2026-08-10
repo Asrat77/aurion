@@ -155,7 +155,7 @@ function RfqWorkspace() {
     return (
       <section className="mx-auto max-w-[var(--container-narrow)] px-4 py-20 text-center sm:px-6">
         <div className="b-panel p-10">
-          <ShieldCheck size={34} className="mx-auto text-[var(--b-navy)]" />
+          <ShieldCheck size={34} className="mx-auto text-[var(--b-accent)]" />
           <h1 className="display-title mt-4">Your sourcing workspace</h1>
           <p className="mx-auto mt-3 max-w-[440px] text-[0.88rem] leading-relaxed text-[var(--text-secondary)]">
             Sign in to create a buyer organization, publish requirements, see how suppliers were scored, and follow each
@@ -196,7 +196,7 @@ function RfqWorkspace() {
           <div className="b-panel">
             <div className="b-panel-head">
               <span className="b-panel-title">Buyer organization</span>
-              <Buildings size={16} className="text-[var(--b-navy)]" />
+              <Buildings size={16} className="text-[var(--b-accent)]" />
             </div>
             <div className="p-4">
               {buyerOrganizations.length ? (
@@ -311,7 +311,7 @@ function RfqWorkspace() {
           <div className="b-panel">
             <div className="b-panel-head">
               <span className="b-panel-title">New request for quotation</span>
-              <ClipboardText size={16} className="text-[var(--b-navy)]" />
+              <ClipboardText size={16} className="text-[var(--b-accent)]" />
             </div>
             <form onSubmit={handleCreateRfq} className="grid gap-4 p-5 sm:grid-cols-2">
               <Field label="Company name">
@@ -420,7 +420,7 @@ function RfqWorkspace() {
                 <label className="flex items-start gap-2.5 text-[0.82rem] text-[var(--text-secondary)]">
                   <input
                     type="checkbox"
-                    className="mt-0.5 accent-[var(--b-navy)]"
+                    className="mt-0.5 accent-[var(--b-accent)]"
                     checked={rfqForm.inspection_required}
                     onChange={(event) => setRfqForm({ ...rfqForm, inspection_required: event.target.checked })}
                   />
@@ -462,7 +462,7 @@ function RfqWorkspace() {
                       {publishRfq.isPending ? "Publishing" : "Publish and match"}
                     </button>
                   ) : (
-                    <span className="b-chip b-chip-navy">{selectedRfq.status}</span>
+                    <span className="b-chip b-chip-accent">{selectedRfq.status}</span>
                   )}
                 </div>
                 <MatchConsole rfqId={selectedRfq.id} />
