@@ -74,7 +74,9 @@ export default function BusinessNav() {
             onClick={() => setMobileOpen(false)}
           >
             <span className="relative h-8 w-8">
-              <Image src="/brand/aurion-emblem.png" alt="" fill sizes="32px" className="object-contain" priority />
+              <Image src="/brand/aurion-emblem.png" alt="" fill sizes="32px"
+              unoptimized
+              className="object-contain" priority />
             </span>
             <span className="leading-none">
               <span className="block text-[1.02rem] font-bold tracking-[0.14em] text-[var(--b-accent)]">AURION</span>

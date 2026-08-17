@@ -135,6 +135,7 @@ export default function Home() {
                   fill
                   priority
                   sizes="(max-width: 1024px) 68vw, 370px"
+              unoptimized
                   className="object-contain drop-shadow-[0_28px_80px_rgba(214,180,94,0.22)]"
                 />
               </div>

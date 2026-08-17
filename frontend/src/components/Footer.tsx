@@ -20,7 +20,9 @@ export default function Footer({ channel = "express" }: { channel?: Channel }) {
         <div className="max-w-[520px]">
           <Link href="/" className="inline-flex items-center gap-3" aria-label={t("nav.home")}>
             <span className="relative h-14 w-14">
-              <Image src="/brand/aurion-emblem.png" alt="" fill sizes="56px" className="object-contain" />
+              <Image src="/brand/aurion-emblem.png" alt="" fill sizes="56px"
+              unoptimized
+              className="object-contain" />
             </span>
             <span>
               <span className="block font-[family-name:var(--font-display)] text-2xl text-[var(--gold-pale)] tracking-[0.12em]">

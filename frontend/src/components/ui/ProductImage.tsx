@@ -54,6 +54,10 @@ export default function ProductImage({
           fill
           sizes={sizes ?? "100vw"}
           priority={priority}
+          // The source URL already carries width, height, crop, format and
+          // quality, so Unsplash returns exactly what we need. Routing it
+          // through the Next optimizer only adds a slow, uncached hop.
+          unoptimized
           className={`object-cover transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
           onLoad={() => setLoaded(true)}
           onError={() => setErrored(true)}
