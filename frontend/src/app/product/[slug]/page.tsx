@@ -214,7 +214,7 @@ function BuyBox({ product }: { product: Product }) {
           </button>
           <input
             id="qty"
-            className="w-12 border-0 bg-transparent text-center font-mono text-sm text-white focus:outline-none"
+            className="w-12 rounded-[4px] border-0 bg-transparent text-center font-mono text-sm text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--gold)]"
             value={qty}
             inputMode="numeric"
             onChange={(e) => {

@@ -20,7 +20,11 @@ export default function ToastHost() {
   const toasts = useUiStore((s) => s.toasts);
 
   return (
-    <div className="fixed top-[90px] right-5 z-[10000] flex flex-col gap-2 max-w-[400px]">
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed top-[90px] right-5 z-[10000] flex flex-col gap-2 max-w-[400px]"
+    >
       {toasts.map((t) => (
         <ToastItem key={t.id} toast={t} />
       ))}

@@ -52,14 +52,17 @@ function Field({
   required?: boolean;
   children: React.ReactNode;
 }) {
+  // Wrapping the control in the label associates the two without needing an
+  // id on every field, so clicking the label focuses the input and assistive
+  // technology reads the two together.
   return (
-    <div>
-      <label className="field-label">
+    <label className="block">
+      <span className="field-label">
         {label}
         {required && <span className="text-[var(--gold)]"> *</span>}
-      </label>
+      </span>
       {children}
-    </div>
+    </label>
   );
 }
 
@@ -221,6 +224,7 @@ export default function CheckoutPage() {
               <Field label={t("checkout.firstName")} required>
                 <input
                   className="input"
+                  autoComplete="given-name"
                   value={address.first}
                   onChange={(e) => setAddress({ ...address, first: e.target.value })}
                 />
@@ -228,6 +232,7 @@ export default function CheckoutPage() {
               <Field label={t("checkout.lastName")} required>
                 <input
                   className="input"
+                  autoComplete="family-name"
                   value={address.last}
                   onChange={(e) => setAddress({ ...address, last: e.target.value })}
                 />
@@ -237,6 +242,7 @@ export default function CheckoutPage() {
                   <input
                     className="input"
                     type="email"
+                    autoComplete="email"
                     value={address.email}
                     onChange={(e) => setAddress({ ...address, email: e.target.value })}
                   />
@@ -246,6 +252,7 @@ export default function CheckoutPage() {
                 <Field label={t("checkout.address")} required>
                   <input
                     className="input"
+                    autoComplete="street-address"
                     value={address.address}
                     onChange={(e) => setAddress({ ...address, address: e.target.value })}
                   />
@@ -254,6 +261,7 @@ export default function CheckoutPage() {
               <Field label={t("checkout.city")} required>
                 <input
                   className="input"
+                  autoComplete="address-level2"
                   value={address.city}
                   onChange={(e) => setAddress({ ...address, city: e.target.value })}
                 />
@@ -261,6 +269,7 @@ export default function CheckoutPage() {
               <Field label={t("checkout.country")} required>
                 <select
                   className="input"
+                  autoComplete="country"
                   value={address.country}
                   onChange={(e) => setAddress({ ...address, country: e.target.value })}
                 >
@@ -274,6 +283,7 @@ export default function CheckoutPage() {
               <Field label={t("checkout.zip")}>
                 <input
                   className="input"
+                  autoComplete="postal-code"
                   value={address.zip}
                   onChange={(e) => setAddress({ ...address, zip: e.target.value })}
                 />
@@ -281,6 +291,9 @@ export default function CheckoutPage() {
               <Field label={t("checkout.phone")}>
                 <input
                   className="input"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   value={address.phone}
                   onChange={(e) => setAddress({ ...address, phone: e.target.value })}
                 />
