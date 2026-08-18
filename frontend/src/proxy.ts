@@ -43,12 +43,27 @@ const EXPRESS_ROUTES = [
   /^\/source(?:\/.*)?$/,
 ];
 
-/** Pre-split paths, mapped to where the route now lives. */
+/**
+ * Paths people type or arrive on that are not themselves pages.
+ *
+ * The first group predates the Express/Business split. The rest are addresses
+ * a reviewer or a returning customer reasonably guesses — signing in happens
+ * in a dialog rather than on its own page, and the catalogue is called "store"
+ * in the URL but "marketplace" in the navigation. Landing on a 404 for these
+ * reads as a broken site even though no page is missing.
+ */
 const LEGACY: Array<[RegExp, (match: RegExpMatchArray) => string]> = [
   [/^\/workspace\/?$/, () => businessHref("/rfqs")],
   [/^\/catalogue\/?$/, () => businessHref("/catalogue")],
   [/^\/opportunities\/?$/, () => businessHref("/opportunities")],
   [/^\/trades\/([^/]+)\/?$/, (match) => businessHref(`/trades/${match[1]}`)],
+  [/^\/(marketplace|shop|products)\/?$/, () => expressHref("/store")],
+  [/^\/(login|signin|sign-in|auth)\/?$/, () => expressHref("/account?signin=1")],
+  [/^\/(register|signup|sign-up)\/?$/, () => expressHref("/account?signup=1")],
+  [/^\/(our-story|story|about)\/?$/, () => expressHref("/#story")],
+  [/^\/(source-at-scale|wholesale|b2b)\/?$/, () => businessHref("/")],
+  [/^\/(rfq|request-a-quote)\/?$/, () => businessHref("/rfqs")],
+  [/^\/suppliers\/?$/, () => businessHref("/suppliers")],
 ];
 
 export function proxy(request: NextRequest) {

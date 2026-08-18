@@ -82,6 +82,7 @@ export default function Navbar({ channel = "express" }: { channel?: Channel }) {
               alt=""
               fill
               sizes="44px"
+              unoptimized
               className="object-contain"
               priority
             />

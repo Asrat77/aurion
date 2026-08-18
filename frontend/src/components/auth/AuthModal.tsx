@@ -19,6 +19,17 @@ export default function AuthModal() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
+  // Signing in happens in this dialog rather than on its own page, so anyone
+  // who types /login or /register is redirected here with a flag and the
+  // dialog opens for them. Read from location rather than useSearchParams:
+  // this component is mounted on every page, and the hook would make every
+  // route dynamic just to check a query string.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("signup")) openAuth("signup");
+    else if (params.has("signin")) openAuth("login");
+  }, [openAuth]);
+
   // Entrance: scale from 0.97 + fade (modals stay centered, no origin anchor).
   // The rAF flips mounted on open; cleanup resets it on close so each reopen
   // replays the entrance.
