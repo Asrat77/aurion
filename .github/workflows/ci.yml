@@ -36,8 +36,13 @@ jobs:
         run: bin/rails zeitwerk:check
       - name: RuboCop
         run: bin/rubocop -f github
+      # Not bin/brakeman: that binstub forces --ensure-latest, which exits
+      # non-zero whenever a newer Brakeman has been published, so an upstream
+      # release turns master red with no change to our code. The gate we want
+      # is "are there security warnings"; keeping the gem current is what the
+      # dependency audit and lockfile updates are for.
       - name: Brakeman
-        run: bin/brakeman --no-pager
+        run: bundle exec brakeman --no-pager
       - name: Bundler audit
         run: bin/bundler-audit check --update
 
